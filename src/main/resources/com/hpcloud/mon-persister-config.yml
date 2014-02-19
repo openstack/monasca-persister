@@ -1,1 +1,89 @@
 name: mon-persister
+
+# Logging settings.
+logging:
+
+  # The default level of all loggers. Can be OFF, ERROR, WARN, INFO,
+  # DEBUG, TRACE, or ALL.
+  level: INFO
+
+  # Logger-specific levels.
+  loggers:
+
+    # Sets the level for 'com.example.app' to DEBUG.
+    com.example.app: DEBUG
+
+  # Settings for logging to stdout.
+  console:
+
+    # If true, write log statements to stdout.
+    enabled: true
+
+    # Do not display log statements below this threshold to stdout.
+    threshold: ALL
+
+    # The time zone in which dates should be displayed.
+    timeZone: UTC
+
+    # A custom Logback format string.
+    logFormat: null
+
+  # Settings for logging to a file.
+  file:
+
+    # If true, write log statements to a file.
+    enabled: true
+
+    # Do not write log statements below this threshold to the file.
+    threshold: ALL
+
+    # The time zone in which dates should be displayed.
+    timeZone: UTC
+
+    # A custom Logback format string.
+    logFormat: null
+
+    # The file to which statements will be logged.
+    #
+    # If enabled is true, this must be specified.
+    currentLogFilename: ./logs/mon-persister.log
+
+    # If true, log files are rotated and archived.
+    archive: true
+
+    # When the log file rolls over, the file will be archived to
+    # app-2012-03-15.log.gz, example.log will be truncated,
+    # and new statements written to it.
+    #
+    # If archive is true, this must be specified.
+    archivedLogFilenamePattern: ./logs/mon-persister-%d.log.gz
+
+    # The maximum number of log files to archive.
+    archivedFileCount: 5
+
+  # Settings for logging to syslog.
+  syslog:
+
+    # If true, write log statements to syslog.
+    enabled: false
+
+    # The hostname of the syslog server to which statements will be
+    # sent.
+    #
+    # N.B.: If this is the local host, the local syslog instance
+    # will need to be configured to listen on an inet socket, not just
+    # a Unix socket.
+    host: localhost
+
+    # The syslog facility to which statements will be sent.
+    #
+    # Can be one of: {AUTH, AUTHPRIV, DAEMON, CRON, FTP, LPR, KERN,
+    # MAIL, NEWS, SYSLOG, USER, UUCP, LOCAL0, LOCAL1, LOCAL2, LOCAL3,
+    # LOCAL4, LOCAL5, LOCAL6, LOCAL7}.
+    facility: local0
+
+    # The time zone in which dates should be displayed.
+    timeZone: UTC
+
+    # A custom Logback format string.
+    logFormat: null
