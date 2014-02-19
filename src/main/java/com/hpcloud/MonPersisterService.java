@@ -18,5 +18,6 @@ public class MonPersisterService extends Service<MonPersisterConfiguration> {
     public void run(MonPersisterConfiguration configuration, Environment environment) throws Exception {
        System.out.println("Hello, my name is " + configuration.getName());
         environment.addResource(new Resource());
+        environment.addHealthCheck(new SimpleHealthCheck("foo"));
     }
 }
