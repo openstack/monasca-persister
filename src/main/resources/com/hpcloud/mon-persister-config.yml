@@ -26,6 +26,14 @@ kafkaConfiguration:
   zookeeperConnectionTimeoutMs : 6000
   zookeeperSyncTimeMs: 2000
 
+disruptorConfiguration:
+  bufferSize:  1048576
+  numThreads: 1
+
+verticaOutputProcessorConfiguration:
+  batchSize: 512
+  numProcessors: 1
+
 # Logging settings.
 logging:
 

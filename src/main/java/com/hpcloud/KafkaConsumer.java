@@ -1,7 +1,7 @@
 package com.hpcloud;
 
 import com.google.inject.Inject;
-import com.yammer.dropwizard.config.Environment;
+import com.lmax.disruptor.dsl.Disruptor;
 import kafka.consumer.Consumer;
 import kafka.consumer.ConsumerConfig;
 import kafka.consumer.KafkaStream;
@@ -24,14 +24,16 @@ public class KafkaConsumer {
     private final Integer numThreads;
     private final ConsumerConnector consumerConnector;
     private ExecutorService executorService;
+    private final Disruptor disruptor;
 
     @Inject
-    public KafkaConsumer(MonPersisterConfiguration configuration, Environment environment) {
+    public KafkaConsumer(MonPersisterConfiguration configuration, Disruptor disruptor) {
 
-        Properties kafkaProperties = createKafkaProperties(configuration.getKafkaConfiguration());
-        ConsumerConfig consumerConfig = createConsumerConfig(kafkaProperties);
         this.topic = configuration.getKafkaConfiguration().topic;
         this.numThreads = configuration.getKafkaConfiguration().numThreads;
+        this.disruptor = disruptor;
+        Properties kafkaProperties = createKafkaProperties(configuration.getKafkaConfiguration());
+        ConsumerConfig consumerConfig = createConsumerConfig(kafkaProperties);
         this.consumerConnector = Consumer.createJavaConsumerConnector(consumerConfig);
     }
 
@@ -44,7 +46,7 @@ public class KafkaConsumer {
 
         int threadNumber = 0;
         for (final KafkaStream stream : streams) {
-            executorService.submit(new KafkaConsumerRunnableBasic(stream, threadNumber));
+            executorService.submit(new KafkaConsumerRunnableBasic(stream, threadNumber, disruptor));
         }
 
     }

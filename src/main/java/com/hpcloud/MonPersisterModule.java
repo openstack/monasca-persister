@@ -1,22 +1,22 @@
 package com.hpcloud;
 
 import com.google.inject.AbstractModule;
-import com.yammer.dropwizard.config.Environment;
+import com.lmax.disruptor.dsl.Disruptor;
 
 public class MonPersisterModule extends AbstractModule {
 
     private final MonPersisterConfiguration configuration;
-    private final Environment environment;
+    private final Disruptor disruptor;
 
-    public MonPersisterModule(MonPersisterConfiguration configuration, Environment environment) {
+    public MonPersisterModule(MonPersisterConfiguration configuration, Disruptor<StringEvent> disruptor) {
         this.configuration = configuration;
-        this.environment = environment;
+        this.disruptor = disruptor;
     }
 
     @Override
     protected void configure() {
         bind(MonPersisterConfiguration.class).toInstance(configuration);
-        bind(Environment.class).toInstance(environment);
+        bind(Disruptor.class).toInstance(disruptor);
         bind(MonConsumer.class);
 
     }

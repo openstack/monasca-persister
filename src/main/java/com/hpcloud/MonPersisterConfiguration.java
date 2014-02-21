@@ -23,4 +23,22 @@ public class MonPersisterConfiguration extends Configuration {
     public KafkaConfiguration getKafkaConfiguration() {
         return kafkaConfiguration;
     }
+
+    @Valid
+    @NotNull
+    @JsonProperty
+    private DisruptorConfiguration disruptorConfiguration = new DisruptorConfiguration();
+
+    public DisruptorConfiguration getDisruptorConfiguration() {
+        return disruptorConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty
+    private VerticaOutputProcessorConfiguration verticaOutputProcessorConfiguration = new VerticaOutputProcessorConfiguration();
+
+    public VerticaOutputProcessorConfiguration getVerticaOutputProcessorConfiguration() {
+        return verticaOutputProcessorConfiguration;
+    }
 }
