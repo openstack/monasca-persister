@@ -3,20 +3,27 @@ package com.hpcloud;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-public class KafkaConsumerTest {
+public class MonConsumerTest {
 
-    KafkaConsumer kafkaConsumer;
+    @Mock
+    private KafkaConsumer kafkaConsumer;
+
+    @InjectMocks
+    private MonConsumer monConsumer;
 
     @Before
-    public void before() {
-        kafkaConsumer = new KafkaConsumer();
+    public void initMocks() {
+        MockitoAnnotations.initMocks(this);
     }
 
     @Test
     public void testKafkaConsumerStart() {
         try {
-            kafkaConsumer.start();
+            monConsumer.start();
         } catch (Exception e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
@@ -26,7 +33,7 @@ public class KafkaConsumerTest {
     @Test
     public void testKafkaConsumerStop() {
         try {
-            kafkaConsumer.stop();
+            monConsumer.stop();
         } catch (Exception e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }

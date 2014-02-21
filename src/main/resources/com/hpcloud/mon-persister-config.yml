@@ -3,6 +3,8 @@ name: mon-persister
 #Kafka settings.
 kafkaConfiguration:
 # See http://kafka.apache.org/documentation.html#api for semantics and defaults.
+  topic: test
+  numThreads: 1
   groupId: 1
   zookeeperConnect: localhost:2181
   consumerId: 1

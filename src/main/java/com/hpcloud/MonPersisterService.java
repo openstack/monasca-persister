@@ -19,12 +19,14 @@ public class MonPersisterService extends Service<MonPersisterConfiguration> {
 
     @Override
     public void run(MonPersisterConfiguration configuration, Environment environment) throws Exception {
-        Injector injector = Guice.createInjector(new MonPersisterModule());
+        Injector injector = Guice.createInjector(new MonPersisterModule(configuration, environment));
 
+        // Sample resource.
         environment.addResource(new Resource());
+        // Sample health check.
         environment.addHealthCheck(new SimpleHealthCheck("test-health-check"));
 
-        KafkaConsumer kafkaConsumer = injector.getInstance(KafkaConsumer.class);
-        environment.manage(kafkaConsumer);
+        MonConsumer monConsumer = injector.getInstance(MonConsumer.class);
+        environment.manage(monConsumer);
     }
 }

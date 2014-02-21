@@ -5,6 +5,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class KafkaConfiguration {
 
     @JsonProperty
+    String topic;
+
+    @JsonProperty
+    Integer numThreads;
+
+    @JsonProperty
     String groupId;
 
     @JsonProperty
