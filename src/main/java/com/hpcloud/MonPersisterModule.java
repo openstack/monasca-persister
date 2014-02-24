@@ -1,8 +1,6 @@
 package com.hpcloud;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Provider;
-import com.google.inject.ProvisionException;
 import com.google.inject.Scopes;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.hpcloud.configuration.MonPersisterConfiguration;
@@ -14,7 +12,6 @@ import com.hpcloud.event.StringEventHandler;
 import com.hpcloud.event.StringEventHandlerFactory;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.yammer.dropwizard.config.Environment;
-import com.yammer.dropwizard.jdbi.DBIFactory;
 import org.skife.jdbi.v2.DBI;
 
 public class MonPersisterModule extends AbstractModule {
@@ -31,6 +28,7 @@ public class MonPersisterModule extends AbstractModule {
     protected void configure() {
 
         bind(MonPersisterConfiguration.class).toInstance(configuration);
+        bind(Environment.class).toInstance(environment);
 
         install(new FactoryModuleBuilder()
                 .implement(StringEventHandler.class, StringEventHandler.class)
@@ -41,21 +39,11 @@ public class MonPersisterModule extends AbstractModule {
                 .build(KafkaConsumerRunnableBasicFactory.class));
 
         bind(Disruptor.class)
-                .toProvider(DisruptorProvider.class);
+                .toProvider(DisruptorProvider.class).in(Scopes.SINGLETON);
+
+        bind(DBI.class).toProvider(DBIProvider.class).in(Scopes.SINGLETON);
 
         bind(MonConsumer.class);
-
-        bind(DBI.class).toProvider(new Provider<DBI>() {
-            @Override
-            public DBI get() {
-                try {
-                    return new DBIFactory().build(environment, configuration.getDatabaseConfiguration(), "vertica");
-                } catch (ClassNotFoundException e) {
-                    throw new ProvisionException("Failed to provision DBI", e);
-                }
-            }
-        }).in(Scopes.SINGLETON);
-
 
     }
 }
