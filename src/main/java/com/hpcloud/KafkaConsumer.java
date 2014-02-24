@@ -27,11 +27,11 @@ public class KafkaConsumer {
     private final Disruptor disruptor;
 
     @Inject
-    public KafkaConsumer(MonPersisterConfiguration configuration, Disruptor disruptor) {
+    public KafkaConsumer(MonPersisterConfiguration configuration, DisruptorFactory disruptorFactory) {
 
         this.topic = configuration.getKafkaConfiguration().topic;
         this.numThreads = configuration.getKafkaConfiguration().numThreads;
-        this.disruptor = disruptor;
+        this.disruptor = disruptorFactory.create();
         Properties kafkaProperties = createKafkaProperties(configuration.getKafkaConfiguration());
         ConsumerConfig consumerConfig = createConsumerConfig(kafkaProperties);
         this.consumerConnector = Consumer.createJavaConsumerConnector(consumerConfig);
