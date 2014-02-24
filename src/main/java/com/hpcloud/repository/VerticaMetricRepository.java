@@ -1,4 +1,4 @@
-package com.hpcloud;
+package com.hpcloud.repository;
 
 import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;

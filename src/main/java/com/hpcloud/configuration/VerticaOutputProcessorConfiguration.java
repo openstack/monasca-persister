@@ -1,4 +1,4 @@
-package com.hpcloud;
+package com.hpcloud.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -7,6 +7,9 @@ public class VerticaOutputProcessorConfiguration {
     @JsonProperty
     Integer batchSize;
 
-    @JsonProperty
-    Integer numProcessors;
+    public Integer getBatchSize() {
+        return batchSize;
+    }
+
+
 }

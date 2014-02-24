@@ -1,6 +1,9 @@
-package com.hpcloud;
+package com.hpcloud.consumer;
 
 import com.google.inject.Inject;
+import com.hpcloud.configuration.KafkaConfiguration;
+import com.hpcloud.configuration.MonPersisterConfiguration;
+import com.hpcloud.disruptor.DisruptorFactory;
 import com.lmax.disruptor.dsl.Disruptor;
 import kafka.consumer.Consumer;
 import kafka.consumer.ConsumerConfig;
@@ -29,8 +32,8 @@ public class KafkaConsumer {
     @Inject
     public KafkaConsumer(MonPersisterConfiguration configuration, DisruptorFactory disruptorFactory) {
 
-        this.topic = configuration.getKafkaConfiguration().topic;
-        this.numThreads = configuration.getKafkaConfiguration().numThreads;
+        this.topic = configuration.getKafkaConfiguration().getTopic();
+        this.numThreads = configuration.getKafkaConfiguration().getNumThreads();
         this.disruptor = disruptorFactory.create();
         Properties kafkaProperties = createKafkaProperties(configuration.getKafkaConfiguration());
         ConsumerConfig consumerConfig = createConsumerConfig(kafkaProperties);
@@ -66,26 +69,26 @@ public class KafkaConsumer {
 
     private Properties createKafkaProperties(KafkaConfiguration kafkaConfiguration) {
         Properties properties = new Properties();
-        properties.put("group.id", kafkaConfiguration.groupId);
-        properties.put("zookeeper.connect", kafkaConfiguration.zookeeperConnect);
-        properties.put("consumer.id", kafkaConfiguration.consumerId);
-        properties.put("socket.timeout.ms", kafkaConfiguration.socketTimeoutMs.toString());
-        properties.put("socket.receive.buffer.bytes", kafkaConfiguration.socketReceiveBufferBytes.toString());
-        properties.put("fetch.message.max.bytes", kafkaConfiguration.fetchMessageMaxBytes.toString());
-        properties.put("auto.commit.enable", kafkaConfiguration.autoCommitEnable.toString());
-        properties.put("auto.commit.interval.ms", kafkaConfiguration.autoCommitIntervalMs.toString());
-        properties.put("queued.max.message.chunks", kafkaConfiguration.queuedMaxMessageChunks.toString());
-        properties.put("rebalance.max.retries", kafkaConfiguration.rebalanceMaxRetries.toString());
-        properties.put("fetch.min.bytes", kafkaConfiguration.fetchMinBytes.toString());
-        properties.put("fetch.wait.max.ms", kafkaConfiguration.fetchWaitMaxMs.toString());
-        properties.put("rebalance.backoff.ms", kafkaConfiguration.rebalanceBackoffMs.toString());
-        properties.put("refresh.leader.backoff.ms", kafkaConfiguration.refreshLeaderBackoffMs.toString());
-        properties.put("auto.offset.reset", kafkaConfiguration.autoOffsetReset);
-        properties.put("consumer.timeout.ms", kafkaConfiguration.consumerTimeoutMs.toString());
-        properties.put("client.id", kafkaConfiguration.clientId);
-        properties.put("zookeeper.session.timeout.ms", kafkaConfiguration.zookeeperSessionTimeoutMs.toString());
-        properties.put("zookeeper.connection.timeout.ms", kafkaConfiguration.zookeeperSessionTimeoutMs.toString());
-        properties.put("zookeeper.sync.time.ms", kafkaConfiguration.zookeeperSyncTimeMs.toString());
+        properties.put("group.id", kafkaConfiguration.getGroupId());
+        properties.put("zookeeper.connect", kafkaConfiguration.getZookeeperConnect());
+        properties.put("consumer.id", kafkaConfiguration.getConsumerId());
+        properties.put("socket.timeout.ms", kafkaConfiguration.getSocketTimeoutMs().toString());
+        properties.put("socket.receive.buffer.bytes", kafkaConfiguration.getSocketReceiveBufferBytes().toString());
+        properties.put("fetch.message.max.bytes", kafkaConfiguration.getFetchMessageMaxBytes().toString());
+        properties.put("auto.commit.enable", kafkaConfiguration.getAutoCommitEnable().toString());
+        properties.put("auto.commit.interval.ms", kafkaConfiguration.getAutoCommitIntervalMs().toString());
+        properties.put("queued.max.message.chunks", kafkaConfiguration.getQueuedMaxMessageChunks().toString());
+        properties.put("rebalance.max.retries", kafkaConfiguration.getRebalanceMaxRetries().toString());
+        properties.put("fetch.min.bytes", kafkaConfiguration.getFetchMinBytes().toString());
+        properties.put("fetch.wait.max.ms", kafkaConfiguration.getFetchWaitMaxMs().toString());
+        properties.put("rebalance.backoff.ms", kafkaConfiguration.getRebalanceBackoffMs().toString());
+        properties.put("refresh.leader.backoff.ms", kafkaConfiguration.getRefreshLeaderBackoffMs().toString());
+        properties.put("auto.offset.reset", kafkaConfiguration.getAutoOffsetReset());
+        properties.put("consumer.timeout.ms", kafkaConfiguration.getConsumerTimeoutMs().toString());
+        properties.put("client.id", kafkaConfiguration.getClientId());
+        properties.put("zookeeper.session.timeout.ms", kafkaConfiguration.getZookeeperSessionTimeoutMs().toString());
+        properties.put("zookeeper.connection.timeout.ms", kafkaConfiguration.getZookeeperConnectionTimeoutMs().toString());
+        properties.put("zookeeper.sync.time.ms", kafkaConfiguration.getZookeeperSyncTimeMs().toString());
         return properties;
     }
 

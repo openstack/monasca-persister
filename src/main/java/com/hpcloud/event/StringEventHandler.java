@@ -1,7 +1,8 @@
-package com.hpcloud;
+package com.hpcloud.event;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import com.hpcloud.repository.VerticaMetricRepository;
 import com.lmax.disruptor.EventHandler;
 
 public class StringEventHandler implements EventHandler<StringEvent> {

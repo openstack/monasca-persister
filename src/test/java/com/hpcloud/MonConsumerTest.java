@@ -1,5 +1,7 @@
 package com.hpcloud;
 
+import com.hpcloud.consumer.KafkaConsumer;
+import com.hpcloud.consumer.MonConsumer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

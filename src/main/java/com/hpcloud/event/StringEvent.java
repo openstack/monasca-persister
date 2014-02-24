@@ -1,4 +1,4 @@
-package com.hpcloud;
+package com.hpcloud.event;
 
 public class StringEvent {
 

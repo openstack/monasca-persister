@@ -4,7 +4,7 @@ name: mon-persister
 kafkaConfiguration:
 # See http://kafka.apache.org/documentation.html#api for semantics and defaults.
   topic: test
-  numThreads: 1
+  numThreads: 2
   groupId: 1
   zookeeperConnect: localhost:2181
   consumerId: 1
@@ -28,11 +28,10 @@ kafkaConfiguration:
 
 disruptorConfiguration:
   bufferSize:  1048576
-  numThreads: 1
+  numProcessors: 2
 
 verticaOutputProcessorConfiguration:
   batchSize: 10
-  numProcessors: 1
 
 databaseConfiguration:
   driverClass: com.vertica.jdbc.Driver

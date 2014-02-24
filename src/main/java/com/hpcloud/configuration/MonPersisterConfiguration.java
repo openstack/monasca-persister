@@ -1,4 +1,4 @@
-package com.hpcloud;
+package com.hpcloud.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.yammer.dropwizard.config.Configuration;

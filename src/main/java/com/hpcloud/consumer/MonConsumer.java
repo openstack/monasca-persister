@@ -1,4 +1,4 @@
-package com.hpcloud;
+package com.hpcloud.consumer;
 
 import com.google.inject.Inject;
 import com.yammer.dropwizard.lifecycle.Managed;

@@ -1,10 +1,10 @@
-package com.hpcloud;
+package com.hpcloud.healthcheck;
 
 import com.yammer.metrics.core.HealthCheck;
 
 public class SimpleHealthCheck extends HealthCheck {
 
-    protected SimpleHealthCheck(String name) {
+    public SimpleHealthCheck(String name) {
         super(name);
     }
 

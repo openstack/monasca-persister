@@ -1,5 +1,6 @@
-package com.hpcloud;
+package com.hpcloud.consumer;
 
+import com.hpcloud.event.StringEvent;
 import com.lmax.disruptor.EventTranslator;
 import com.lmax.disruptor.dsl.Disruptor;
 import kafka.consumer.ConsumerIterator;

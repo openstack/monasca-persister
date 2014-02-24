@@ -1,4 +1,4 @@
-package com.hpcloud;
+package com.hpcloud.resource;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
