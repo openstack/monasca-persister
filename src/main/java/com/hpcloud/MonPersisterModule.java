@@ -6,6 +6,8 @@ import com.google.inject.ProvisionException;
 import com.google.inject.Scopes;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.hpcloud.configuration.MonPersisterConfiguration;
+import com.hpcloud.consumer.KafkaConsumerRunnableBasic;
+import com.hpcloud.consumer.KafkaConsumerRunnableBasicFactory;
 import com.hpcloud.consumer.MonConsumer;
 import com.hpcloud.disruptor.DisruptorFactory;
 import com.hpcloud.event.StringEventHandler;
@@ -32,6 +34,10 @@ public class MonPersisterModule extends AbstractModule {
         install(new FactoryModuleBuilder()
                 .implement(StringEventHandler.class, StringEventHandler.class)
                 .build(StringEventHandlerFactory.class));
+
+        install(new FactoryModuleBuilder()
+                .implement(KafkaConsumerRunnableBasic.class, KafkaConsumerRunnableBasic.class)
+                .build(KafkaConsumerRunnableBasicFactory.class));
 
         bind(DisruptorFactory.class);
 

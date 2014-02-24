@@ -29,9 +29,12 @@ public class KafkaConsumer {
     private final ConsumerConnector consumerConnector;
     private ExecutorService executorService;
     private final Disruptor disruptor;
+    private final KafkaConsumerRunnableBasicFactory kafkaConsumerRunnableBasicFactory;
 
     @Inject
-    public KafkaConsumer(MonPersisterConfiguration configuration, DisruptorFactory disruptorFactory) {
+    public KafkaConsumer(MonPersisterConfiguration configuration,
+                         DisruptorFactory disruptorFactory,
+                         KafkaConsumerRunnableBasicFactory kafkaConsumerRunnableBasicFactory) {
 
         this.topic = configuration.getKafkaConfiguration().getTopic();
         logger.info(KAFKA_CONFIGURATION + " topic = " + topic);
@@ -43,6 +46,8 @@ public class KafkaConsumer {
         Properties kafkaProperties = createKafkaProperties(configuration.getKafkaConfiguration());
         ConsumerConfig consumerConfig = createConsumerConfig(kafkaProperties);
         this.consumerConnector = Consumer.createJavaConsumerConnector(consumerConfig);
+
+        this.kafkaConsumerRunnableBasicFactory = kafkaConsumerRunnableBasicFactory;
     }
 
     public void run() {
@@ -54,7 +59,7 @@ public class KafkaConsumer {
 
         int threadNumber = 0;
         for (final KafkaStream stream : streams) {
-            executorService.submit(new KafkaConsumerRunnableBasic(stream, threadNumber, disruptor));
+            executorService.submit(kafkaConsumerRunnableBasicFactory.create(stream, threadNumber));
         }
 
     }
