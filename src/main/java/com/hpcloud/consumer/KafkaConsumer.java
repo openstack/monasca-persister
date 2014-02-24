@@ -21,7 +21,8 @@ import java.util.concurrent.Executors;
 
 public class KafkaConsumer {
 
-    private static Logger logger = LoggerFactory.getLogger(MonConsumer.class);
+    private static final String KAFKA_CONFIGURATION = "Kafka configuration:";
+    private static Logger logger = LoggerFactory.getLogger(KafkaConsumer.class);
 
     private final String topic;
     private final Integer numThreads;
@@ -33,7 +34,11 @@ public class KafkaConsumer {
     public KafkaConsumer(MonPersisterConfiguration configuration, DisruptorFactory disruptorFactory) {
 
         this.topic = configuration.getKafkaConfiguration().getTopic();
+        logger.info(KAFKA_CONFIGURATION + " topic = " + topic);
+
         this.numThreads = configuration.getKafkaConfiguration().getNumThreads();
+        logger.info(KAFKA_CONFIGURATION + " numThreads = " + numThreads);
+
         this.disruptor = disruptorFactory.create();
         Properties kafkaProperties = createKafkaProperties(configuration.getKafkaConfiguration());
         ConsumerConfig consumerConfig = createConsumerConfig(kafkaProperties);
@@ -69,6 +74,7 @@ public class KafkaConsumer {
 
     private Properties createKafkaProperties(KafkaConfiguration kafkaConfiguration) {
         Properties properties = new Properties();
+
         properties.put("group.id", kafkaConfiguration.getGroupId());
         properties.put("zookeeper.connect", kafkaConfiguration.getZookeeperConnect());
         properties.put("consumer.id", kafkaConfiguration.getConsumerId());
@@ -89,6 +95,11 @@ public class KafkaConsumer {
         properties.put("zookeeper.session.timeout.ms", kafkaConfiguration.getZookeeperSessionTimeoutMs().toString());
         properties.put("zookeeper.connection.timeout.ms", kafkaConfiguration.getZookeeperConnectionTimeoutMs().toString());
         properties.put("zookeeper.sync.time.ms", kafkaConfiguration.getZookeeperSyncTimeMs().toString());
+
+        for (String key : properties.stringPropertyNames()) {
+            logger.info(KAFKA_CONFIGURATION + " " + key + " = " + properties.getProperty(key));
+        }
+
         return properties;
     }
 
