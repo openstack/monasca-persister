@@ -1,7 +1,6 @@
 package com.hpcloud.consumer;
 
 import com.google.inject.Inject;
-import com.hpcloud.disruptor.DisruptorFactory;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.yammer.dropwizard.lifecycle.Managed;
 import org.slf4j.Logger;
@@ -15,9 +14,9 @@ public class MonConsumer implements Managed {
     private Disruptor disruptor;
 
     @Inject
-    public MonConsumer(KafkaConsumer kafkaConsumer, DisruptorFactory disruptorFactory) {
+    public MonConsumer(KafkaConsumer kafkaConsumer, Disruptor disruptor) {
         this.kafkaConsumer = kafkaConsumer;
-        this.disruptor = disruptorFactory.create();
+        this.disruptor = disruptor;
     }
 
     @Override

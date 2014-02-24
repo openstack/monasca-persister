@@ -3,7 +3,6 @@ package com.hpcloud.consumer;
 import com.google.inject.Inject;
 import com.hpcloud.configuration.KafkaConfiguration;
 import com.hpcloud.configuration.MonPersisterConfiguration;
-import com.hpcloud.disruptor.DisruptorFactory;
 import com.lmax.disruptor.dsl.Disruptor;
 import kafka.consumer.Consumer;
 import kafka.consumer.ConsumerConfig;
@@ -33,7 +32,7 @@ public class KafkaConsumer {
 
     @Inject
     public KafkaConsumer(MonPersisterConfiguration configuration,
-                         DisruptorFactory disruptorFactory,
+                         Disruptor disruptor,
                          KafkaConsumerRunnableBasicFactory kafkaConsumerRunnableBasicFactory) {
 
         this.topic = configuration.getKafkaConfiguration().getTopic();
@@ -42,7 +41,7 @@ public class KafkaConsumer {
         this.numThreads = configuration.getKafkaConfiguration().getNumThreads();
         logger.info(KAFKA_CONFIGURATION + " numThreads = " + numThreads);
 
-        this.disruptor = disruptorFactory.create();
+        this.disruptor = disruptor;
         Properties kafkaProperties = createKafkaProperties(configuration.getKafkaConfiguration());
         ConsumerConfig consumerConfig = createConsumerConfig(kafkaProperties);
         this.consumerConnector = Consumer.createJavaConsumerConnector(consumerConfig);
@@ -51,7 +50,7 @@ public class KafkaConsumer {
     }
 
     public void run() {
-        Map<String, Integer> topicCountMap = new HashMap<String, Integer>();
+        Map<String, Integer> topicCountMap = new HashMap<>();
         topicCountMap.put(topic, new Integer(numThreads));
         Map<String, List<KafkaStream<byte[], byte[]>>> consumerMap = consumerConnector.createMessageStreams(topicCountMap);
         List<KafkaStream<byte[], byte[]>> streams = consumerMap.get(topic);

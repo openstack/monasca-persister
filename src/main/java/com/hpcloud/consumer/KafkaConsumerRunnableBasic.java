@@ -2,7 +2,6 @@ package com.hpcloud.consumer;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import com.hpcloud.disruptor.DisruptorFactory;
 import com.hpcloud.event.StringEvent;
 import com.lmax.disruptor.EventTranslator;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -15,12 +14,12 @@ public class KafkaConsumerRunnableBasic implements Runnable {
     private Disruptor disruptor;
 
     @Inject
-    public KafkaConsumerRunnableBasic(DisruptorFactory disruptorFactory,
+    public KafkaConsumerRunnableBasic(Disruptor disruptor,
                                       @Assisted KafkaStream stream,
                                       @Assisted int threadNumber) {
         this.stream = stream;
         this.threadNumber = threadNumber;
-        this.disruptor = disruptorFactory.create();
+        this.disruptor = disruptor;
     }
 
     @SuppressWarnings("unchecked")

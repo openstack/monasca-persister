@@ -1,6 +1,7 @@
 package com.hpcloud.disruptor;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.hpcloud.configuration.MonPersisterConfiguration;
 import com.hpcloud.event.StringEvent;
 import com.hpcloud.event.StringEventFactory;
@@ -12,20 +13,20 @@ import com.lmax.disruptor.dsl.EventHandlerGroup;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-public class DisruptorFactory {
+public class DisruptorProvider implements Provider<Disruptor> {
 
     private MonPersisterConfiguration configuration;
     private StringEventHandlerFactory stringEventHandlerFactory;
     private Disruptor instance;
 
     @Inject
-    public DisruptorFactory(MonPersisterConfiguration configuration,
-                            StringEventHandlerFactory stringEventHandlerFactory) {
+    public DisruptorProvider(MonPersisterConfiguration configuration,
+                             StringEventHandlerFactory stringEventHandlerFactory) {
         this.configuration = configuration;
         this.stringEventHandlerFactory = stringEventHandlerFactory;
     }
 
-    public synchronized Disruptor<StringEvent> create() {
+    public synchronized Disruptor<StringEvent> get() {
         if (instance == null) {
 
             Executor executor = Executors.newCachedThreadPool();
