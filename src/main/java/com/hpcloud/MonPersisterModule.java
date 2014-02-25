@@ -7,9 +7,11 @@ import com.hpcloud.configuration.MonPersisterConfiguration;
 import com.hpcloud.consumer.KafkaConsumerRunnableBasic;
 import com.hpcloud.consumer.KafkaConsumerRunnableBasicFactory;
 import com.hpcloud.consumer.MonConsumer;
+import com.hpcloud.disruptor.DisruptorExceptionHandler;
 import com.hpcloud.disruptor.DisruptorProvider;
 import com.hpcloud.event.StringEventHandler;
 import com.hpcloud.event.StringEventHandlerFactory;
+import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.yammer.dropwizard.config.Environment;
 import org.skife.jdbi.v2.DBI;
@@ -37,6 +39,8 @@ public class MonPersisterModule extends AbstractModule {
         install(new FactoryModuleBuilder()
                 .implement(KafkaConsumerRunnableBasic.class, KafkaConsumerRunnableBasic.class)
                 .build(KafkaConsumerRunnableBasicFactory.class));
+
+        bind(ExceptionHandler.class).to(DisruptorExceptionHandler.class);
 
         bind(Disruptor.class)
                 .toProvider(DisruptorProvider.class).in(Scopes.SINGLETON);

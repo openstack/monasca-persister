@@ -8,6 +8,7 @@ import com.hpcloud.event.StringEventFactory;
 import com.hpcloud.event.StringEventHandler;
 import com.hpcloud.event.StringEventHandlerFactory;
 import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.dsl.Disruptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,15 +20,18 @@ public class DisruptorProvider implements Provider<Disruptor> {
 
     private static Logger logger = LoggerFactory.getLogger(DisruptorProvider.class);
 
-    private MonPersisterConfiguration configuration;
-    private StringEventHandlerFactory stringEventHandlerFactory;
+    private final MonPersisterConfiguration configuration;
+    private final StringEventHandlerFactory stringEventHandlerFactory;
+    private final ExceptionHandler exceptionHandler;
     private Disruptor instance;
 
     @Inject
     public DisruptorProvider(MonPersisterConfiguration configuration,
-                             StringEventHandlerFactory stringEventHandlerFactory) {
+                             StringEventHandlerFactory stringEventHandlerFactory,
+                             ExceptionHandler exceptionHandler) {
         this.configuration = configuration;
         this.stringEventHandlerFactory = stringEventHandlerFactory;
+        this.exceptionHandler = exceptionHandler;
     }
 
     public synchronized Disruptor<StringEvent> get() {
@@ -45,6 +49,7 @@ public class DisruptorProvider implements Provider<Disruptor> {
             logger.debug("Buffer size for instance of disruptor [" + bufferSize + "]");
 
             Disruptor<StringEvent> disruptor = new Disruptor(stringEventFactory, bufferSize, executor);
+            disruptor.handleExceptionsWith(exceptionHandler);
 
             int batchSize = configuration.getVerticaOutputProcessorConfiguration().getBatchSize();
             logger.debug("Batch size for each output processor [" + batchSize + "]");
