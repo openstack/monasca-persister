@@ -5,7 +5,6 @@ import com.google.inject.Provider;
 import com.hpcloud.configuration.MonPersisterConfiguration;
 import com.hpcloud.event.StringEvent;
 import com.hpcloud.event.StringEventFactory;
-import com.hpcloud.event.StringEventHandler;
 import com.hpcloud.event.StringEventHandlerFactory;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.ExceptionHandler;
@@ -54,15 +53,15 @@ public class DisruptorProvider implements Provider<Disruptor> {
         int numOutputProcessors = configuration.getDisruptorConfiguration().getNumProcessors();
         logger.debug("Number of output processors [" + numOutputProcessors + "]");
 
-        EventHandler[] stringEventHandlers = new StringEventHandler[numOutputProcessors];
+        EventHandler[] eventHandlers = new EventHandler[numOutputProcessors];
 
         for (int i = 0; i < numOutputProcessors; ++i) {
 
-            stringEventHandlers[i] = stringEventHandlerFactory.create(i, numOutputProcessors, batchSize);
+            eventHandlers[i] = stringEventHandlerFactory.create(i, numOutputProcessors, batchSize);
 
         }
 
-        disruptor.handleEventsWith(stringEventHandlers);
+        disruptor.handleEventsWith(eventHandlers);
 
         disruptor.start();
         logger.debug("Instance of disruptor successfully started");
