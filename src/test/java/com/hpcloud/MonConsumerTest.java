@@ -2,6 +2,7 @@ package com.hpcloud;
 
 import com.hpcloud.consumer.KafkaConsumer;
 import com.hpcloud.consumer.MonConsumer;
+import com.lmax.disruptor.dsl.Disruptor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -13,6 +14,9 @@ public class MonConsumerTest {
 
     @Mock
     private KafkaConsumer kafkaConsumer;
+
+    @Mock
+    private Disruptor disruptor;
 
     @InjectMocks
     private MonConsumer monConsumer;
