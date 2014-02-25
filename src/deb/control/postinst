@@ -1,0 +1,15 @@
+#!/bin/sh
+
+case "$1" in
+  configure)
+    if ! [ `getent passwd persister` ]; then
+      adduser --system --group persister
+    fi
+
+    #Restart does not pick up upstart job config changes stop/start is needed
+    stop mon-persister
+    start mon-persister
+  ;;
+esac
+
+exit 0

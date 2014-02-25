@@ -1,0 +1,9 @@
+Package: [[name]]
+Section: misc
+Priority: optional
+Architecture: all
+Depends: openjdk-7-jre-headless | openjdk-7-jre
+Version: [[version]]-[[timestamp]]-[[buildNumber]]
+Maintainer: HPCloud Monitoring <hpcs-mon@hp.com>
+Description: Mon-Persister
+  Pulls data from various sources and inserts into the SOM DB.

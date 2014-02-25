@@ -1,0 +1,358 @@
+#Application Config
+
+metricsPersister:
+  enabled: true
+  csvConsumerEnabled: true
+  udpConsumerEnabled: true
+  
+  disruptorConfig:
+    claimBufferSize: 262144
+    numBatches: 8
+    numOutputProcessors: 4
+    repositoryType: "vertica"
+    schemaName: Metrics
+    enableJournaling: false
+    enableAmqpOutputProcessor: false
+
+  udpConsumerConfig:
+    useMulticast: false
+    port: 25826
+    ipAddress: 0.0.0.0
+    datagramPacketBufferSize: 4096
+    numDatagramPacketTranslatorProcessors: 4
+ 
+  csvConsumerConfig:
+    inputFileDir: "/var/som/csv/toProcess"
+    processedFileDir : "/var/som/csv/processed"
+
+  somMaasConfig:
+    rabbitExchange: "metrics.rnd"
+    rabbit:
+      hosts: [15.185.167.30,15.185.102.80,15.185.224.94]
+      port: 5672
+      username: som
+      password: password
+      vhost: /
+      consumerThreadPoolSize: 1
+      maxWaitForConnection: 1s
+    connectRetryMilliseconds: 2000
+    filterType: "plugin"
+    filterMatch: "libvirt,bock"
+    amqpMetricsMsgBufferSize: 65536
+    numAmqpPublishers: 1
+
+csPersister:
+  enabled: true
+  amqpConsumerEnabled: true
+  
+  disruptorConfig:
+    claimBufferSize: 512
+    numBatches: 1
+    numOutputProcessors: 1
+    repositoryType: "vertica"
+    schemaName: CS
+    enableJournaling: false
+    enableAmqpOutputProcessor: false
+
+  amqpConsumerConfig:
+    exchangeName: "cs_entities"
+    queueName: "control-services-sync"
+    routingKey: "#"
+    declareQueue: false
+    prefetchCount: 8192
+    connection:
+      hosts: 
+            - som-rabbit.rndd.aw1.hpcloud.net
+      port: 5672
+      username: cspersister
+      password: <password>
+      vhost: /
+      consumerThreadPoolSize: 8
+
+nagiosPersister:
+  enabled: true
+  amqpConsumerEnabled: true
+  
+  disruptorConfig:
+    claimBufferSize: 512
+    numBatches: 4
+    numOutputProcessors: 1
+    repositoryType: "vertica"
+    schemaName: Nagios
+    enableJournaling: false
+    enableAmqpOutputProcessor: false
+    
+  amqpConsumerConfig:
+    exchangeName: "icinga_events"
+    queueName: "som-nagios-consumer"
+    routingKey: "#"
+    declareQueue: false
+    prefetchCount: 1024
+
+    connection:
+      hosts: 
+            - som-rabbit.rndd.aw1.hpcloud.net
+      port: 5672
+      username: nagiospersister
+      password: <password>
+      vhost: /
+      consumerThreadPoolSize: 8
+
+salesforcePersister:
+  enabled: true
+  httpConsumerEnabled: true
+
+  disruptorConfig:
+    claimBufferSize: 512
+    numBatches: 1
+    numOutputProcessors: 0
+    repositoryType: "vertica"
+    schemaName: SalesForce
+    enableJournaling: false
+    enableAmqpOutputProcessor: false 
+
+  httpConsumerConfig:
+    username: hpcs-mon-som@hp.com
+    password: <password>
+    securityToken: <token>
+    endPoint: https://salesforce.com/services/Soap/c/22.0/0DFV00000008OKG
+    setTrace: false
+    proxy: web-proxy.dev.uswest.hpcloud.net
+    port: 8080
+    apiVersion: 28.0
+
+customMetricsPersister:
+  enabled: true
+  amqpConsumerEnabled: true
+
+  disruptorConfig:
+    claimBufferSize: 512
+    numBatches : 1
+    numOutputProcessors: 16
+    repositoryType: http
+    schemaName: CustomMetrics
+    enableJournaling: false
+    enableAmqpOutputProcessor: false
+
+  amqpConsumerConfig:
+    exchangeName: "custom_metrics"
+    queueName: "som-custommetrics-consumer"
+    routingKey: "#"
+    declareQueue: true
+    prefetchCount: 512
+    connection:
+        hosts: 
+          - som-rabbit.rndd.aw1.hpcloud.net
+        port: 5672
+        username: cmpersister
+        password: <password>
+        vhost: /custom_metrics
+        consumerThreadPoolSize: 8
+
+  httpProducerConfig:
+    endPoints:
+      - https://mon-aw1rdd1-somapi0001.rndd.aw1.hpcloud.net/v1/metrics/custom
+      - https://mon-aw1rdd1-somapi0002.rndd.aw1.hpcloud.net/v1/metrics/custom
+    maxConnections: 64
+
+# Platform config
+
+database:
+  driverClass: com.vertica.jdbc.Driver
+  url: jdbc:vertica://mon-aw1rdd1-vertica0001.rndd.aw1.hpcloud.net:5433/som
+  user: persister
+  password: <password> 
+  properties:
+      ssl: true
+  # the maximum amount of time to wait on an empty pool before throwing an exception
+  maxWaitForConnection: 1s
+
+  # the SQL query to run when validating a connection's liveness
+  validationQuery: "/* MyService Health Check */ SELECT 1"
+
+  # the minimum number of connections to keep open
+  minSize: 8
+
+  # the maximum number of connections to keep open
+  # If you add a DB connection, this value will 
+  # need to increase
+  maxSize: 41
+
+  # whether or not idle connections should be validated
+  checkConnectionWhileIdle: false
+
+  # how long a connection must be held before it can be validated
+  checkConnectionHealthWhenIdleFor: 10s
+
+  # the maximum lifetime of an idle connection
+  closeConnectionIfIdleFor: 1 minute
+
+# HTTP-specific options.
+http:
+
+  # The port on which the HTTP server listens for service requests.
+  port: 8080
+
+  # The port on which the HTTP server listens for administrative requests.
+  adminPort: 8081
+
+  # Maximum number of threads.
+  maxThreads: 100
+
+  # Minimum number of thread to keep alive.
+  minThreads: 10
+
+  # The type of connector to use. Other valid values are "nonblocking" or "legacy". In general, the
+  # blocking connector should be used for low-latency services with short request durations. The
+  # nonblocking connector should be used for services with long request durations or which
+  # specifically take advantage of Jetty's continuation support.
+  # If you need SSL support, you can either choose from "nonblocking+ssl" or "legacy+ssl".
+  connectorType: blocking
+
+  # The maximum amount of time a connection is allowed to be idle before being closed.
+  maxIdleTime: 1s
+
+  # The number of threads dedicated to accepting connections. If omitted, this defaults to the
+  # number of logical CPUs on the current machine.
+  acceptorThreads: 3
+
+  # The offset of the acceptor threads' priorities. Can be [-5...5], with -5 dropping the acceptor
+  # threads to the lowest possible priority and with 5 raising them to the highest priority.
+  acceptorThreadPriorityOffset: 0
+
+  # The number of unaccepted requests to keep in the accept queue before refusing connections. If
+  # set to -1 or omitted, the system default is used.
+  acceptQueueSize: 100
+
+  # The maximum number of buffers to keep in memory.
+  maxBufferCount: 1024
+
+  # The initial buffer size for reading requests.
+  requestBufferSize: 32KB
+
+  # The initial buffer size for reading request headers.
+  requestHeaderBufferSize: 6KB
+
+  # The initial buffer size for writing responses.
+  responseBufferSize: 32KB
+
+  # The initial buffer size for writing response headers.
+  responseHeaderBufferSize: 6KB
+
+  # Enables SO_REUSEADDR on the server socket.
+  reuseAddress: true
+
+  # Enables SO_LINGER on the server socket with the specified linger time.
+  soLingerTime: 1s
+
+  # The number of open connections at which the server transitions to a "low-resources" mode.
+  lowResourcesConnectionThreshold: 25000
+
+  # When in low-resources mode, the maximum amount of time a connection is allowed to be idle before
+  # being closed. Overrides maxIdleTime.
+  lowResourcesMaxIdleTime: 5s
+
+  # If non-zero, the server will allow worker threads to finish processing requests after the server
+  # socket has been closed for the given amount of time.
+  shutdownGracePeriod: 2s
+
+  # If true, the HTTP server will prefer X-Forwarded headers over their non-forwarded equivalents.
+  useForwardedHeaders: true
+
+  # If true, forces the HTTP connector to use off-heap, direct buffers.
+  useDirectBuffers: true
+
+  # The hostname of the interface to which the HTTP server socket wil be found. If omitted, the
+  # socket will listen on all interfaces.
+  # bindHost: app1.example.com
+
+# Trust store for SSL trusted Certificate Authorities
+#  ssl:
+#    trustStore: /etc/ssl/hpcs-keystore.jks
+#    trustStorePassword: <%= @keystore_pass %>
+
+  # HTTP request log settings
+  requestLog:
+    # Settings for logging to stdout.
+    console:
+      # If true, addToBatch log statements to stdout.
+      enabled: false
+
+    # Settings for logging to a file. Possibly to move to this and off syslog if we end up with man http requests
+    file:
+      # If true, addToBatch log statements to a file.
+      enabled: false
+
+      # The file to which statements will be logged.
+      currentLogFilename: ./logs/som-metrics-persister-requests.log
+
+      #  When the log file rolls over, the file will be archived to example-2012-03-15.log.gz,
+      # example.log will be truncated, and new statements written to it.
+      archivedLogFilenamePattern: ./logs/som-metrics-persister-requests-%d.log.gz
+
+      # The maximum number of log files to archive.
+      archivedFileCount: 5
+
+    # Settings for logging to syslog.
+    syslog:
+
+      # If true, addToBatch log statements to syslog.
+      enabled: true
+
+      # The hostname of the syslog server to which statements will be sent.
+      # N.B.: If this is the local host, the local syslog instance will need to be configured to
+      # listen on an inet socket, not just a Unix socket.
+      host: localhost
+
+      # The syslog facility to which statements will be sent.
+      facility: local0
+
+# Logging settings.
+logging:
+
+  # The default level of all loggers. Can be OFF, ERROR, WARN, INFO, DEBUG, TRACE, or ALL.
+  level: INFO
+
+  # Logger-specific levels.
+  loggers:
+
+    com.hpcloud: INFO
+    com.hpcloud.som: INFO
+    com.yammer.metrics.reporting.JmxReporter: ERROR
+
+# Settings for logging to a file.
+  file:
+    # If true, addToBatch log statements to a file.
+    enabled: true
+    # Do not addToBatch log statements below this threshold to the file.
+    threshold: ALL
+    # The file to which statements will be logged.
+    currentLogFilename: /var/log/som/som-persister.log
+    #  When the log file rolls over, the file will be archived to example-2012-03-15.log.gz,
+    # example.log will be truncated, and new statements written to it.
+    archivedLogFilenamePattern: /var/log/som/som-persister%d.log.gz
+    # The maximum number of log files to archive.
+    archivedFileCount: 10
+
+  # Settings for logging to stdout.
+  console:
+
+    # If true, addToBatch log statements to stdout.
+    enabled: false
+
+    # Do not display log statements below this threshold to stdout.
+    threshold: ALL
+
+  # Settings for logging to syslog.
+  syslog:
+
+    # If true, addToBatch log statements to syslog.
+    enabled: false
+
+    # The hostname of the syslog server to which statements will be sent.
+    # N.B.: If this is the local host, the local syslog instance will need to be configured to
+    # listen on an inet socket, not just a Unix socket.
+    host: localhost
+
+    # The syslog facility to which statements will be sent.
+    facility: local0
