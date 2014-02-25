@@ -23,7 +23,7 @@ public class DisruptorProvider implements Provider<Disruptor> {
     private final MonPersisterConfiguration configuration;
     private final StringEventHandlerFactory stringEventHandlerFactory;
     private final ExceptionHandler exceptionHandler;
-    private Disruptor instance;
+    private final Disruptor instance;
 
     @Inject
     public DisruptorProvider(MonPersisterConfiguration configuration,
@@ -32,50 +32,48 @@ public class DisruptorProvider implements Provider<Disruptor> {
         this.configuration = configuration;
         this.stringEventHandlerFactory = stringEventHandlerFactory;
         this.exceptionHandler = exceptionHandler;
+        this.instance = createInstance();
     }
 
-    public synchronized Disruptor<StringEvent> get() {
+    private Disruptor createInstance() {
 
-        logger.debug("Requesting instance of disruptor");
+        logger.debug("Creating disruptor...");
 
-        if (instance == null) {
+        Executor executor = Executors.newCachedThreadPool();
+        StringEventFactory stringEventFactory = new StringEventFactory();
 
-            logger.debug("Instance of disruptor is null. Creating disruptor...");
+        int bufferSize = configuration.getDisruptorConfiguration().getBufferSize();
+        logger.debug("Buffer size for instance of disruptor [" + bufferSize + "]");
 
-            Executor executor = Executors.newCachedThreadPool();
-            StringEventFactory stringEventFactory = new StringEventFactory();
+        Disruptor<StringEvent> disruptor = new Disruptor(stringEventFactory, bufferSize, executor);
+        disruptor.handleExceptionsWith(exceptionHandler);
 
-            int bufferSize = configuration.getDisruptorConfiguration().getBufferSize();
-            logger.debug("Buffer size for instance of disruptor [" + bufferSize + "]");
+        int batchSize = configuration.getVerticaOutputProcessorConfiguration().getBatchSize();
+        logger.debug("Batch size for each output processor [" + batchSize + "]");
 
-            Disruptor<StringEvent> disruptor = new Disruptor(stringEventFactory, bufferSize, executor);
-            disruptor.handleExceptionsWith(exceptionHandler);
+        int numOutputProcessors = configuration.getDisruptorConfiguration().getNumProcessors();
+        logger.debug("Number of output processors [" + numOutputProcessors + "]");
 
-            int batchSize = configuration.getVerticaOutputProcessorConfiguration().getBatchSize();
-            logger.debug("Batch size for each output processor [" + batchSize + "]");
+        EventHandler[] stringEventHandlers = new StringEventHandler[numOutputProcessors];
 
-            int numOutputProcessors = configuration.getDisruptorConfiguration().getNumProcessors();
-            logger.debug("Number of output processors [" + numOutputProcessors + "]");
+        for (int i = 0; i < numOutputProcessors; ++i) {
 
-            EventHandler[] stringEventHandlers = new StringEventHandler[numOutputProcessors];
+            stringEventHandlers[i] = stringEventHandlerFactory.create(i, numOutputProcessors, batchSize);
 
-            for (int i = 0; i < numOutputProcessors; ++i) {
-
-                stringEventHandlers[i] = stringEventHandlerFactory.create(i, numOutputProcessors, batchSize);
-
-            }
-
-            disruptor.handleEventsWith(stringEventHandlers);
-
-            disruptor.start();
-            logger.debug("Instance of disruptor successfully started");
-
-            logger.debug("Instance of disruptor fully created");
-
-            instance = disruptor;
         }
 
-        logger.debug("Returning instance of disruptor");
+        disruptor.handleEventsWith(stringEventHandlers);
+
+        disruptor.start();
+        logger.debug("Instance of disruptor successfully started");
+
+        logger.debug("Instance of disruptor fully created");
+
+        return disruptor;
+
+    }
+
+    public Disruptor<StringEvent> get() {
 
         return instance;
     }
