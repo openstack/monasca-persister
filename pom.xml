@@ -15,6 +15,20 @@
         </repository>
     </repositories>
 
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <artifactNamedVersion>${project.name}-${project.version}-${timestamp}-${buildNumber}
+        </artifactNamedVersion>
+    </properties>
+
+    <!--Needed for buildnumber-maven-plugin-->
+    <scm>
+        <connection>scm:git:git@keg.dev.uswest.hpcloud.net:som-persister</connection>
+        <developerConnection>scm:git:git@keg.dev.uswest.hpcloud.net:som-persister
+        </developerConnection>
+    </scm>
+
     <dependencies>
         <dependency>
             <groupId>org.apache.kafka</groupId>
@@ -75,6 +89,16 @@
             <artifactId>vertica-jdbc</artifactId>
             <version>6.1.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>buildnumber-maven-plugin</artifactId>
+            <version>1.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.vafer</groupId>
+            <artifactId>jdeb</artifactId>
+            <version>1.0.1</version>
+        </dependency>
     </dependencies>
 
 
@@ -96,6 +120,7 @@
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>2.2</version>
                 <configuration>
+                    <finalName>${artifactNamedVersion}</finalName>
                     <createDependencyReducedPom>true</createDependencyReducedPom>
                     <filters>
                         <filter>
@@ -151,9 +176,26 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
+                <version>1.2</version>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>create</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <doCheck>false</doCheck>
+                    <shortRevisionLength>6</shortRevisionLength>
+                </configuration>
+            </plugin>
+            <plugin>
                 <artifactId>jdeb</artifactId>
                 <groupId>org.vafer</groupId>
-                <version>1.0</version>
+                <version>1.0.1</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -161,11 +203,12 @@
                             <goal>jdeb</goal>
                         </goals>
                         <configuration>
-                            <deb>${project.basedir}/../debs/binaries/${artifactNamedVersion}.deb</deb>
+                            <deb>${project.basedir}/debs/binaries/${artifactNamedVersion}.deb</deb>
                             <dataSet>
                                 <data>
                                     <type>file</type>
-                                    <src>${project.build.directory}/${artifactNamedVersion}.jar</src>
+                                    <src>${project.build.directory}/${artifactNamedVersion}.jar
+                                    </src>
                                     <dst>/opt/mon/mon-persister.jar</dst>
                                 </data>
                                 <data>
@@ -175,7 +218,9 @@
                                 </data>
                                 <data>
                                     <type>file</type>
-                                    <src>${project.basedir}/src/deb/etc/persister-config.yml-sample</src>
+                                    <src>
+                                        ${project.basedir}/src/deb/etc/persister-config.yml-sample
+                                    </src>
                                     <dst>/etc/mon/persister-config.yml-sample</dst>
                                 </data>
                             </dataSet>
@@ -185,11 +230,6 @@
             </plugin>
         </plugins>
     </build>
-
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    </properties>
 
 
 </project>
