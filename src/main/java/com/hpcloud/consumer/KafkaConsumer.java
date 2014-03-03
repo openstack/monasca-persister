@@ -3,7 +3,6 @@ package com.hpcloud.consumer;
 import com.google.inject.Inject;
 import com.hpcloud.configuration.KafkaConfiguration;
 import com.hpcloud.configuration.MonPersisterConfiguration;
-import com.lmax.disruptor.dsl.Disruptor;
 import kafka.consumer.Consumer;
 import kafka.consumer.ConsumerConfig;
 import kafka.consumer.KafkaStream;
@@ -27,12 +26,10 @@ public class KafkaConsumer {
     private final Integer numThreads;
     private final ConsumerConnector consumerConnector;
     private ExecutorService executorService;
-    private final Disruptor disruptor;
     private final KafkaConsumerRunnableBasicFactory kafkaConsumerRunnableBasicFactory;
 
     @Inject
     public KafkaConsumer(MonPersisterConfiguration configuration,
-                         Disruptor disruptor,
                          KafkaConsumerRunnableBasicFactory kafkaConsumerRunnableBasicFactory) {
 
         this.topic = configuration.getKafkaConfiguration().getTopic();
@@ -41,7 +38,6 @@ public class KafkaConsumer {
         this.numThreads = configuration.getKafkaConfiguration().getNumThreads();
         logger.info(KAFKA_CONFIGURATION + " numThreads = " + numThreads);
 
-        this.disruptor = disruptor;
         Properties kafkaProperties = createKafkaProperties(configuration.getKafkaConfiguration());
         ConsumerConfig consumerConfig = createConsumerConfig(kafkaProperties);
         this.consumerConnector = Consumer.createJavaConsumerConnector(consumerConfig);

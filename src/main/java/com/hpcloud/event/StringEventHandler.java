@@ -29,11 +29,14 @@ public class StringEventHandler implements EventHandler<StringEvent> {
     @Override
     public void onEvent(StringEvent stringEvent, long sequence, boolean b) throws Exception {
 
+        System.out.println("Sequence number: " + sequence +
+                " Ordinal: " + ordinal +
+                " Event: " + stringEvent.getValue());
+
         if (((sequence / batchSize) % this.numProcessors) != this.ordinal) {
             return;
         }
 
-        System.out.println("Event: " + stringEvent.getValue());
         verticaMetricRepository.addToBatch(stringEvent.getValue());
 
         if (sequence % batchSize == (batchSize - 1)) {
