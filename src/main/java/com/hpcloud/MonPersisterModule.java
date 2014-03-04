@@ -1,5 +1,6 @@
 package com.hpcloud;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
@@ -9,8 +10,8 @@ import com.hpcloud.consumer.KafkaConsumerRunnableBasicFactory;
 import com.hpcloud.consumer.MonConsumer;
 import com.hpcloud.disruptor.DisruptorExceptionHandler;
 import com.hpcloud.disruptor.DisruptorProvider;
-import com.hpcloud.event.StringEventHandler;
-import com.hpcloud.event.StringEventHandlerFactory;
+import com.hpcloud.event.MetricMessageEventHandler;
+import com.hpcloud.event.MetricMessageEventHandlerFactory;
 import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.yammer.dropwizard.config.Environment;
@@ -33,12 +34,14 @@ public class MonPersisterModule extends AbstractModule {
         bind(Environment.class).toInstance(environment);
 
         install(new FactoryModuleBuilder()
-                .implement(StringEventHandler.class, StringEventHandler.class)
-                .build(StringEventHandlerFactory.class));
+                .implement(MetricMessageEventHandler.class, MetricMessageEventHandler.class)
+                .build(MetricMessageEventHandlerFactory.class));
 
         install(new FactoryModuleBuilder()
                 .implement(KafkaConsumerRunnableBasic.class, KafkaConsumerRunnableBasic.class)
                 .build(KafkaConsumerRunnableBasicFactory.class));
+
+        bind(ObjectMapper.class);
 
         bind(ExceptionHandler.class).to(DisruptorExceptionHandler.class);
 

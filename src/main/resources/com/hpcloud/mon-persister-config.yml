@@ -4,7 +4,7 @@ name: mon-persister
 kafkaConfiguration:
 # See http://kafka.apache.org/documentation.html#api for semantics and defaults.
   topic: test
-  numThreads: 2
+  numThreads: 1
   groupId: 1
   zookeeperConnect: localhost:2181
   consumerId: 1
@@ -28,16 +28,17 @@ kafkaConfiguration:
 
 disruptorConfiguration:
   bufferSize:  1048576
-  numProcessors: 2
+  numProcessors: 1
 
 verticaOutputProcessorConfiguration:
-  batchSize: 10
+  batchSize: 100
 
 databaseConfiguration:
   driverClass: com.vertica.jdbc.Driver
 #  url: jdbc:vertica://mon-aw1rdd1-vertica0001.rndd.aw1.hpcloud.net:5433/som
   url: jdbc:vertica://15.185.94.245:5433/som
-  user: persister
+#  user: persister
+  user: mon_persister
   password: password
   properties:
       ssl: false
