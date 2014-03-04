@@ -41,7 +41,8 @@ databaseConfiguration:
 #  url: jdbc:vertica://mon-aw1rdd1-vertica0001.rndd.aw1.hpcloud.net:5433/som
   url: jdbc:vertica://15.185.94.245:5433/som
 #  user: persister
-  user: mon_persister
+#  user: mon_persister
+  user: dbadmin
   password: password
   properties:
       ssl: false

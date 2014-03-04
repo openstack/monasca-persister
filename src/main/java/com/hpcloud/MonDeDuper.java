@@ -8,6 +8,8 @@ import org.skife.jdbi.v2.Handle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.SQLException;
+
 public class MonDeDuper implements Managed {
 
     private static Logger logger = LoggerFactory.getLogger(MonDeDuper.class);
@@ -51,17 +53,23 @@ public class MonDeDuper implements Managed {
         private static final String DEDEUP_STAGING_DIMS =
                 "insert into MonMetrics.Dimensions select distinct * from MonMetrics.StagedDimensions where metric_definition_id not in (select metric_definition_id from MonMetrics.Dimensions)";
 
-        private static final String DROP_PARTITION_STAGING_DEFS =
-                "select drop partition('monmetrics.stageddefinitions', )";
+        private static final String TRUNCATE_STAGING_DEFS =
+                "truncate table monmetrics.stageddefinitions";
 
-        private static final String DROP_PARTITION_STAGING_DIMS =
-                "select drop partition('monmetrics.stageddimensions', )";
+        private static final String TRUNCATE_STAGING_DIMS =
+                "truncate table monmetrics.stageddimensions";
 
         private DeDuperRunnable(MonPersisterConfiguration configuration, DBI dbi) {
             this.configuration = configuration;
             this.dbi = dbi;
             this.handle = this.dbi.open();
             this.handle.execute("SET TIME ZONE TO 'UTC'");
+            try {
+                this.handle.getConnection().setAutoCommit(false);
+            } catch (SQLException e) {
+                logger.error("Failed to set autocommit to false", e);
+                System.exit(-1);
+            }
 
         }
 
@@ -71,13 +79,25 @@ public class MonDeDuper implements Managed {
             for (; ; ) {
                 try {
                     Thread.sleep(seconds * 1000);
+                    handle.begin();
                     logger.debug("Waited " + seconds + " seconds");
 
-                    logger.debug("Executing:" + DEDUPE_STAGING_DEFS);
+                    logger.debug("Executing: " + DEDUPE_STAGING_DEFS);
                     handle.execute(DEDUPE_STAGING_DEFS);
 
-                    logger.debug("Executing:" + DEDEUP_STAGING_DIMS);
+                    logger.debug("Executing: " + TRUNCATE_STAGING_DEFS);
+                    handle.execute(TRUNCATE_STAGING_DEFS);
+
+                    handle.commit();
+
+                    handle.begin();
+                    logger.debug("Executing: " + DEDEUP_STAGING_DIMS);
                     handle.execute(DEDEUP_STAGING_DIMS);
+
+                    logger.debug("Executing: " + TRUNCATE_STAGING_DIMS);
+                    handle.execute(TRUNCATE_STAGING_DIMS);
+                    handle.commit();
+
                 } catch (InterruptedException e) {
                     logger.warn("Failed to wait for " + seconds + " between deduping", e);
                 }
