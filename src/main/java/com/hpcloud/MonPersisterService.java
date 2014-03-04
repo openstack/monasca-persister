@@ -33,6 +33,9 @@ public class MonPersisterService extends Service<MonPersisterConfiguration> {
 
         MonConsumer monConsumer = injector.getInstance(MonConsumer.class);
         environment.manage(monConsumer);
+
+        MonDeDuper monDeDuper = injector.getInstance(MonDeDuper.class);
+        environment.manage(monDeDuper);
     }
 
 }

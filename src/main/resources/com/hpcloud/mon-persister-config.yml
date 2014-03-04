@@ -31,7 +31,10 @@ disruptorConfiguration:
   numProcessors: 1
 
 verticaOutputProcessorConfiguration:
-  batchSize: 100
+  batchSize: 2
+
+monDeDuperConfiguration:
+  dedupeRunFrequencySeconds: 30
 
 databaseConfiguration:
   driverClass: com.vertica.jdbc.Driver

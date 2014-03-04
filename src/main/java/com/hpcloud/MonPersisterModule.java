@@ -51,6 +51,7 @@ public class MonPersisterModule extends AbstractModule {
         bind(DBI.class).toProvider(DBIProvider.class).in(Scopes.SINGLETON);
 
         bind(MonConsumer.class);
+        bind(MonDeDuper.class);
 
     }
 }

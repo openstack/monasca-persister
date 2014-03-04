@@ -52,4 +52,13 @@ public class MonPersisterConfiguration extends Configuration {
         return databaseConfiguration;
     }
 
+    @Valid
+    @NotNull
+    @JsonProperty
+    private MonDeDuperConfiguration monDeDuperConfiguration = new MonDeDuperConfiguration();
+
+    public MonDeDuperConfiguration getMonDeDuperConfiguration() {
+        return monDeDuperConfiguration;
+    }
+
 }

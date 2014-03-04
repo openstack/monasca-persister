@@ -21,15 +21,7 @@ public class VerticaMetricRepository extends VerticaRepository {
     private static final String SQL_INSERT_INTO_STAGING_DIMENSIONS =
             "insert into MonMetrics.stagedDimensions values (:metric_definition_id, :name, :value)";
 
-    private static final String METRIC_DEF_ID_COL_NAME = "metric_definition_id";
-    private static final String TIME_STAMP_COL_NAME = "time_stamp";
-    private static final String VALUE_COL_NAME = "value";
-    private static final String NAME_COL_NAME = "name";
-    private static final String TENANT_ID_COL_NAME = "tenant_id";
-    private static final String REGION_COL_NAME = "region";
-
     private PreparedBatch metricsBatch;
-
     private PreparedBatch stagedDefinitionsBatch;
     private PreparedBatch stagedDimensionsBatch;
 
