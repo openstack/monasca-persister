@@ -48,7 +48,7 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
             return;
         }
 
-        logger.info("Sequence number: " + sequence +
+        logger.debug("Sequence number: " + sequence +
                 " Ordinal: " + ordinal +
                 " Event: " + metricMessageEvent.getMetricMessage());
 
