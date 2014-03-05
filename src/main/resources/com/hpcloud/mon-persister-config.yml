@@ -4,7 +4,7 @@ name: mon-persister
 kafkaConfiguration:
 # See http://kafka.apache.org/documentation.html#api for semantics and defaults.
   topic: test
-  numThreads: 4
+  numThreads: 2
   groupId: 1
   zookeeperConnect: localhost:2181
   consumerId: 1
@@ -28,10 +28,10 @@ kafkaConfiguration:
 
 disruptorConfiguration:
   bufferSize:  1048576
-  numProcessors: 4
+  numProcessors: 2
 
 verticaOutputProcessorConfiguration:
-  batchSize: 100
+  batchSize: 50000
 
 monDeDuperConfiguration:
   dedupeRunFrequencySeconds: 30
@@ -74,7 +74,7 @@ logging:
 
   # The default level of all loggers. Can be OFF, ERROR, WARN, INFO,
   # DEBUG, TRACE, or ALL.
-  level: DEBUG
+  level: INFO
 
   # Logger-specific levels.
   loggers:

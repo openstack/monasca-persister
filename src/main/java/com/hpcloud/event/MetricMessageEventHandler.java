@@ -6,12 +6,16 @@ import com.hpcloud.message.MetricMessage;
 import com.hpcloud.repository.VerticaMetricRepository;
 import com.lmax.disruptor.EventHandler;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
 public class MetricMessageEventHandler implements EventHandler<MetricMessageEvent> {
+
+    private static final Logger logger = LoggerFactory.getLogger(MetricMessageEventHandler.class);
 
     private final int ordinal;
     private final int numProcessors;
@@ -40,13 +44,13 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
     @Override
     public void onEvent(MetricMessageEvent metricMessageEvent, long sequence, boolean b) throws Exception {
 
-        System.out.println("Sequence number: " + sequence +
-                " Ordinal: " + ordinal +
-                " Event: " + metricMessageEvent.getMetricMessage());
-
         if (((sequence / batchSize) % this.numProcessors) != this.ordinal) {
             return;
         }
+
+        logger.info("Sequence number: " + sequence +
+                " Ordinal: " + ordinal +
+                " Event: " + metricMessageEvent.getMetricMessage());
 
         MetricMessage metricMessage = metricMessageEvent.getMetricMessage();
 
