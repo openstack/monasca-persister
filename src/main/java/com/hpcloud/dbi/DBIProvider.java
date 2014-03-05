@@ -1,4 +1,4 @@
-package com.hpcloud;
+package com.hpcloud.dbi;
 
 import com.google.inject.ProvisionException;
 import com.hpcloud.configuration.MonPersisterConfiguration;

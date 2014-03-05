@@ -1,4 +1,4 @@
-package com.hpcloud;
+package com.hpcloud.dedupe;
 
 import com.google.inject.Inject;
 import com.hpcloud.configuration.MonPersisterConfiguration;

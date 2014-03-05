@@ -8,6 +8,8 @@ import com.hpcloud.configuration.MonPersisterConfiguration;
 import com.hpcloud.consumer.KafkaConsumerRunnableBasic;
 import com.hpcloud.consumer.KafkaConsumerRunnableBasicFactory;
 import com.hpcloud.consumer.MonConsumer;
+import com.hpcloud.dbi.DBIProvider;
+import com.hpcloud.dedupe.MonDeDuper;
 import com.hpcloud.disruptor.DisruptorExceptionHandler;
 import com.hpcloud.disruptor.DisruptorProvider;
 import com.hpcloud.event.MetricMessageEventHandler;

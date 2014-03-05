@@ -4,6 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.hpcloud.configuration.MonPersisterConfiguration;
 import com.hpcloud.consumer.MonConsumer;
+import com.hpcloud.dedupe.MonDeDuper;
 import com.hpcloud.healthcheck.SimpleHealthCheck;
 import com.hpcloud.resource.Resource;
 import com.yammer.dropwizard.Service;

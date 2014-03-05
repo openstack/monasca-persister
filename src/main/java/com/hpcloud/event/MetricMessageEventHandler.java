@@ -17,6 +17,8 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
     private final int numProcessors;
     private final int batchSize;
 
+    private final SimpleDateFormat simpleDateFormat;
+
     VerticaMetricRepository verticaMetricRepository;
 
     @Inject
@@ -29,6 +31,9 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
         this.ordinal = ordinal;
         this.numProcessors = numProcessors;
         this.batchSize = batchSize;
+
+        simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        simpleDateFormat.setTimeZone(TimeZone.getTimeZone("GMT-0"));
 
     }
 
@@ -54,9 +59,6 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
         }
 
         byte[] sha1HashByteArry = DigestUtils.sha(stringToHash.getBytes());
-
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        simpleDateFormat.setTimeZone(TimeZone.getTimeZone("GMT-0"));
 
         if (metricMessage.getValue() != null && metricMessage.getTimeStamp() != null) {
             String timeStamp = simpleDateFormat.format(new Date(Long.parseLong(metricMessage.getTimeStamp()) * 1000));
