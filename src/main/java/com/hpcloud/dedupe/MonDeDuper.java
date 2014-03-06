@@ -125,6 +125,8 @@ public class MonDeDuper implements Managed {
 
                 } catch (InterruptedException e) {
                     logger.warn("Failed to wait for " + seconds + " between deduping", e);
+                } catch (Exception e) {
+                    logger.error("Failed to dedupe", e);
                 }
 
             }
