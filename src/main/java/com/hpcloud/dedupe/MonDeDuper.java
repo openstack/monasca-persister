@@ -97,6 +97,8 @@ public class MonDeDuper implements Managed {
                     handle.begin();
 
                     startTime = System.currentTimeMillis();
+                    logger.debug("Executing: " + DELETE_STAGING_DEFS);
+                    handle.execute(DELETE_STAGING_DEFS);
                     logger.debug("Executing: " + DEDUPE_STAGING_DEFS);
                     handle.execute(DEDUPE_STAGING_DEFS);
                     logger.debug("Executing: " + DELETE_STAGING_DEFS);
@@ -111,6 +113,8 @@ public class MonDeDuper implements Managed {
                     handle.begin();
 
                     startTime = System.currentTimeMillis();
+                    logger.debug("Executing: " + DELETE_STAGING_DIMS);
+                    handle.execute(DELETE_STAGING_DIMS);
                     logger.debug("Executing: " + DEDEUP_STAGING_DIMS);
                     handle.execute(DEDEUP_STAGING_DIMS);
                     logger.debug("Executing: " + DELETE_STAGING_DIMS);
