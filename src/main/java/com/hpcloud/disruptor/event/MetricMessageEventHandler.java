@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -64,11 +65,13 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
 
         logger.debug("Sequence number: " + sequence +
                 " Ordinal: " + ordinal +
-                " Event: " + metricMessageEvent.getMetricMessage());
+                " Event: " + metricMessageEvent.getMetricEnvelope());
 
-        MetricMessage metricMessage = metricMessageEvent.getMetricMessage();
+        MetricMessage metricMessage = metricMessageEvent.getMetricEnvelope().metric;
+        Map<String, Object> meta = metricMessageEvent.getMetricEnvelope().meta;
+        String tenantId = (String) meta.get("tenantId");
 
-        String stringToHash = metricMessage.getName() + metricMessage.getRegion() + metricMessage.getTenant();
+        String stringToHash = metricMessage.getName() + metricMessage.getRegion();
         if (metricMessage.getDimensions() != null) {
             for (String name : metricMessage.getDimensions().keySet()) {
                 String val = metricMessage.getDimensions().get(name);
@@ -81,12 +84,12 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
         if (metricMessage.getValue() != null && metricMessage.getTimeStamp() != null) {
             String timeStamp = simpleDateFormat.format(new Date(Long.parseLong(metricMessage.getTimeStamp()) * 1000));
             Double value = metricMessage.getValue();
-            verticaMetricRepository.addToBatchMetrics(sha1HashByteArry, timeStamp, metricMessage.getValue());
+            verticaMetricRepository.addToBatchMetrics(sha1HashByteArry, timeStamp, value);
             metricCounter.inc();
 
         }
-        if (metricMessage.getTimeValues() != null) {
-            for (Double[] timeValuePairs : metricMessage.getTimeValues()) {
+        if (metricMessage.getTime_values() != null) {
+            for (Double[] timeValuePairs : metricMessage.getTime_values()) {
                 String timeStamp = simpleDateFormat.format(new Date((long) (timeValuePairs[0] * 1000)));
                 Double value = timeValuePairs[1];
                 verticaMetricRepository.addToBatchMetrics(sha1HashByteArry, timeStamp, value);
@@ -95,7 +98,7 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
             }
         }
 
-        verticaMetricRepository.addToBatchStagingDefinitions(sha1HashByteArry, metricMessage.getName(), metricMessage.getTenant(), metricMessage.getRegion());
+        verticaMetricRepository.addToBatchStagingDefinitions(sha1HashByteArry, metricMessage.getName(), tenantId, metricMessage.getRegion());
         definitionCounter.inc();
 
         if (metricMessage.getDimensions() != null) {

@@ -11,33 +11,29 @@ public class MetricMessage {
     String name = null;
 
     @JsonProperty
-    String tenant = null;
-
-    @JsonProperty
-    String region = null;
+    String region = "";
 
     @JsonProperty
     Map<String, String> dimensions = null;
 
     @JsonProperty
-    String timeStamp = null;
+    String timestamp = null;
 
     @JsonProperty
     Double value = null;
 
     @JsonProperty
-    Double[][] timeValues = null;
+    Double[][] time_values = null;
 
     @Override
     public String toString() {
         return "MetricMessage{" +
                 "name='" + name + '\'' +
-                ", tenant='" + tenant + '\'' +
                 ", region='" + region + '\'' +
                 ", dimensions=" + dimensions +
-                ", timeStamp='" + timeStamp + '\'' +
+                ", timeStamp='" + timestamp + '\'' +
                 ", value=" + value +
-                ", timeValues=" + Arrays.toString(timeValues) +
+                ", time_values=" + Arrays.toString(time_values) +
                 '}';
     }
 
@@ -47,14 +43,6 @@ public class MetricMessage {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getTenant() {
-        return tenant;
-    }
-
-    public void setTenant(String tenant) {
-        this.tenant = tenant;
     }
 
     public String getRegion() {
@@ -74,11 +62,11 @@ public class MetricMessage {
     }
 
     public String getTimeStamp() {
-        return timeStamp;
+        return timestamp;
     }
 
     public void setTimeStamp(String timeStamp) {
-        this.timeStamp = timeStamp;
+        this.timestamp = timeStamp;
     }
 
     public Double getValue() {
@@ -89,11 +77,11 @@ public class MetricMessage {
         this.value = value;
     }
 
-    public Double[][] getTimeValues() {
-        return timeValues;
+    public Double[][] getTime_values() {
+        return time_values;
     }
 
-    public void setTimeValues(Double[][] timeValues) {
-        this.timeValues = timeValues;
+    public void setTime_values(Double[][] time_values) {
+        this.time_values = time_values;
     }
 }

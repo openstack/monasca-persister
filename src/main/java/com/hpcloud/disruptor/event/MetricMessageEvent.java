@@ -1,17 +1,17 @@
 package com.hpcloud.disruptor.event;
 
-import com.hpcloud.message.MetricMessage;
+import com.hpcloud.message.MetricEnvelope;
 
 public class MetricMessageEvent {
 
-    public MetricMessage getMetricMessage() {
-        return metricMessage;
+    public MetricEnvelope getMetricEnvelope() {
+        return metricEnvelope;
     }
 
-    public void setMetricMessage(MetricMessage metricMessage) {
-        this.metricMessage = metricMessage;
+    public void setMetricEnvelope(MetricEnvelope metricEnvelope) {
+        this.metricEnvelope = metricEnvelope;
     }
 
-    public MetricMessage metricMessage;
+    public MetricEnvelope metricEnvelope;
 
 }

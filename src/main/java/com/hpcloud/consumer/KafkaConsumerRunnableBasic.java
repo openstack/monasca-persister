@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.hpcloud.disruptor.event.MetricMessageEvent;
-import com.hpcloud.message.MetricMessage;
+import com.hpcloud.message.MetricEnvelope;
 import com.lmax.disruptor.EventTranslator;
 import com.lmax.disruptor.dsl.Disruptor;
 import kafka.consumer.ConsumerIterator;
@@ -47,15 +47,16 @@ public class KafkaConsumerRunnableBasic implements Runnable {
             logger.debug("Thread " + threadNumber + ": " + s);
 
             try {
-                final MetricMessage[] metricMessages = objectMapper.readValue(s, MetricMessage[].class);
+                final MetricEnvelope[] metricEnvelopes = objectMapper.readValue(s, MetricEnvelope[].class);
 
-                for (final MetricMessage metricMessage : metricMessages) {
-                    logger.debug(metricMessage.toString());
+                for (final MetricEnvelope metricEnvelope : metricEnvelopes) {
+
+                    logger.debug(metricEnvelope.toString());
 
                     disruptor.publishEvent(new EventTranslator<MetricMessageEvent>() {
                         @Override
                         public void translateTo(MetricMessageEvent event, long sequence) {
-                            event.setMetricMessage(metricMessage);
+                            event.setMetricEnvelope(metricEnvelope);
 
                         }
 
