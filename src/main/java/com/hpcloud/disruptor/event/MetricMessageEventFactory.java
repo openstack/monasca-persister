@@ -1,4 +1,4 @@
-package com.hpcloud.event;
+package com.hpcloud.disruptor.event;
 
 import com.lmax.disruptor.EventFactory;
 

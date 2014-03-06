@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import com.hpcloud.event.MetricMessageEvent;
+import com.hpcloud.disruptor.event.MetricMessageEvent;
 import com.hpcloud.message.MetricMessage;
 import com.lmax.disruptor.EventTranslator;
 import com.lmax.disruptor.dsl.Disruptor;

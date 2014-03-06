@@ -82,7 +82,7 @@ logging:
     # Sets the level for 'com.example.app' to DEBUG.
     com.example.app: DEBUG
     com.hpcloud.dedupe: DEBUG
-    com.hpcloud.event: DEBUG
+    com.hpcloud.disruptor.event: DEBUG
 
   # Settings for logging to stdout.
   console:

@@ -3,6 +3,9 @@ package com.hpcloud.dedupe;
 import com.google.inject.Inject;
 import com.hpcloud.configuration.MonPersisterConfiguration;
 import com.yammer.dropwizard.lifecycle.Managed;
+import com.yammer.metrics.Metrics;
+import com.yammer.metrics.core.Timer;
+import com.yammer.metrics.core.TimerContext;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
 import org.slf4j.Logger;
@@ -17,7 +20,6 @@ public class MonDeDuper implements Managed {
     private final MonPersisterConfiguration configuration;
     private final DBI dbi;
     private final DeDuperRunnable deDuperRunnable;
-    private Thread deduperThread;
 
     @Inject
     public MonDeDuper(MonPersisterConfiguration configuration,
@@ -46,6 +48,7 @@ public class MonDeDuper implements Managed {
         private final MonPersisterConfiguration configuration;
         private final DBI dbi;
         private final Handle handle;
+        private final Timer dedupeTimer = Metrics.newTimer(this.getClass(), "dedupe-execution-timer");
 
         private static final String DEDUPE_STAGING_DEFS =
                 "insert into MonMetrics.Definitions select distinct * from MonMetrics.StagedDefinitions where metric_definition_id not in (select metric_definition_id from MonMetrics.Definitions)";
@@ -87,8 +90,11 @@ public class MonDeDuper implements Managed {
             for (; ; ) {
                 try {
                     Thread.sleep(seconds * 1000);
-                    handle.begin();
                     logger.debug("Waking up after sleeping " + seconds + " seconds, yawn...");
+
+                    TimerContext context = dedupeTimer.time();
+
+                    handle.begin();
 
                     startTime = System.currentTimeMillis();
                     logger.debug("Executing: " + DEDUPE_STAGING_DEFS);
@@ -98,10 +104,12 @@ public class MonDeDuper implements Managed {
                     logger.debug("Executing: " + PURGE_STAGING_DEFS);
                     handle.execute(PURGE_STAGING_DEFS);
                     handle.commit();
+
                     endTime = System.currentTimeMillis();
                     logger.debug("Deduping metric defintitions took " + (endTime - startTime) / 1000 + " seconds");
 
                     handle.begin();
+
                     startTime = System.currentTimeMillis();
                     logger.debug("Executing: " + DEDEUP_STAGING_DIMS);
                     handle.execute(DEDEUP_STAGING_DIMS);
@@ -112,6 +120,8 @@ public class MonDeDuper implements Managed {
                     handle.commit();
                     endTime = System.currentTimeMillis();
                     logger.debug("Deduping metric dimensions took " + (endTime - startTime) / 1000 + " seconds");
+
+                    context.stop();
 
                 } catch (InterruptedException e) {
                     logger.warn("Failed to wait for " + seconds + " between deduping", e);

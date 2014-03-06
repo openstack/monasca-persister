@@ -1,10 +1,15 @@
-package com.hpcloud.event;
+package com.hpcloud.disruptor.event;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.hpcloud.message.MetricMessage;
 import com.hpcloud.repository.VerticaMetricRepository;
 import com.lmax.disruptor.EventHandler;
+import com.yammer.metrics.Metrics;
+import com.yammer.metrics.core.Counter;
+import com.yammer.metrics.core.Meter;
+import com.yammer.metrics.core.Timer;
+import com.yammer.metrics.core.TimerContext;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 public class MetricMessageEventHandler implements EventHandler<MetricMessageEvent> {
 
@@ -23,7 +29,13 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
 
     private final SimpleDateFormat simpleDateFormat;
 
-    VerticaMetricRepository verticaMetricRepository;
+    private final VerticaMetricRepository verticaMetricRepository;
+    private final Counter metricCounter = Metrics.newCounter(this.getClass(), "metrics-added-to-batch-counter");
+    private final Counter definitionCounter = Metrics.newCounter(this.getClass(), "metric-definitions-added-to-batch-counter");
+    private final Counter dimensionCounter = Metrics.newCounter(this.getClass(), "metric-dimensions-added-to-batch-counter");
+    private final Meter metricMessageMeter = Metrics.newMeter(this.getClass(), "Metric", "metrics-messages-processed-meter", TimeUnit.SECONDS);
+    private final Meter commitMeter = Metrics.newMeter(this.getClass(), "Metric", "commits-executed-meter", TimeUnit.SECONDS);
+    private final Timer commitTimer = Metrics.newTimer(this.getClass(), "commits-executed-timer");
 
     @Inject
     public MetricMessageEventHandler(VerticaMetricRepository verticaMetricRepository,
@@ -48,6 +60,8 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
             return;
         }
 
+        metricMessageMeter.mark();
+
         logger.debug("Sequence number: " + sequence +
                 " Ordinal: " + ordinal +
                 " Event: " + metricMessageEvent.getMetricMessage());
@@ -68,6 +82,7 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
             String timeStamp = simpleDateFormat.format(new Date(Long.parseLong(metricMessage.getTimeStamp()) * 1000));
             Double value = metricMessage.getValue();
             verticaMetricRepository.addToBatchMetrics(sha1HashByteArry, timeStamp, metricMessage.getValue());
+            metricCounter.inc();
 
         }
         if (metricMessage.getTimeValues() != null) {
@@ -75,20 +90,26 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
                 String timeStamp = simpleDateFormat.format(new Date((long) (timeValuePairs[0] * 1000)));
                 Double value = timeValuePairs[1];
                 verticaMetricRepository.addToBatchMetrics(sha1HashByteArry, timeStamp, value);
+                metricCounter.inc();
 
             }
         }
 
         verticaMetricRepository.addToBatchStagingDefinitions(sha1HashByteArry, metricMessage.getName(), metricMessage.getTenant(), metricMessage.getRegion());
+        definitionCounter.inc();
 
         if (metricMessage.getDimensions() != null) {
             for (String name : metricMessage.getDimensions().keySet()) {
                 String value = metricMessage.getDimensions().get(name);
                 verticaMetricRepository.addToBatchStagingDimensions(sha1HashByteArry, name, value);
+                dimensionCounter.inc();
             }
         }
         if (sequence % batchSize == (batchSize - 1)) {
+            TimerContext context = commitTimer.time();
             verticaMetricRepository.commitBatch();
+            context.stop();
+            commitMeter.mark();
         }
 
 
