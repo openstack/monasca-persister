@@ -28,10 +28,10 @@ kafkaConfiguration:
 
 disruptorConfiguration:
   bufferSize:  1048576
-  numProcessors: 1
+  numProcessors: 2
 
 verticaOutputProcessorConfiguration:
-  batchSize: 2
+  batchSize: 50000
 
 monDeDuperConfiguration:
   dedupeRunFrequencySeconds: 30
@@ -81,8 +81,7 @@ logging:
 
     # Sets the level for 'com.example.app' to DEBUG.
     com.example.app: DEBUG
-    com.hpcloud.dedupe: DEBUG
-    com.hpcloud.disruptor.event: DEBUG
+    com.hpcloud: DEBUG
 
   # Settings for logging to stdout.
   console:

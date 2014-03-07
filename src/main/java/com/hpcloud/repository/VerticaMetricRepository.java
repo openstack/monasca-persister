@@ -21,6 +21,19 @@ public class VerticaMetricRepository extends VerticaRepository {
     private static final String SQL_INSERT_INTO_STAGING_DIMENSIONS =
             "insert into MonMetrics.stagedDimensions values (:metric_definition_id, :name, :value)";
 
+    private static final String defs = "(" +
+            "   metric_definition_id BINARY(20) NOT NULL," +
+            "   name VARCHAR NOT NULL," +
+            "   tenant_id VARCHAR(14) NOT NULL," +
+            "   region VARCHAR" +
+            ")";
+
+    private static final String dims = "(" +
+            "    metric_definition_id BINARY(20)," +
+            "    name VARCHAR NOT NULL," +
+            "    value VARCHAR NOT NULL" +
+            ")";
+
     private PreparedBatch metricsBatch;
     private PreparedBatch stagedDefinitionsBatch;
     private PreparedBatch stagedDimensionsBatch;
@@ -28,9 +41,19 @@ public class VerticaMetricRepository extends VerticaRepository {
     @Inject
     public VerticaMetricRepository(DBI dbi) throws NoSuchAlgorithmException, SQLException {
         super(dbi);
+        logger.debug("Instantiating: " + this);
+
+        String sDefs = this.toString().replaceAll(".", "_").replaceAll("@", "_") + "staged_definitions";
+        String sDims = this.toString().replaceAll(".", "_").replaceAll("@", "_") + "staged_dimensions";
+        handle.execute("drop table if exists" + sDefs + " cascade");
+        handle.execute("drop table if exists" + sDims + " cascade");
+
+        handle.execute("create local temp table " + sDefs + " " + defs + " on commit preserve rows");
+        handle.execute("create local temp table " + sDims + " " + dims + " on commit preserve rows");
+
         handle.getConnection().setAutoCommit(false);
         metricsBatch = handle.prepareBatch(SQL_INSERT_INTO_METRICS);
-        stagedDefinitionsBatch = handle.prepareBatch(SQL_INSERT_INTO_STAGING_DEFINITIONS);
+        stagedDefinitionsBatch = handle.prepareBatch("insert into " + sDefs + " values (:metric_definition_id, :name, :tenant_id, ");
         stagedDimensionsBatch = handle.prepareBatch(SQL_INSERT_INTO_STAGING_DIMENSIONS);
         handle.begin();
     }
