@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 public class MetricMessageEventHandler implements EventHandler<MetricMessageEvent> {
 
     private static final Logger logger = LoggerFactory.getLogger(MetricMessageEventHandler.class);
+    private static final String TENANT_ID = "tenantId";
 
     private final int ordinal;
     private final int numProcessors;
@@ -69,9 +70,16 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
 
         MetricMessage metricMessage = metricMessageEvent.getMetricEnvelope().metric;
         Map<String, Object> meta = metricMessageEvent.getMetricEnvelope().meta;
-        String tenantId = (String) meta.get("tenantId");
+        String tenantId = "";
+        if (!meta.containsKey(TENANT_ID)) {
+            logger.warn("Failed to find 'tenantId' in message envelope meta data. Metric message may be mal-formed. Setting 'tenantId' to empty string.");
+            logger.warn(metricMessage.toString());
+            logger.warn("meta" + meta.toString());
+        } else {
+            tenantId = (String) meta.get(TENANT_ID);
+        }
 
-        String stringToHash = metricMessage.getName() + metricMessage.getRegion();
+        String stringToHash = metricMessage.getName() + tenantId + metricMessage.getRegion();
         if (metricMessage.getDimensions() != null) {
             for (String name : metricMessage.getDimensions().keySet()) {
                 String val = metricMessage.getDimensions().get(name);
