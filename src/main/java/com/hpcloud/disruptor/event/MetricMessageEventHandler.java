@@ -81,8 +81,8 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
 
         byte[] sha1HashByteArry = DigestUtils.sha(stringToHash.getBytes());
 
-        if (metricMessage.getValue() != null && metricMessage.getTimeStamp() != null) {
-            String timeStamp = simpleDateFormat.format(new Date(Long.parseLong(metricMessage.getTimeStamp()) * 1000));
+        if (metricMessage.getValue() != null && metricMessage.getTimestamp() != null) {
+            String timeStamp = simpleDateFormat.format(new Date(Long.parseLong(metricMessage.getTimestamp()) * 1000));
             Double value = metricMessage.getValue();
             verticaMetricRepository.addToBatchMetrics(sha1HashByteArry, timeStamp, value);
             metricCounter.inc();

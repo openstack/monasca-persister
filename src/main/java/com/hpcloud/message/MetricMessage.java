@@ -1,28 +1,20 @@
 package com.hpcloud.message;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.Arrays;
 import java.util.Map;
 
 public class MetricMessage {
 
-    @JsonProperty
     String name = null;
 
-    @JsonProperty
     String region = "";
 
-    @JsonProperty
     Map<String, String> dimensions = null;
 
-    @JsonProperty
     String timestamp = null;
 
-    @JsonProperty
     Double value = null;
 
-    @JsonProperty
     Double[][] time_values = null;
 
     @Override
@@ -61,12 +53,12 @@ public class MetricMessage {
         this.dimensions = dimensions;
     }
 
-    public String getTimeStamp() {
+    public String getTimestamp() {
         return timestamp;
     }
 
-    public void setTimeStamp(String timeStamp) {
-        this.timestamp = timeStamp;
+    public void setTimestamp(String timestamp) {
+        this.timestamp = timestamp;
     }
 
     public Double getValue() {
