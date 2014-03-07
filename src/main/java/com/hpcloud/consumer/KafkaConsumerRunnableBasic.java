@@ -66,6 +66,8 @@ public class KafkaConsumerRunnableBasic implements Runnable {
             } catch (IOException e) {
 
                 logger.error("Failed to deserialize JSON message: " + s, e);
+            } catch (Exception e) {
+                logger.error("Failed to deserialize JSON message and place on disruptor queue: " + s, e);
             }
 
         }
