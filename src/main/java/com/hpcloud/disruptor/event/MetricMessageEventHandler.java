@@ -124,7 +124,7 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
         }
         if (sequence % batchSize == (batchSize - 1)) {
             TimerContext context = commitTimer.time();
-            verticaMetricRepository.commitBatch();
+            verticaMetricRepository.flush();
             context.stop();
             commitMeter.mark();
         }

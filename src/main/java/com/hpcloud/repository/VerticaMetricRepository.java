@@ -104,7 +104,7 @@ public class VerticaMetricRepository extends VerticaRepository {
 
     }
 
-    public void commitBatch() {
+    private void commitBatch() {
         long startTime = System.currentTimeMillis();
         metricsBatch.execute();
         stagedDefinitionsBatch.execute();
