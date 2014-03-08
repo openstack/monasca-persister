@@ -4,7 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.hpcloud.configuration.MonPersisterConfiguration;
 import com.hpcloud.consumer.MonConsumer;
-import com.hpcloud.dedupe.MonDeDuper;
+import com.hpcloud.dedupe.MonDeDuperHeartbeat;
 import com.hpcloud.healthcheck.SimpleHealthCheck;
 import com.hpcloud.resource.Resource;
 import com.yammer.dropwizard.Service;
@@ -35,8 +35,8 @@ public class MonPersisterService extends Service<MonPersisterConfiguration> {
         MonConsumer monConsumer = injector.getInstance(MonConsumer.class);
         environment.manage(monConsumer);
 
-        MonDeDuper monDeDuper = injector.getInstance(MonDeDuper.class);
-        environment.manage(monDeDuper);
+        MonDeDuperHeartbeat monDeDuperHeartbeat = injector.getInstance(MonDeDuperHeartbeat.class);
+        environment.manage(monDeDuperHeartbeat);
     }
 
 }

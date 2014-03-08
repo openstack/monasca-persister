@@ -9,7 +9,7 @@ import com.hpcloud.consumer.KafkaConsumerRunnableBasic;
 import com.hpcloud.consumer.KafkaConsumerRunnableBasicFactory;
 import com.hpcloud.consumer.MonConsumer;
 import com.hpcloud.dbi.DBIProvider;
-import com.hpcloud.dedupe.MonDeDuper;
+import com.hpcloud.dedupe.MonDeDuperHeartbeat;
 import com.hpcloud.disruptor.DisruptorExceptionHandler;
 import com.hpcloud.disruptor.DisruptorProvider;
 import com.hpcloud.disruptor.event.MetricMessageEventHandler;
@@ -53,7 +53,7 @@ public class MonPersisterModule extends AbstractModule {
         bind(DBI.class).toProvider(DBIProvider.class).in(Scopes.SINGLETON);
 
         bind(MonConsumer.class);
-        bind(MonDeDuper.class);
+        bind(MonDeDuperHeartbeat.class);
 
     }
 }

@@ -31,7 +31,7 @@ disruptorConfiguration:
   numProcessors: 2
 
 verticaOutputProcessorConfiguration:
-  batchSize: 50000
+  batchSize: 25000
 
 monDeDuperConfiguration:
   dedupeRunFrequencySeconds: 30
@@ -81,7 +81,8 @@ logging:
 
     # Sets the level for 'com.example.app' to DEBUG.
     com.example.app: DEBUG
-    com.hpcloud: DEBUG
+    com.hpcloud.repository: DEBUG
+    com.hpcloud.disruptor.event: INFO
 
   # Settings for logging to stdout.
   console:

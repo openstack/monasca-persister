@@ -31,7 +31,7 @@ disruptorConfiguration:
   numProcessors: 2
 
 verticaOutputProcessorConfiguration:
-  batchSize: 10
+  batchSize: 2
 
 monDeDuperConfiguration:
   dedupeRunFrequencySeconds: 30

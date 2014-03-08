@@ -58,6 +58,12 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
     @Override
     public void onEvent(MetricMessageEvent metricMessageEvent, long sequence, boolean b) throws Exception {
 
+        if (metricMessageEvent.getMetricEnvelope() == null) {
+            logger.debug("Received heartbeat message. Flushing staging tables.");
+            verticaMetricRepository.flush();
+            return;
+        }
+
         if (((sequence / batchSize) % this.numProcessors) != this.ordinal) {
             return;
         }
@@ -66,7 +72,7 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
 
         logger.debug("Sequence number: " + sequence +
                 " Ordinal: " + ordinal +
-                " Event: " + metricMessageEvent.getMetricEnvelope());
+                " Event: " + metricMessageEvent.getMetricEnvelope().metric);
 
         MetricMessage metricMessage = metricMessageEvent.getMetricEnvelope().metric;
         Map<String, Object> meta = metricMessageEvent.getMetricEnvelope().meta;
