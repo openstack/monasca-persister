@@ -28,7 +28,7 @@ kafkaConfiguration:
 
 disruptorConfiguration:
   bufferSize:  1048576
-  numProcessors: 2
+  numProcessors: 1
 
 verticaOutputProcessorConfiguration:
   batchSize: 25000
@@ -41,8 +41,8 @@ databaseConfiguration:
 #  url: jdbc:vertica://mon-aw1rdd1-vertica0001.rndd.aw1.hpcloud.net:5433/som
   url: jdbc:vertica://15.185.94.245:5433/som
 #  user: persister
-#  user: mon_persister
-  user: dbadmin
+  user: mon_persister
+#  user: dbadmin
   password: password
   properties:
       ssl: false
@@ -81,8 +81,8 @@ logging:
 
     # Sets the level for 'com.example.app' to DEBUG.
     com.example.app: DEBUG
+    com.hpcloud: debug
     com.hpcloud.repository: DEBUG
-    com.hpcloud.disruptor.event: INFO
 
   # Settings for logging to stdout.
   console:

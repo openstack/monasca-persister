@@ -4,11 +4,6 @@ import com.google.common.base.Preconditions;
 
 import java.util.Map;
 
-/**
- * A metric envelope.
- *
- * @author Jonathan Halterman
- */
 public class MetricEnvelope {
     public MetricMessage metric;
     public Map<String, Object> meta;
@@ -26,5 +21,13 @@ public class MetricEnvelope {
         Preconditions.checkNotNull(meta, "meta");
         this.metric = metric;
         this.meta = meta;
+    }
+
+    @Override
+    public String toString() {
+        return "MetricEnvelope{" +
+                "metric=" + metric +
+                ", meta=" + meta +
+                '}';
     }
 }

@@ -1,7 +1,6 @@
 package com.hpcloud.dedupe;
 
 import com.google.inject.Inject;
-import com.hpcloud.configuration.MonPersisterConfiguration;
 import com.hpcloud.disruptor.event.MetricMessageEvent;
 import com.lmax.disruptor.EventTranslator;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -13,16 +12,13 @@ public class MonDeDuperHeartbeat implements Managed {
 
     private static Logger logger = LoggerFactory.getLogger(MonDeDuperHeartbeat.class);
 
-    private final MonPersisterConfiguration configuration;
     private final Disruptor disruptor;
     private final DeDuperRunnable deDuperRunnable;
 
     @Inject
-    public MonDeDuperHeartbeat(MonPersisterConfiguration configuration,
-                               Disruptor disruptor) {
-        this.configuration = configuration;
+    public MonDeDuperHeartbeat(Disruptor disruptor) {
         this.disruptor = disruptor;
-        this.deDuperRunnable = new DeDuperRunnable(configuration, disruptor);
+        this.deDuperRunnable = new DeDuperRunnable(disruptor);
 
     }
 
@@ -41,24 +37,22 @@ public class MonDeDuperHeartbeat implements Managed {
 
         private static Logger logger = LoggerFactory.getLogger(DeDuperRunnable.class);
 
-        private final MonPersisterConfiguration configuration;
         private final Disruptor disruptor;
 
-        private DeDuperRunnable(MonPersisterConfiguration configuration, Disruptor disruptor) {
-            this.configuration = configuration;
+        private DeDuperRunnable(Disruptor disruptor) {
             this.disruptor = disruptor;
         }
 
         @Override
         public void run() {
-            int seconds = configuration.getMonDeDuperConfiguration().getDedupeRunFrequencySeconds();
             for (; ; ) {
                 try {
-                    Thread.sleep(seconds * 1000);
-                    logger.debug("Waking up after sleeping " + seconds + " seconds, yawn...");
+                    // Send a heartbeat every second.
+                    Thread.sleep(1000);
+                    logger.debug("Waking up after sleeping 1 seconds, yawn...");
 
                     // Send heartbeat
-                    logger.debug("Sending dedupe heartbeat message");
+                    logger.debug("Sending heartbeat message");
                     disruptor.publishEvent(new EventTranslator<MetricMessageEvent>() {
 
                         @Override
@@ -69,7 +63,7 @@ public class MonDeDuperHeartbeat implements Managed {
                     });
 
                 } catch (Exception e) {
-                    logger.error("Failed to send dedupe heartbeat", e);
+                    logger.error("Failed to send heartbeat", e);
                 }
 
             }

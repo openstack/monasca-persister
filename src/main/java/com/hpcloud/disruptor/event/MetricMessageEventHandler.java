@@ -2,6 +2,7 @@ package com.hpcloud.disruptor.event;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import com.hpcloud.configuration.MonPersisterConfiguration;
 import com.hpcloud.message.MetricMessage;
 import com.hpcloud.repository.VerticaMetricRepository;
 import com.lmax.disruptor.EventHandler;
@@ -31,21 +32,32 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
 
     private final SimpleDateFormat simpleDateFormat;
 
+    private long millisSinceLastFlush = System.currentTimeMillis();
+    private final long millisBetweenFlushes;
+    private final int secondsBetweenFlushes;
+
     private final VerticaMetricRepository verticaMetricRepository;
+    private final MonPersisterConfiguration configuration;
+
     private final Counter metricCounter = Metrics.newCounter(this.getClass(), "metrics-added-to-batch-counter");
     private final Counter definitionCounter = Metrics.newCounter(this.getClass(), "metric-definitions-added-to-batch-counter");
     private final Counter dimensionCounter = Metrics.newCounter(this.getClass(), "metric-dimensions-added-to-batch-counter");
     private final Meter metricMessageMeter = Metrics.newMeter(this.getClass(), "Metric", "metrics-messages-processed-meter", TimeUnit.SECONDS);
     private final Meter commitMeter = Metrics.newMeter(this.getClass(), "Metric", "commits-executed-meter", TimeUnit.SECONDS);
-    private final Timer commitTimer = Metrics.newTimer(this.getClass(), "commits-executed-timer");
+    private final Timer commitTimer = Metrics.newTimer(this.getClass(), "total-commit-and-flush-timer");
 
     @Inject
     public MetricMessageEventHandler(VerticaMetricRepository verticaMetricRepository,
+                                     MonPersisterConfiguration configuration,
                                      @Assisted("ordinal") int ordinal,
                                      @Assisted("numProcessors") int numProcessors,
                                      @Assisted("batchSize") int batchSize) {
 
         this.verticaMetricRepository = verticaMetricRepository;
+        this.configuration = configuration;
+        this.secondsBetweenFlushes = configuration.getMonDeDuperConfiguration().getDedupeRunFrequencySeconds();
+        this.millisBetweenFlushes = secondsBetweenFlushes * 1000;
+
         this.ordinal = ordinal;
         this.numProcessors = numProcessors;
         this.batchSize = batchSize;
@@ -53,14 +65,20 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
         simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         simpleDateFormat.setTimeZone(TimeZone.getTimeZone("GMT-0"));
 
+
     }
 
     @Override
     public void onEvent(MetricMessageEvent metricMessageEvent, long sequence, boolean b) throws Exception {
 
         if (metricMessageEvent.getMetricEnvelope() == null) {
-            logger.debug("Received heartbeat message. Flushing staging tables.");
-            verticaMetricRepository.flush();
+            logger.debug("Received heartbeat message. Checking last flush time.");
+            if (millisSinceLastFlush + millisBetweenFlushes < System.currentTimeMillis()) {
+                logger.debug("It's been more than " + secondsBetweenFlushes + " seconds since last flush. Flushing staging tables now...");
+                flush();
+            } else {
+                logger.debug("It has not been more than " + secondsBetweenFlushes + " seeconds since last flush. No need to perform flush at this time.");
+            }
             return;
         }
 
@@ -124,11 +142,15 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
         }
         if (sequence % batchSize == (batchSize - 1)) {
             TimerContext context = commitTimer.time();
-            verticaMetricRepository.flush();
+            flush();
             context.stop();
             commitMeter.mark();
         }
+    }
 
-
+    private void flush() {
+        verticaMetricRepository.flush();
+        millisSinceLastFlush = System.currentTimeMillis();
     }
 }
+

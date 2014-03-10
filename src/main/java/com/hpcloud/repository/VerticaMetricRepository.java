@@ -1,5 +1,8 @@
 package com.hpcloud.repository;
 
+import com.yammer.metrics.Metrics;
+import com.yammer.metrics.core.Timer;
+import com.yammer.metrics.core.TimerContext;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.PreparedBatch;
 import org.slf4j.Logger;
@@ -15,12 +18,6 @@ public class VerticaMetricRepository extends VerticaRepository {
 
     private static final String SQL_INSERT_INTO_METRICS =
             "insert into MonMetrics.metrics (metric_definition_id, time_stamp, value) values (:metric_definition_id, :time_stamp, :value)";
-
-    private static final String SQL_INSERT_INTO_STAGING_DEFINITIONS =
-            "insert into MonMetrics.stagedDefinitions values (:metric_definition_id, :name, :tenant_id," +
-                    ":region)";
-    private static final String SQL_INSERT_INTO_STAGING_DIMENSIONS =
-            "insert into MonMetrics.stagedDimensions values (:metric_definition_id, :name, :value)";
 
     private static final String defs = "(" +
             "   metric_definition_id BINARY(20) NOT NULL," +
@@ -45,6 +42,9 @@ public class VerticaMetricRepository extends VerticaRepository {
 
     private final String dsDefs;
     private final String dsDims;
+
+    private final Timer commitTimer = Metrics.newTimer(this.getClass(), "commits-timer");
+    private final Timer flushTimer = Metrics.newTimer(this.getClass(), "staging-tables-flushed-timer");
 
     @Inject
     public VerticaMetricRepository(DBI dbi) throws NoSuchAlgorithmException, SQLException {
@@ -93,12 +93,14 @@ public class VerticaMetricRepository extends VerticaRepository {
     public void flush() {
         commitBatch();
         long startTime = System.currentTimeMillis();
+        TimerContext context = flushTimer.time();
         handle.execute(dsDefs);
         handle.execute("truncate table " + sDefs);
         handle.execute(dsDims);
         handle.execute("truncate table " + sDims);
         handle.commit();
         handle.begin();
+        context.stop();
         long endTime = System.currentTimeMillis();
         logger.debug("Flushing staging tables took " + (endTime - startTime) / 1000 + " seconds");
 
@@ -106,11 +108,13 @@ public class VerticaMetricRepository extends VerticaRepository {
 
     private void commitBatch() {
         long startTime = System.currentTimeMillis();
+        TimerContext context = commitTimer.time();
         metricsBatch.execute();
         stagedDefinitionsBatch.execute();
         stagedDimensionsBatch.execute();
         handle.commit();
         handle.begin();
+        context.stop();
         long endTime = System.currentTimeMillis();
         logger.debug("Commiting batch took " + (endTime - startTime) / 1000 + " seconds");
     }
