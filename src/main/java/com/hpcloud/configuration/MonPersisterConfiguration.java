@@ -61,4 +61,13 @@ public class MonPersisterConfiguration extends Configuration {
         return monDeDuperConfiguration;
     }
 
+    @Valid
+    @NotNull
+    @JsonProperty
+    private VerticaMetricRepositoryConfiguration verticaMetricRepositoryConfiguration = new VerticaMetricRepositoryConfiguration();
+
+    public VerticaMetricRepositoryConfiguration getVerticaMetricRepositoryConfiguration() {
+        return verticaMetricRepositoryConfiguration;
+    }
+
 }

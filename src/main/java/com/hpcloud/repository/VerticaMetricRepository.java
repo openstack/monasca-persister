@@ -1,5 +1,8 @@
 package com.hpcloud.repository;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.hpcloud.configuration.MonPersisterConfiguration;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.core.Timer;
 import com.yammer.metrics.core.TimerContext;
@@ -11,10 +14,17 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
+import java.util.HashSet;
+import java.util.Set;
 
 public class VerticaMetricRepository extends VerticaRepository {
 
     private static final Logger logger = LoggerFactory.getLogger(VerticaMetricRepository.class);
+
+    private final MonPersisterConfiguration configuration;
+
+    private final Cache<byte[], byte[]> defIdCache;
+    private final Set<byte[]> defIdSet = new HashSet<>();
 
     private static final String SQL_INSERT_INTO_METRICS =
             "insert into MonMetrics.metrics (metric_definition_id, time_stamp, value) values (:metric_definition_id, :time_stamp, :value)";
@@ -47,9 +57,16 @@ public class VerticaMetricRepository extends VerticaRepository {
     private final Timer flushTimer = Metrics.newTimer(this.getClass(), "staging-tables-flushed-timer");
 
     @Inject
-    public VerticaMetricRepository(DBI dbi) throws NoSuchAlgorithmException, SQLException {
+    public VerticaMetricRepository(DBI dbi, MonPersisterConfiguration configuration) throws NoSuchAlgorithmException, SQLException {
         super(dbi);
         logger.debug("Instantiating: " + this);
+
+        this.configuration = configuration;
+
+        defIdCache = CacheBuilder.newBuilder()
+                .maximumSize(configuration.getVerticaMetricRepositoryConfiguration().getMaxCacheSize()).build();
+
+        logger.info("Building temp staging tables...");
 
         this.sDefs = this.toString().replaceAll("\\.", "_").replaceAll("\\@", "_") + "_staged_definitions";
         logger.debug("temp staging definitions table: " + sDefs);
@@ -81,13 +98,19 @@ public class VerticaMetricRepository extends VerticaRepository {
     }
 
     public void addToBatchStagingDefinitions(byte[] defId, String name, String tenantId, String region) {
-        stagedDefinitionsBatch.add().bind(0, defId).bind(1, name).bind(2, tenantId).bind(3, region);
+        if (defIdCache.getIfPresent(defId) == null) {
+            stagedDefinitionsBatch.add().bind(0, defId).bind(1, name).bind(2, tenantId).bind(3, region);
+            defIdSet.add(defId);
+        }
     }
 
     public void addToBatchStagingDimensions(byte[] defId, String name, String value) {
-        stagedDimensionsBatch.add().bind(0, defId)
-                .bind(1, name)
-                .bind(2, value);
+        if (defIdCache.getIfPresent(defId) == null) {
+            stagedDimensionsBatch.add().bind(0, defId)
+                    .bind(1, name)
+                    .bind(2, value);
+            defIdSet.add(defId);
+        }
     }
 
     public void flush() {
@@ -113,9 +136,17 @@ public class VerticaMetricRepository extends VerticaRepository {
         stagedDefinitionsBatch.execute();
         stagedDimensionsBatch.execute();
         handle.commit();
+        updateDefIdCache();
         handle.begin();
         context.stop();
         long endTime = System.currentTimeMillis();
         logger.debug("Commiting batch took " + (endTime - startTime) / 1000 + " seconds");
+    }
+
+    private void updateDefIdCache() {
+        for (byte[] defId : defIdSet) {
+            defIdCache.put(defId, defId);
+        }
+        defIdSet.clear();
     }
 }

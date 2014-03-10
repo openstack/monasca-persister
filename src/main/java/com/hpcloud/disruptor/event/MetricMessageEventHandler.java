@@ -140,6 +140,7 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
                 dimensionCounter.inc();
             }
         }
+
         if (sequence % batchSize == (batchSize - 1)) {
             TimerContext context = commitTimer.time();
             flush();

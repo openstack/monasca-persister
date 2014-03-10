@@ -36,6 +36,9 @@ verticaOutputProcessorConfiguration:
 monDeDuperConfiguration:
   dedupeRunFrequencySeconds: 30
 
+verticaMetricRepositoryConfiguration:
+  maxCacheSize: 2000000
+
 databaseConfiguration:
   driverClass: com.vertica.jdbc.Driver
 #  url: jdbc:vertica://mon-aw1rdd1-vertica0001.rndd.aw1.hpcloud.net:5433/som
@@ -81,8 +84,8 @@ logging:
 
     # Sets the level for 'com.example.app' to DEBUG.
     com.example.app: DEBUG
-    com.hpcloud: debug
-    com.hpcloud.repository: DEBUG
+#    com.hpcloud: debug
+#    com.hpcloud.repository: DEBUG
 
   # Settings for logging to stdout.
   console:
