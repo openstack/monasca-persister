@@ -13,8 +13,6 @@ import kafka.consumer.KafkaStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-
 public class KafkaConsumerRunnableBasic implements Runnable {
 
     private static Logger logger = LoggerFactory.getLogger(KafkaConsumerRunnableBasic.class);
@@ -63,9 +61,6 @@ public class KafkaConsumerRunnableBasic implements Runnable {
                     });
                 }
 
-            } catch (IOException e) {
-
-                logger.error("Failed to deserialize JSON message: " + s, e);
             } catch (Exception e) {
                 logger.error("Failed to deserialize JSON message and place on disruptor queue: " + s, e);
             }
