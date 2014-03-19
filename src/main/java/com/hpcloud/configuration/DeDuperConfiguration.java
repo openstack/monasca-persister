@@ -2,7 +2,7 @@ package com.hpcloud.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class MonDeDuperConfiguration {
+public class DeduperConfiguration {
 
     @JsonProperty
     Integer dedupeRunFrequencySeconds;

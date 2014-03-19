@@ -10,6 +10,4 @@ public class VerticaOutputProcessorConfiguration {
     public Integer getBatchSize() {
         return batchSize;
     }
-
-
 }

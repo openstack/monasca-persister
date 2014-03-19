@@ -6,9 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class VerticaRepository {
+    private static final Logger logger = LoggerFactory.getLogger(VerticaRepository.class);
     protected DBI dbi;
     protected Handle handle;
-    private static final Logger logger = LoggerFactory.getLogger(VerticaRepository.class);
 
     public VerticaRepository(DBI dbi) {
         this.dbi = dbi;
@@ -24,6 +24,4 @@ public class VerticaRepository {
         this.dbi = dbi;
         this.handle = dbi.open();
     }
-
-
 }

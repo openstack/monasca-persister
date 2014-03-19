@@ -24,9 +24,10 @@ public class KafkaConsumer {
 
     private final String topic;
     private final Integer numThreads;
-    private final ConsumerConnector consumerConnector;
     private ExecutorService executorService;
     private final KafkaConsumerRunnableBasicFactory kafkaConsumerRunnableBasicFactory;
+    private final ConsumerConfig consumerConfig;
+    private ConsumerConnector consumerConnector;
 
     @Inject
     public KafkaConsumer(MonPersisterConfiguration configuration,
@@ -39,13 +40,13 @@ public class KafkaConsumer {
         logger.info(KAFKA_CONFIGURATION + " numThreads = " + numThreads);
 
         Properties kafkaProperties = createKafkaProperties(configuration.getKafkaConfiguration());
-        ConsumerConfig consumerConfig = createConsumerConfig(kafkaProperties);
-        this.consumerConnector = Consumer.createJavaConsumerConnector(consumerConfig);
-
+        consumerConfig = createConsumerConfig(kafkaProperties);
         this.kafkaConsumerRunnableBasicFactory = kafkaConsumerRunnableBasicFactory;
     }
 
     public void run() {
+        consumerConnector = Consumer.createJavaConsumerConnector(consumerConfig);
+
         Map<String, Integer> topicCountMap = new HashMap<>();
         topicCountMap.put(topic, new Integer(numThreads));
         Map<String, List<KafkaStream<byte[], byte[]>>> consumerMap = consumerConnector.createMessageStreams(topicCountMap);
@@ -56,7 +57,6 @@ public class KafkaConsumer {
         for (final KafkaStream stream : streams) {
             executorService.submit(kafkaConsumerRunnableBasicFactory.create(stream, threadNumber));
         }
-
     }
 
     public void stop() {

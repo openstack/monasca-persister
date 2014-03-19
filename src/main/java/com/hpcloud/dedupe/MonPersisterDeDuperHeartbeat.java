@@ -8,24 +8,24 @@ import com.yammer.dropwizard.lifecycle.Managed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MonDeDuperHeartbeat implements Managed {
+public class MonPersisterDeduperHeartbeat implements Managed {
 
-    private static Logger logger = LoggerFactory.getLogger(MonDeDuperHeartbeat.class);
+    private static Logger logger = LoggerFactory.getLogger(MonPersisterDeduperHeartbeat.class);
 
     private final Disruptor disruptor;
-    private final DeDuperRunnable deDuperRunnable;
+    private final DeduperRunnable deduperRunnable;
 
     @Inject
-    public MonDeDuperHeartbeat(Disruptor disruptor) {
+    public MonPersisterDeduperHeartbeat(Disruptor disruptor) {
         this.disruptor = disruptor;
-        this.deDuperRunnable = new DeDuperRunnable(disruptor);
+        this.deduperRunnable = new DeduperRunnable(disruptor);
 
     }
 
     @Override
     public void start() throws Exception {
 
-        Thread deduperThread = new Thread(deDuperRunnable);
+        Thread deduperThread = new Thread(deduperRunnable);
         deduperThread.start();
     }
 
@@ -33,13 +33,13 @@ public class MonDeDuperHeartbeat implements Managed {
     public void stop() throws Exception {
     }
 
-    private static class DeDuperRunnable implements Runnable {
+    private static class DeduperRunnable implements Runnable {
 
-        private static Logger logger = LoggerFactory.getLogger(DeDuperRunnable.class);
+        private static Logger logger = LoggerFactory.getLogger(DeduperRunnable.class);
 
         private final Disruptor disruptor;
 
-        private DeDuperRunnable(Disruptor disruptor) {
+        private DeduperRunnable(Disruptor disruptor) {
             this.disruptor = disruptor;
         }
 

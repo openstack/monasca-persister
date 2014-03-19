@@ -45,7 +45,6 @@ public class DisruptorProvider implements Provider<Disruptor> {
         logger.debug("Buffer size for instance of disruptor [" + bufferSize + "]");
 
         Disruptor<MetricMessageEvent> disruptor = new Disruptor(metricMessageEventFactory, bufferSize, executor);
-
         disruptor.handleExceptionsWith(exceptionHandler);
 
         int batchSize = configuration.getVerticaOutputProcessorConfiguration().getBatchSize();
@@ -57,24 +56,19 @@ public class DisruptorProvider implements Provider<Disruptor> {
         EventHandler[] eventHandlers = new EventHandler[numOutputProcessors];
 
         for (int i = 0; i < numOutputProcessors; ++i) {
-
             eventHandlers[i] = metricMessageEventHandlerFactory.create(i, numOutputProcessors, batchSize);
-
         }
 
         disruptor.handleEventsWith(eventHandlers);
-
         disruptor.start();
-        logger.debug("Instance of disruptor successfully started");
 
+        logger.debug("Instance of disruptor successfully started");
         logger.debug("Instance of disruptor fully created");
 
         return disruptor;
-
     }
 
     public Disruptor<MetricMessageEvent> get() {
-
         return instance;
     }
 }

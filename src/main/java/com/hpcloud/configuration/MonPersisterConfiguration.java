@@ -55,9 +55,9 @@ public class MonPersisterConfiguration extends Configuration {
     @Valid
     @NotNull
     @JsonProperty
-    private MonDeDuperConfiguration monDeDuperConfiguration = new MonDeDuperConfiguration();
+    private DeduperConfiguration monDeDuperConfiguration = new DeduperConfiguration();
 
-    public MonDeDuperConfiguration getMonDeDuperConfiguration() {
+    public DeduperConfiguration getMonDeDuperConfiguration() {
         return monDeDuperConfiguration;
     }
 
@@ -69,5 +69,4 @@ public class MonPersisterConfiguration extends Configuration {
     public VerticaMetricRepositoryConfiguration getVerticaMetricRepositoryConfiguration() {
         return verticaMetricRepositoryConfiguration;
     }
-
 }

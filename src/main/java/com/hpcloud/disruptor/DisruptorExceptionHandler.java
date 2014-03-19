@@ -12,7 +12,6 @@ public class DisruptorExceptionHandler implements ExceptionHandler {
     public void handleEventException(Throwable ex, long sequence, Object event) {
 
         logger.error("Disruptor encountered an exception during normal operation", ex);
-
         throw new RuntimeException(ex);
     }
 
@@ -20,7 +19,6 @@ public class DisruptorExceptionHandler implements ExceptionHandler {
     public void handleOnStartException(Throwable ex) {
 
         logger.error("Disruptor encountered an exception during startup", ex);
-
         throw new RuntimeException(ex);
     }
 
@@ -28,8 +26,6 @@ public class DisruptorExceptionHandler implements ExceptionHandler {
     public void handleOnShutdownException(Throwable ex) {
 
         logger.error("Disruptor encountered an exception during shutdown", ex);
-
         throw new RuntimeException(ex);
-
     }
 }

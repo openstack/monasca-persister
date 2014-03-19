@@ -1,7 +1,7 @@
 package com.hpcloud;
 
 import com.hpcloud.consumer.KafkaConsumer;
-import com.hpcloud.consumer.MonConsumer;
+import com.hpcloud.consumer.MonPersisterConsumer;
 import com.lmax.disruptor.dsl.Disruptor;
 import org.junit.After;
 import org.junit.Before;
@@ -19,7 +19,7 @@ public class MonConsumerTest {
     private Disruptor disruptor;
 
     @InjectMocks
-    private MonConsumer monConsumer;
+    private MonPersisterConsumer monConsumer;
 
     @Before
     public void initMocks() {

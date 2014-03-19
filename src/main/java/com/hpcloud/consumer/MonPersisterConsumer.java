@@ -6,15 +6,15 @@ import com.yammer.dropwizard.lifecycle.Managed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MonConsumer implements Managed {
+public class MonPersisterConsumer implements Managed {
 
-    private static Logger logger = LoggerFactory.getLogger(MonConsumer.class);
+    private static Logger logger = LoggerFactory.getLogger(MonPersisterConsumer.class);
 
     private KafkaConsumer kafkaConsumer;
     private Disruptor disruptor;
 
     @Inject
-    public MonConsumer(KafkaConsumer kafkaConsumer, Disruptor disruptor) {
+    public MonPersisterConsumer(KafkaConsumer kafkaConsumer, Disruptor disruptor) {
         this.kafkaConsumer = kafkaConsumer;
         this.disruptor = disruptor;
     }

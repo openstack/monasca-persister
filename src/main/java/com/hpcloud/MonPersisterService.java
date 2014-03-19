@@ -3,8 +3,8 @@ package com.hpcloud;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.hpcloud.configuration.MonPersisterConfiguration;
-import com.hpcloud.consumer.MonConsumer;
-import com.hpcloud.dedupe.MonDeDuperHeartbeat;
+import com.hpcloud.consumer.MonPersisterConsumer;
+import com.hpcloud.dedupe.MonPersisterDeduperHeartbeat;
 import com.hpcloud.healthcheck.SimpleHealthCheck;
 import com.hpcloud.resource.Resource;
 import com.yammer.dropwizard.Service;
@@ -32,11 +32,11 @@ public class MonPersisterService extends Service<MonPersisterConfiguration> {
         // Sample health check.
         environment.addHealthCheck(new SimpleHealthCheck("test-health-check"));
 
-        MonConsumer monConsumer = injector.getInstance(MonConsumer.class);
-        environment.manage(monConsumer);
+        MonPersisterConsumer consumer = injector.getInstance(MonPersisterConsumer.class);
+        environment.manage(consumer);
 
-        MonDeDuperHeartbeat monDeDuperHeartbeat = injector.getInstance(MonDeDuperHeartbeat.class);
-        environment.manage(monDeDuperHeartbeat);
+        MonPersisterDeduperHeartbeat deduperHeartbeat = injector.getInstance(MonPersisterDeduperHeartbeat.class);
+        environment.manage(deduperHeartbeat);
     }
 
 }
