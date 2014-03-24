@@ -1,0 +1,163 @@
+name: mon-persister
+
+#Kafka settings.
+kafkaConfiguration:
+# See http://kafka.apache.org/documentation.html#api for semantics and defaults.
+  topic: test
+  numThreads: 1
+  groupId: 1
+  zookeeperConnect: localhost:2181
+  consumerId: 1
+  socketTimeoutMs: 30000
+  socketReceiveBufferBytes : 65536
+  fetchMessageMaxBytes: 1048576
+  autoCommitEnable: true
+  autoCommitIntervalMs: 60000
+  queuedMaxMessageChunks: 10
+  rebalanceMaxRetries: 4
+  fetchMinBytes:  1
+  fetchWaitMaxMs:  100
+  rebalanceBackoffMs: 2000
+  refreshLeaderBackoffMs: 200
+  autoOffsetReset: largest
+  consumerTimeoutMs:  -1
+  clientId : 1
+  zookeeperSessionTimeoutMs : 60000
+  zookeeperConnectionTimeoutMs : 6000
+  zookeeperSyncTimeMs: 2000
+
+disruptorConfiguration:
+  bufferSize:  1048576
+  numProcessors: 1
+
+verticaOutputProcessorConfiguration:
+  batchSize: 25000
+
+monDeDuperConfiguration:
+  dedupeRunFrequencySeconds: 30
+
+verticaMetricRepositoryConfiguration:
+  maxCacheSize: 2000000
+
+databaseConfiguration:
+  driverClass: com.vertica.jdbc.Driver
+#  url: jdbc:vertica://mon-aw1rdd1-vertica0001.rndd.aw1.hpcloud.net:5433/som
+  url: jdbc:vertica://15.185.94.245:5433/som
+#  user: persister
+  user: mon_persister
+#  user: dbadmin
+  password: password
+  properties:
+      ssl: false
+  # the maximum amount of time to wait on an empty pool before throwing an exception
+  maxWaitForConnection: 1s
+
+  # the SQL query to run when validating a connection's liveness
+  validationQuery: "/* MyService Health Check */ SELECT 1"
+
+  # the minimum number of connections to keep open
+  minSize: 8
+
+  # the maximum number of connections to keep open
+
+
+  maxSize: 41
+
+  # whether or not idle connections should be validated
+  checkConnectionWhileIdle: false
+
+  # how long a connection must be held before it can be validated
+  checkConnectionHealthWhenIdleFor: 10s
+
+  # the maximum lifetime of an idle connection
+  closeConnectionIfIdleFor: 1 minute
+
+# Logging settings.
+logging:
+
+  # The default level of all loggers. Can be OFF, ERROR, WARN, INFO,
+  # DEBUG, TRACE, or ALL.
+  level: INFO
+
+  # Logger-specific levels.
+  loggers:
+
+    # Sets the level for 'com.example.app' to DEBUG.
+    com.example.app: DEBUG
+#    com.hpcloud: debug
+#    com.hpcloud.mon.persister.repository: DEBUG
+
+  # Settings for logging to stdout.
+  console:
+
+    # If true, write log statements to stdout.
+    enabled: true
+
+    # Do not display log statements below this threshold to stdout.
+    threshold: ALL
+
+    # The time zone in which dates should be displayed.
+    timeZone: UTC
+
+    # A custom Logback format string.
+    logFormat: null
+
+  # Settings for logging to a file.
+  file:
+
+    # If true, write log statements to a file.
+    enabled: true
+
+    # Do not write log statements below this threshold to the file.
+    threshold: ALL
+
+    # The time zone in which dates should be displayed.
+    timeZone: UTC
+
+    # A custom Logback format string.
+    logFormat: null
+
+    # The file to which statements will be logged.
+    #
+    # If enabled is true, this must be specified.
+    currentLogFilename: ./logs/mon-persister.log
+
+    # If true, log files are rotated and archived.
+    archive: true
+
+    # When the log file rolls over, the file will be archived to
+    # app-2012-03-15.log.gz, example.log will be truncated,
+    # and new statements written to it.
+    #
+    # If archive is true, this must be specified.
+    archivedLogFilenamePattern: ./logs/mon-persister-%d.log.gz
+
+    # The maximum number of log files to archive.
+    archivedFileCount: 5
+
+  # Settings for logging to syslog.
+  syslog:
+
+    # If true, write log statements to syslog.
+    enabled: false
+
+    # The hostname of the syslog server to which statements will be
+    # sent.
+    #
+    # N.B.: If this is the local host, the local syslog instance
+    # will need to be configured to listen on an inet socket, not just
+    # a Unix socket.
+    host: localhost
+
+    # The syslog facility to which statements will be sent.
+    #
+    # Can be one of: {AUTH, AUTHPRIV, DAEMON, CRON, FTP, LPR, KERN,
+    # MAIL, NEWS, SYSLOG, USER, UUCP, LOCAL0, LOCAL1, LOCAL2, LOCAL3,
+    # LOCAL4, LOCAL5, LOCAL6, LOCAL7}.
+    facility: local0
+
+    # The time zone in which dates should be displayed.
+    timeZone: UTC
+
+    # A custom Logback format string.
+    logFormat: null
