@@ -77,7 +77,7 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
                 logger.debug("It's been more than " + secondsBetweenFlushes + " seconds since last flush. Flushing staging tables now...");
                 flush();
             } else {
-                logger.debug("It has not been more than " + secondsBetweenFlushes + " seeconds since last flush. No need to perform flush at this time.");
+                logger.debug("It has not been more than " + secondsBetweenFlushes + " seconds since last flush. No need to perform flush at this time.");
             }
             return;
         }
