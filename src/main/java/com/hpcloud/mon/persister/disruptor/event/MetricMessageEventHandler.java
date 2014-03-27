@@ -19,6 +19,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 public class MetricMessageEventHandler implements EventHandler<MetricMessageEvent> {
@@ -105,9 +106,11 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
 
         String stringToHash = metricMessage.getName() + tenantId + metricMessage.getRegion();
         if (metricMessage.getDimensions() != null) {
-            for (String name : metricMessage.getDimensions().keySet()) {
-                String val = metricMessage.getDimensions().get(name);
-                stringToHash += name + val;
+            // Sort the dimensions on name and value.
+            TreeMap<String, String> dimensionTreeMap = new TreeMap<>(metricMessage.getDimensions());
+            for (String dimensionName : dimensionTreeMap.keySet()) {
+                String dimensionValue = dimensionTreeMap.get(dimensionName);
+                stringToHash += dimensionName + dimensionValue;
             }
         }
 
