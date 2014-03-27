@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 public class MetricsConsumer implements Managed {
 
-    private static Logger logger = LoggerFactory.getLogger(MetricsConsumer.class);
+    private static final Logger logger = LoggerFactory.getLogger(MetricsConsumer.class);
     private final KafkaMetricsConsumer consumer;
     private final MetricDisruptor disruptor;
 

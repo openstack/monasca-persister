@@ -13,12 +13,13 @@ import java.util.concurrent.Executors;
 public class KafkaAlarmStateTransitionConsumer {
 
     private static final String KAFKA_CONFIGURATION = "Kafka configuration:";
-    private static Logger logger = LoggerFactory.getLogger(KafkaAlarmStateTransitionConsumer.class);
+    private static final Logger logger = LoggerFactory.getLogger(KafkaAlarmStateTransitionConsumer.class);
 
     private final Integer numThreads;
     private ExecutorService executorService;
     private final KafkaAlarmStateTransitionConsumerRunnableBasicFactory kafkaConsumerRunnableBasicFactory;
-    @Inject private KafkaStreams kafkaStreams;
+    @Inject
+    private KafkaStreams kafkaStreams;
 
     @Inject
     public KafkaAlarmStateTransitionConsumer(MonPersisterConfiguration configuration,

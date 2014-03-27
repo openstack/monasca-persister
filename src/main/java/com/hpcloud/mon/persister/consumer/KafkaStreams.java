@@ -16,7 +16,7 @@ import java.util.Properties;
 
 public class KafkaStreams {
     private static final String KAFKA_CONFIGURATION = "Kafka configuration:";
-    private static Logger logger = LoggerFactory.getLogger(KafkaStreams.class);
+    private static final Logger logger = LoggerFactory.getLogger(KafkaStreams.class);
 
     private final ConsumerConnector consumerConnector;
     private final Map<String, List<KafkaStream<byte[], byte[]>>> consumerMap;
@@ -27,8 +27,8 @@ public class KafkaStreams {
         consumerConnector = Consumer.createJavaConsumerConnector(consumerConfig);
         Map<String, Integer> topicCountMap = new HashMap<>();
         Integer numThreads = configuration.getKafkaConfiguration().getNumThreads();
-        topicCountMap.put("metrics", new Integer(numThreads));
-        topicCountMap.put("alarm-state-transitions", new Integer(numThreads));
+        topicCountMap.put("metrics", (int) numThreads);
+        topicCountMap.put("alarm-state-transitions", (int) numThreads);
         consumerMap = consumerConnector.createMessageStreams(topicCountMap);
     }
 

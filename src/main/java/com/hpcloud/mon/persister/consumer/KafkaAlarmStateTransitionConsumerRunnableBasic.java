@@ -15,10 +15,10 @@ import org.slf4j.LoggerFactory;
 
 public class KafkaAlarmStateTransitionConsumerRunnableBasic implements Runnable {
 
-    private static Logger logger = LoggerFactory.getLogger(KafkaAlarmStateTransitionConsumerRunnableBasic.class);
+    private static final Logger logger = LoggerFactory.getLogger(KafkaAlarmStateTransitionConsumerRunnableBasic.class);
 
     private final KafkaStream stream;
-    private int threadNumber;
+    private final int threadNumber;
     private final AlarmStateHistoryDisruptor disruptor;
     private final ObjectMapper objectMapper;
 

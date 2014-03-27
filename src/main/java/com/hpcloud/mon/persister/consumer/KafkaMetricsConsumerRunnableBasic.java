@@ -15,10 +15,10 @@ import org.slf4j.LoggerFactory;
 
 public class KafkaMetricsConsumerRunnableBasic implements Runnable {
 
-    private static Logger logger = LoggerFactory.getLogger(KafkaMetricsConsumerRunnableBasic.class);
-    private KafkaStream stream;
-    private int threadNumber;
-    private MetricDisruptor disruptor;
+    private static final Logger logger = LoggerFactory.getLogger(KafkaMetricsConsumerRunnableBasic.class);
+    private final KafkaStream stream;
+    private final int threadNumber;
+    private final MetricDisruptor disruptor;
     private final ObjectMapper objectMapper;
 
     @Inject

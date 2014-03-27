@@ -39,7 +39,7 @@ public class RepositoryCommitHeartbeat implements Managed {
 
     private static class HeartbeatRunnable implements Runnable {
 
-        private static Logger logger = LoggerFactory.getLogger(HeartbeatRunnable.class);
+        private static final Logger logger = LoggerFactory.getLogger(HeartbeatRunnable.class);
         private final Disruptor metricDisruptor;
         private final Disruptor alarmHistoryDisruptor;
 

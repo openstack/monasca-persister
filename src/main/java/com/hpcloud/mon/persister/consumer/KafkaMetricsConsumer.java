@@ -13,12 +13,13 @@ import java.util.concurrent.Executors;
 public class KafkaMetricsConsumer {
 
     private static final String KAFKA_CONFIGURATION = "Kafka configuration:";
-    private static Logger logger = LoggerFactory.getLogger(KafkaMetricsConsumer.class);
+    private static final Logger logger = LoggerFactory.getLogger(KafkaMetricsConsumer.class);
 
     private final Integer numThreads;
     private ExecutorService executorService;
     private final KafkaMetricsConsumerRunnableBasicFactory kafkaConsumerRunnableBasicFactory;
-    @Inject private KafkaStreams kafkaStreams;
+    @Inject
+    private KafkaStreams kafkaStreams;
 
     @Inject
     public KafkaMetricsConsumer(MonPersisterConfiguration configuration,

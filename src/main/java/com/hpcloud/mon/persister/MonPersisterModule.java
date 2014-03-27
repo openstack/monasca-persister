@@ -6,26 +6,20 @@ import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
 import com.hpcloud.mon.persister.consumer.*;
 import com.hpcloud.mon.persister.dbi.DBIProvider;
-import com.hpcloud.mon.persister.repository.RepositoryCommitHeartbeat;
 import com.hpcloud.mon.persister.disruptor.*;
 import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionMessageEventHandler;
 import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionMessageEventHandlerFactory;
 import com.hpcloud.mon.persister.disruptor.event.MetricMessageEventHandler;
 import com.hpcloud.mon.persister.disruptor.event.MetricMessageEventHandlerFactory;
+import com.hpcloud.mon.persister.repository.RepositoryCommitHeartbeat;
 import com.lmax.disruptor.ExceptionHandler;
 import com.yammer.dropwizard.config.Environment;
 import org.skife.jdbi.v2.DBI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
 
 public class MonPersisterModule extends AbstractModule {
 
-    private static Logger logger = LoggerFactory.getLogger(MonPersisterModule.class);
     private final MonPersisterConfiguration configuration;
     private final Environment environment;
-    @Inject private KafkaStreams kafkaStreams;
 
     public MonPersisterModule(MonPersisterConfiguration configuration, Environment environment) {
         this.configuration = configuration;

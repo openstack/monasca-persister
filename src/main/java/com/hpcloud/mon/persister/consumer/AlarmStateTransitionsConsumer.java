@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 public class AlarmStateTransitionsConsumer implements Managed {
 
-    private static Logger logger = LoggerFactory.getLogger(AlarmStateTransitionsConsumer.class);
+    private static final Logger logger = LoggerFactory.getLogger(AlarmStateTransitionsConsumer.class);
     private final KafkaAlarmStateTransitionConsumer consumer;
     private final AlarmStateHistoryDisruptor disruptor;
 

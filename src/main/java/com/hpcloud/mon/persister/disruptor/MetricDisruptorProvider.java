@@ -15,7 +15,7 @@ import java.util.concurrent.Executors;
 
 public class MetricDisruptorProvider implements Provider<MetricDisruptor> {
 
-    private static Logger logger = LoggerFactory.getLogger(MetricDisruptorProvider.class);
+    private static final Logger logger = LoggerFactory.getLogger(MetricDisruptorProvider.class);
 
     private final MonPersisterConfiguration configuration;
     private final MetricMessageEventHandlerFactory metricMessageEventHandlerFactory;

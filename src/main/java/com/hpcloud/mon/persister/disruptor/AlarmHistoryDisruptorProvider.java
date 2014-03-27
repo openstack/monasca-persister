@@ -15,7 +15,7 @@ import java.util.concurrent.Executors;
 
 public class AlarmHistoryDisruptorProvider implements Provider<AlarmStateHistoryDisruptor> {
 
-    private static Logger logger = LoggerFactory.getLogger(AlarmHistoryDisruptorProvider.class);
+    private static final Logger logger = LoggerFactory.getLogger(AlarmHistoryDisruptorProvider.class);
 
     private final MonPersisterConfiguration configuration;
     private final AlarmStateTransitionMessageEventHandlerFactory eventHandlerFactory;
