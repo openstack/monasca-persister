@@ -140,7 +140,7 @@ public class VerticaMetricRepository extends VerticaRepository {
         handle.begin();
         context.stop();
         long endTime = System.currentTimeMillis();
-        logger.debug("Commiting batch took " + (endTime - startTime) / 1000 + " seconds");
+        logger.debug("Committing batch took " + (endTime - startTime) / 1000 + " seconds");
     }
 
     private void updateDefIdCache() {
