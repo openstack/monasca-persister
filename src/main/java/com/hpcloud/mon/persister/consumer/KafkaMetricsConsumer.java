@@ -38,6 +38,7 @@ public class KafkaMetricsConsumer {
         int threadNumber = 0;
         for (final KafkaStream stream : streams) {
             executorService.submit(kafkaConsumerRunnableBasicFactory.create(stream, threadNumber));
+            threadNumber++;
         }
     }
 
