@@ -1,7 +1,7 @@
 package com.hpcloud.mon.persister;
 
-import com.hpcloud.mon.persister.consumer.KafkaConsumer;
-import com.hpcloud.mon.persister.consumer.MonPersisterConsumer;
+import com.hpcloud.mon.persister.consumer.KafkaMetricsConsumer;
+import com.hpcloud.mon.persister.consumer.MetricsConsumer;
 import com.lmax.disruptor.dsl.Disruptor;
 import org.junit.After;
 import org.junit.Before;
@@ -13,13 +13,13 @@ import org.mockito.MockitoAnnotations;
 public class MonPersisterConsumerTest {
 
     @Mock
-    private KafkaConsumer kafkaConsumer;
+    private KafkaMetricsConsumer kafkaConsumer;
 
     @Mock
     private Disruptor disruptor;
 
     @InjectMocks
-    private MonPersisterConsumer monConsumer;
+    private MetricsConsumer monConsumer;
 
     @Before
     public void initMocks() {

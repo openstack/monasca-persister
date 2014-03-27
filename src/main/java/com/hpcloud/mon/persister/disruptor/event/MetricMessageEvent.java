@@ -8,7 +8,7 @@ public class MetricMessageEvent {
         return metricEnvelope;
     }
 
-    public void setMetricEnvelope(MetricEnvelope metricEnvelope) {
+    public void setEnvelope(MetricEnvelope metricEnvelope) {
         this.metricEnvelope = metricEnvelope;
     }
 

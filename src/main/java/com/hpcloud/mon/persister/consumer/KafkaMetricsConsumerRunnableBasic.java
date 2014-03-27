@@ -4,33 +4,31 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import com.hpcloud.mon.persister.disruptor.MetricDisruptor;
 import com.hpcloud.mon.persister.disruptor.event.MetricMessageEvent;
 import com.hpcloud.mon.persister.message.MetricEnvelope;
 import com.lmax.disruptor.EventTranslator;
-import com.lmax.disruptor.dsl.Disruptor;
 import kafka.consumer.ConsumerIterator;
 import kafka.consumer.KafkaStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class KafkaConsumerRunnableBasic implements Runnable {
+public class KafkaMetricsConsumerRunnableBasic implements Runnable {
 
-    private static Logger logger = LoggerFactory.getLogger(KafkaConsumerRunnableBasic.class);
-
+    private static Logger logger = LoggerFactory.getLogger(KafkaMetricsConsumerRunnableBasic.class);
     private KafkaStream stream;
     private int threadNumber;
-    private Disruptor disruptor;
-    private ObjectMapper objectMapper;
+    private MetricDisruptor disruptor;
+    private final ObjectMapper objectMapper;
 
     @Inject
-    public KafkaConsumerRunnableBasic(Disruptor disruptor,
-                                      ObjectMapper objectMapper,
-                                      @Assisted KafkaStream stream,
-                                      @Assisted int threadNumber) {
+    public KafkaMetricsConsumerRunnableBasic(MetricDisruptor disruptor,
+                                             @Assisted KafkaStream stream,
+                                             @Assisted int threadNumber) {
         this.stream = stream;
         this.threadNumber = threadNumber;
         this.disruptor = disruptor;
-        this.objectMapper = objectMapper;
+        this.objectMapper = new ObjectMapper();
         objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
         objectMapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
     }
@@ -45,29 +43,24 @@ public class KafkaConsumerRunnableBasic implements Runnable {
             logger.debug("Thread " + threadNumber + ": " + s);
 
             try {
-                final MetricEnvelope[] metricEnvelopes = objectMapper.readValue(s, MetricEnvelope[].class);
+                final MetricEnvelope[] envelopes = objectMapper.readValue(s, MetricEnvelope[].class);
 
-                for (final MetricEnvelope metricEnvelope : metricEnvelopes) {
+                for (final MetricEnvelope envelope : envelopes) {
 
-                    logger.debug(metricEnvelope.toString());
+                    logger.debug(envelope.toString());
 
                     disruptor.publishEvent(new EventTranslator<MetricMessageEvent>() {
                         @Override
                         public void translateTo(MetricMessageEvent event, long sequence) {
-                            event.setMetricEnvelope(metricEnvelope);
-
+                            event.setEnvelope(envelope);
                         }
 
                     });
                 }
-
             } catch (Exception e) {
                 logger.error("Failed to deserialize JSON message and place on disruptor queue: " + s, e);
             }
-
         }
-
         logger.debug("Shutting down Thread: " + threadNumber);
-
     }
 }

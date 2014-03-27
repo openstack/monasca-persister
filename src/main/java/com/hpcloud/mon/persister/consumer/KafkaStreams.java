@@ -1,6 +1,5 @@
 package com.hpcloud.mon.persister.consumer;
 
-import com.google.inject.Inject;
 import com.hpcloud.mon.persister.configuration.KafkaConfiguration;
 import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
 import kafka.consumer.Consumer;
@@ -14,58 +13,27 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
-public class KafkaConsumer {
-
+public class KafkaStreams {
     private static final String KAFKA_CONFIGURATION = "Kafka configuration:";
-    private static Logger logger = LoggerFactory.getLogger(KafkaConsumer.class);
+    private static Logger logger = LoggerFactory.getLogger(KafkaStreams.class);
 
-    private final String topic;
-    private final Integer numThreads;
-    private ExecutorService executorService;
-    private final KafkaConsumerRunnableBasicFactory kafkaConsumerRunnableBasicFactory;
-    private final ConsumerConfig consumerConfig;
-    private ConsumerConnector consumerConnector;
+    private final ConsumerConnector consumerConnector;
+    private final Map<String, List<KafkaStream<byte[], byte[]>>> consumerMap;
 
-    @Inject
-    public KafkaConsumer(MonPersisterConfiguration configuration,
-                         KafkaConsumerRunnableBasicFactory kafkaConsumerRunnableBasicFactory) {
-
-        this.topic = configuration.getKafkaConfiguration().getTopic();
-        logger.info(KAFKA_CONFIGURATION + " topic = " + topic);
-
-        this.numThreads = configuration.getKafkaConfiguration().getNumThreads();
-        logger.info(KAFKA_CONFIGURATION + " numThreads = " + numThreads);
-
+    public KafkaStreams(MonPersisterConfiguration configuration) {
         Properties kafkaProperties = createKafkaProperties(configuration.getKafkaConfiguration());
-        consumerConfig = createConsumerConfig(kafkaProperties);
-        this.kafkaConsumerRunnableBasicFactory = kafkaConsumerRunnableBasicFactory;
-    }
-
-    public void run() {
+        ConsumerConfig consumerConfig = createConsumerConfig(kafkaProperties);
         consumerConnector = Consumer.createJavaConsumerConnector(consumerConfig);
-
         Map<String, Integer> topicCountMap = new HashMap<>();
-        topicCountMap.put(topic, new Integer(numThreads));
-        Map<String, List<KafkaStream<byte[], byte[]>>> consumerMap = consumerConnector.createMessageStreams(topicCountMap);
-        List<KafkaStream<byte[], byte[]>> streams = consumerMap.get(topic);
-        executorService = Executors.newFixedThreadPool(numThreads);
-
-        int threadNumber = 0;
-        for (final KafkaStream stream : streams) {
-            executorService.submit(kafkaConsumerRunnableBasicFactory.create(stream, threadNumber));
-        }
+        Integer numThreads = configuration.getKafkaConfiguration().getNumThreads();
+        topicCountMap.put("metrics", new Integer(numThreads));
+        topicCountMap.put("alarm-state-transitions", new Integer(numThreads));
+        consumerMap = consumerConnector.createMessageStreams(topicCountMap);
     }
 
-    public void stop() {
-        if (consumerConnector != null) {
-            consumerConnector.shutdown();
-        }
-        if (executorService != null) {
-            executorService.shutdown();
-        }
+    public final Map<String, List<KafkaStream<byte[], byte[]>>> getStreams() {
+        return consumerMap;
     }
 
     private ConsumerConfig createConsumerConfig(Properties kafkaProperties) {
@@ -102,5 +70,4 @@ public class KafkaConsumer {
 
         return properties;
     }
-
 }
