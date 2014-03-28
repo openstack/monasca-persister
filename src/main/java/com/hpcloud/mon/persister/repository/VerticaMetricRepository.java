@@ -27,7 +27,7 @@ public class VerticaMetricRepository extends VerticaRepository {
     private final Set<byte[]> defIdSet = new HashSet<>();
 
     private static final String SQL_INSERT_INTO_METRICS =
-            "insert into MonMetrics.measurements (metric_definition_id, time_stamp, value) values (:metric_definition_id, :time_stamp, :value)";
+            "insert into MonMetrics.measurements (definition_id, time_stamp, value) values (:metric_definition_id, :time_stamp, :value)";
 
     private static final String defs = "(" +
             "   id BINARY(20) NOT NULL," +
@@ -37,7 +37,7 @@ public class VerticaMetricRepository extends VerticaRepository {
             ")";
 
     private static final String dims = "(" +
-            "    metric_definition_id BINARY(20)," +
+            "    definition_id BINARY(20)," +
             "    name VARCHAR NOT NULL," +
             "    value VARCHAR NOT NULL" +
             ")";
@@ -77,7 +77,7 @@ public class VerticaMetricRepository extends VerticaRepository {
         this.dsDefs = "insert into  MonMetrics.Definitions select distinct * from " + sDefs + " where id not in (select id from MonMetrics.Definitions)";
         logger.debug("insert stmt: " + dsDefs);
 
-        this.dsDims = "insert into MonMetrics.Dimensions select distinct * from " + sDims + " where metric_definition_id not in (select metric_definition_id from MonMetrics.Dimensions)";
+        this.dsDims = "insert into MonMetrics.Dimensions select distinct * from " + sDims + " where definition_id not in (select definition_id from MonMetrics.Dimensions)";
         logger.debug("insert stmt: " + dsDefs);
 
         handle.execute("drop table if exists " + sDefs + " cascade");
