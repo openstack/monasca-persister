@@ -27,10 +27,10 @@ public class VerticaMetricRepository extends VerticaRepository {
     private final Set<byte[]> defIdSet = new HashSet<>();
 
     private static final String SQL_INSERT_INTO_METRICS =
-            "insert into MonMetrics.metrics (metric_definition_id, time_stamp, value) values (:metric_definition_id, :time_stamp, :value)";
+            "insert into MonMetrics.measurements (metric_definition_id, time_stamp, value) values (:metric_definition_id, :time_stamp, :value)";
 
     private static final String defs = "(" +
-            "   metric_definition_id BINARY(20) NOT NULL," +
+            "   id BINARY(20) NOT NULL," +
             "   name VARCHAR NOT NULL," +
             "   tenant_id VARCHAR(14) NOT NULL," +
             "   region VARCHAR" +
@@ -74,7 +74,7 @@ public class VerticaMetricRepository extends VerticaRepository {
         this.sDims = this.toString().replaceAll("\\.", "_").replaceAll("\\@", "_") + "_staged_dimensions";
         logger.debug("temp staging dimensions table: " + sDims);
 
-        this.dsDefs = "insert into  MonMetrics.Definitions select distinct * from " + sDefs + " where metric_definition_id not in (select metric_definition_id from MonMetrics.Definitions)";
+        this.dsDefs = "insert into  MonMetrics.Definitions select distinct * from " + sDefs + " where id not in (select id from MonMetrics.Definitions)";
         logger.debug("insert stmt: " + dsDefs);
 
         this.dsDims = "insert into MonMetrics.Dimensions select distinct * from " + sDims + " where metric_definition_id not in (select metric_definition_id from MonMetrics.Dimensions)";
@@ -88,7 +88,7 @@ public class VerticaMetricRepository extends VerticaRepository {
 
         handle.getConnection().setAutoCommit(false);
         metricsBatch = handle.prepareBatch(SQL_INSERT_INTO_METRICS);
-        stagedDefinitionsBatch = handle.prepareBatch("insert into " + sDefs + " values (:metric_definition_id, :name, :tenant_id, :region)");
+        stagedDefinitionsBatch = handle.prepareBatch("insert into " + sDefs + " values (:id, :name, :tenant_id, :region)");
         stagedDimensionsBatch = handle.prepareBatch("insert into " + sDims + " values (:metric_definition_id, :name, :value)");
         handle.begin();
     }
