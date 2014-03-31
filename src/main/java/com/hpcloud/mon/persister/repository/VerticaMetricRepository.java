@@ -23,8 +23,8 @@ public class VerticaMetricRepository extends VerticaRepository {
 
     private final MonPersisterConfiguration configuration;
 
-    private final Cache<byte[], byte[]> defIdCache;
-    private final Set<byte[]> defIdSet = new HashSet<>();
+    private final Cache<DefinitionId, DefinitionId> defIdCache;
+    private final Set<DefinitionId> defIdSet = new HashSet<>();
 
     private static final String SQL_INSERT_INTO_METRICS =
             "insert into MonMetrics.measurements (definition_id, time_stamp, value) values (:metric_definition_id, :time_stamp, :value)";
@@ -93,20 +93,20 @@ public class VerticaMetricRepository extends VerticaRepository {
         handle.begin();
     }
 
-    public void addToBatchMetrics(byte[] defId, String timeStamp, double value) {
-        metricsBatch.add().bind(0, defId).bind(1, timeStamp).bind(2, value);
+    public void addToBatchMetrics(DefinitionId defId, String timeStamp, double value) {
+        metricsBatch.add().bind(0, defId.getDefinitionIdHash()).bind(1, timeStamp).bind(2, value);
     }
 
-    public void addToBatchStagingDefinitions(byte[] defId, String name, String tenantId, String region) {
+    public void addToBatchStagingDefinitions(DefinitionId defId, String name, String tenantId, String region) {
         if (defIdCache.getIfPresent(defId) == null) {
-            stagedDefinitionsBatch.add().bind(0, defId).bind(1, name).bind(2, tenantId).bind(3, region);
+            stagedDefinitionsBatch.add().bind(0, defId.getDefinitionIdHash()).bind(1, name).bind(2, tenantId).bind(3, region);
             defIdSet.add(defId);
         }
     }
 
-    public void addToBatchStagingDimensions(byte[] defId, String name, String value) {
+    public void addToBatchStagingDimensions(DefinitionId defId, String name, String value) {
         if (defIdCache.getIfPresent(defId) == null) {
-            stagedDimensionsBatch.add().bind(0, defId)
+            stagedDimensionsBatch.add().bind(0, defId.getDefinitionIdHash())
                     .bind(1, name)
                     .bind(2, value);
             defIdSet.add(defId);
@@ -144,9 +144,11 @@ public class VerticaMetricRepository extends VerticaRepository {
     }
 
     private void updateDefIdCache() {
-        for (byte[] defId : defIdSet) {
+        for (DefinitionId defId : defIdSet) {
             defIdCache.put(defId, defId);
         }
         defIdSet.clear();
     }
+
+
 }

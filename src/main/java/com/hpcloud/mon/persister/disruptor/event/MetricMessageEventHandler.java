@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
 import com.hpcloud.mon.persister.message.MetricMessage;
+import com.hpcloud.mon.persister.repository.DefinitionId;
 import com.hpcloud.mon.persister.repository.VerticaMetricRepository;
 import com.lmax.disruptor.EventHandler;
 import com.yammer.metrics.Metrics;
@@ -115,11 +116,12 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
         }
 
         byte[] sha1HashByteArry = DigestUtils.sha(stringToHash.getBytes());
+        DefinitionId definitionId = new DefinitionId(sha1HashByteArry);
 
         if (metricMessage.getValue() != null && metricMessage.getTimestamp() != null) {
             String timeStamp = simpleDateFormat.format(new Date(Long.parseLong(metricMessage.getTimestamp()) * 1000));
             Double value = metricMessage.getValue();
-            verticaMetricRepository.addToBatchMetrics(sha1HashByteArry, timeStamp, value);
+            verticaMetricRepository.addToBatchMetrics(definitionId, timeStamp, value);
             metricCounter.inc();
 
         }
@@ -127,19 +129,19 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
             for (Double[] timeValuePairs : metricMessage.getTime_values()) {
                 String timeStamp = simpleDateFormat.format(new Date((long) (timeValuePairs[0] * 1000)));
                 Double value = timeValuePairs[1];
-                verticaMetricRepository.addToBatchMetrics(sha1HashByteArry, timeStamp, value);
+                verticaMetricRepository.addToBatchMetrics(definitionId, timeStamp, value);
                 metricCounter.inc();
 
             }
         }
 
-        verticaMetricRepository.addToBatchStagingDefinitions(sha1HashByteArry, metricMessage.getName(), tenantId, metricMessage.getRegion());
+        verticaMetricRepository.addToBatchStagingDefinitions(definitionId, metricMessage.getName(), tenantId, metricMessage.getRegion());
         definitionCounter.inc();
 
         if (metricMessage.getDimensions() != null) {
             for (String name : metricMessage.getDimensions().keySet()) {
                 String value = metricMessage.getDimensions().get(name);
-                verticaMetricRepository.addToBatchStagingDimensions(sha1HashByteArry, name, value);
+                verticaMetricRepository.addToBatchStagingDimensions(definitionId, name, value);
                 dimensionCounter.inc();
             }
         }
