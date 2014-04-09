@@ -20,6 +20,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <artifactNamedVersion>${project.name}-${project.version}-${timestamp}-${buildNumber}
         </artifactNamedVersion>
+        <mon.common.version>1.0.0.27</mon.common.version>
     </properties>
 
     <!--Needed for buildnumber-maven-plugin-->
@@ -30,6 +31,11 @@
     </scm>
 
     <dependencies>
+        <dependency>
+            <groupId>com.hpcloud</groupId>
+            <artifactId>mon-model</artifactId>
+            <version>${mon.common.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka_2.10</artifactId>

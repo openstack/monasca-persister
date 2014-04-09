@@ -3,7 +3,7 @@ package com.hpcloud.mon.persister.disruptor.event;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
-import com.hpcloud.mon.persister.message.AlarmStateTransitionMessage;
+import com.hpcloud.mon.common.event.AlarmStateTransitionedEvent;
 import com.hpcloud.mon.persister.repository.VerticaAlarmStateHistoryRepository;
 import com.lmax.disruptor.EventHandler;
 import com.yammer.metrics.Metrics;
@@ -16,9 +16,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
-public class AlarmStateTransitionMessageEventHandler implements EventHandler<AlarmStateTransitionMessageEvent> {
+public class AlarmStateTransitionedMessageEventHandler implements EventHandler<AlarmStateTransitionedMessageEvent> {
 
-    private static final Logger logger = LoggerFactory.getLogger(AlarmStateTransitionMessageEventHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(AlarmStateTransitionedMessageEventHandler.class);
     private final int ordinal;
     private final int numProcessors;
     private final int batchSize;
@@ -36,11 +36,11 @@ public class AlarmStateTransitionMessageEventHandler implements EventHandler<Ala
     private final Timer commitTimer = Metrics.newTimer(this.getClass(), "total-commit-and-flush-timer");
 
     @Inject
-    public AlarmStateTransitionMessageEventHandler(VerticaAlarmStateHistoryRepository repository,
-                                                   MonPersisterConfiguration configuration,
-                                                   @Assisted("ordinal") int ordinal,
-                                                   @Assisted("numProcessors") int numProcessors,
-                                                   @Assisted("batchSize") int batchSize) {
+    public AlarmStateTransitionedMessageEventHandler(VerticaAlarmStateHistoryRepository repository,
+                                                     MonPersisterConfiguration configuration,
+                                                     @Assisted("ordinal") int ordinal,
+                                                     @Assisted("numProcessors") int numProcessors,
+                                                     @Assisted("batchSize") int batchSize) {
 
         this.repository = repository;
         this.configuration = configuration;
@@ -53,7 +53,7 @@ public class AlarmStateTransitionMessageEventHandler implements EventHandler<Ala
     }
 
     @Override
-    public void onEvent(AlarmStateTransitionMessageEvent event, long sequence, boolean b) throws Exception {
+    public void onEvent(AlarmStateTransitionedMessageEvent event, long sequence, boolean b) throws Exception {
 
         if (event.getMessage() == null) {
             logger.debug("Received heartbeat message. Checking last flush time.");
@@ -76,7 +76,7 @@ public class AlarmStateTransitionMessageEventHandler implements EventHandler<Ala
                 " Ordinal: " + ordinal +
                 " Event: " + event.getMessage());
 
-        AlarmStateTransitionMessage message = event.getMessage();
+        AlarmStateTransitionedEvent message = event.getMessage();
         repository.addToBatch(message);
 
         if (sequence % batchSize == (batchSize - 1)) {

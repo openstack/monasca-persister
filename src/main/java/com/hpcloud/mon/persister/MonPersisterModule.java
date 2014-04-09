@@ -7,8 +7,8 @@ import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
 import com.hpcloud.mon.persister.consumer.*;
 import com.hpcloud.mon.persister.dbi.DBIProvider;
 import com.hpcloud.mon.persister.disruptor.*;
-import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionMessageEventHandler;
-import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionMessageEventHandlerFactory;
+import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionedMessageEventHandler;
+import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionedMessageEventHandlerFactory;
 import com.hpcloud.mon.persister.disruptor.event.MetricMessageEventHandler;
 import com.hpcloud.mon.persister.disruptor.event.MetricMessageEventHandlerFactory;
 import com.hpcloud.mon.persister.repository.RepositoryCommitHeartbeat;
@@ -37,8 +37,8 @@ public class MonPersisterModule extends AbstractModule {
                 .build(MetricMessageEventHandlerFactory.class));
 
         install(new FactoryModuleBuilder()
-                .implement(AlarmStateTransitionMessageEventHandler.class, AlarmStateTransitionMessageEventHandler.class)
-                .build(AlarmStateTransitionMessageEventHandlerFactory.class));
+                .implement(AlarmStateTransitionedMessageEventHandler.class, AlarmStateTransitionedMessageEventHandler.class)
+                .build(AlarmStateTransitionedMessageEventHandlerFactory.class));
 
         install(new FactoryModuleBuilder()
                 .implement(KafkaMetricsConsumerRunnableBasic.class, KafkaMetricsConsumerRunnableBasic.class)

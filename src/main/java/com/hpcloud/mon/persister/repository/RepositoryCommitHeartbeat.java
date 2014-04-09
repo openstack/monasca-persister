@@ -3,7 +3,7 @@ package com.hpcloud.mon.persister.repository;
 import com.google.inject.Inject;
 import com.hpcloud.mon.persister.disruptor.AlarmStateHistoryDisruptor;
 import com.hpcloud.mon.persister.disruptor.MetricDisruptor;
-import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionMessageEvent;
+import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionedMessageEvent;
 import com.hpcloud.mon.persister.disruptor.event.MetricMessageEvent;
 import com.lmax.disruptor.EventTranslator;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -65,10 +65,10 @@ public class RepositoryCommitHeartbeat implements Managed {
                             event.setEnvelope(null);
                         }
                     });
-                    alarmHistoryDisruptor.publishEvent(new EventTranslator<AlarmStateTransitionMessageEvent>() {
+                    alarmHistoryDisruptor.publishEvent(new EventTranslator<AlarmStateTransitionedMessageEvent>() {
 
                         @Override
-                        public void translateTo(AlarmStateTransitionMessageEvent event, long sequence) {
+                        public void translateTo(AlarmStateTransitionedMessageEvent event, long sequence) {
                             event.setMessage(null);
                         }
                     });

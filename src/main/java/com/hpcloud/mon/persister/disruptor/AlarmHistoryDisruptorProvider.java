@@ -3,8 +3,8 @@ package com.hpcloud.mon.persister.disruptor;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
-import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionMessageEventFactory;
-import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionMessageEventHandlerFactory;
+import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionedMessageEventFactory;
+import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionedMessageEventHandlerFactory;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.ExceptionHandler;
 import org.slf4j.Logger;
@@ -18,13 +18,13 @@ public class AlarmHistoryDisruptorProvider implements Provider<AlarmStateHistory
     private static final Logger logger = LoggerFactory.getLogger(AlarmHistoryDisruptorProvider.class);
 
     private final MonPersisterConfiguration configuration;
-    private final AlarmStateTransitionMessageEventHandlerFactory eventHandlerFactory;
+    private final AlarmStateTransitionedMessageEventHandlerFactory eventHandlerFactory;
     private final ExceptionHandler exceptionHandler;
     private final AlarmStateHistoryDisruptor instance;
 
     @Inject
     public AlarmHistoryDisruptorProvider(MonPersisterConfiguration configuration,
-                                         AlarmStateTransitionMessageEventHandlerFactory eventHandlerFactory,
+                                         AlarmStateTransitionedMessageEventHandlerFactory eventHandlerFactory,
                                          ExceptionHandler exceptionHandler) {
         this.configuration = configuration;
         this.eventHandlerFactory = eventHandlerFactory;
@@ -37,7 +37,7 @@ public class AlarmHistoryDisruptorProvider implements Provider<AlarmStateHistory
         logger.debug("Creating disruptor...");
 
         Executor executor = Executors.newCachedThreadPool();
-        AlarmStateTransitionMessageEventFactory eventFactory = new AlarmStateTransitionMessageEventFactory();
+        AlarmStateTransitionedMessageEventFactory eventFactory = new AlarmStateTransitionedMessageEventFactory();
 
         int bufferSize = configuration.getDisruptorConfiguration().getBufferSize();
         logger.debug("Buffer size for instance of disruptor [" + bufferSize + "]");
