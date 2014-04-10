@@ -1,5 +1,8 @@
 package com.hpcloud.mon.persister.disruptor.event;
 
+import com.codahale.metrics.Counter;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
@@ -7,11 +10,7 @@ import com.hpcloud.mon.persister.message.MetricMessage;
 import com.hpcloud.mon.persister.repository.Sha1HashId;
 import com.hpcloud.mon.persister.repository.VerticaMetricRepository;
 import com.lmax.disruptor.EventHandler;
-import com.yammer.metrics.Metrics;
-import com.yammer.metrics.core.Counter;
-import com.yammer.metrics.core.Meter;
-import com.yammer.metrics.core.Timer;
-import com.yammer.metrics.core.TimerContext;
+import io.dropwizard.setup.Environment;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +20,6 @@ import java.util.Date;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.TreeMap;
-import java.util.concurrent.TimeUnit;
 
 public class MetricMessageEventHandler implements EventHandler<MetricMessageEvent> {
 
@@ -40,24 +38,35 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
 
     private final VerticaMetricRepository verticaMetricRepository;
     private final MonPersisterConfiguration configuration;
+    private final Environment environment;
 
-    private final Counter metricCounter = Metrics.newCounter(this.getClass(), "metrics-added-to-batch-counter");
-    private final Counter definitionCounter = Metrics.newCounter(this.getClass(), "metric-definitions-added-to-batch-counter");
-    private final Counter dimensionCounter = Metrics.newCounter(this.getClass(), "metric-dimensions-added-to-batch-counter");
-    private final Counter definitionDimensionsCounter = Metrics.newCounter(this.getClass(), "metric-definition-dimensions-added-to-batch-counter");
-    private final Meter metricMessageMeter = Metrics.newMeter(this.getClass(), "Metric", "metrics-messages-processed-meter", TimeUnit.SECONDS);
-    private final Meter commitMeter = Metrics.newMeter(this.getClass(), "Metric", "commits-executed-meter", TimeUnit.SECONDS);
-    private final Timer commitTimer = Metrics.newTimer(this.getClass(), "total-commit-and-flush-timer");
+    private final Counter metricCounter;
+    private final Counter definitionCounter;
+    private final Counter dimensionCounter;
+    private final Counter definitionDimensionsCounter;
+    private final Meter metricMessageMeter;
+    private final Meter commitMeter;
+    private final Timer commitTimer;
 
     @Inject
     public MetricMessageEventHandler(VerticaMetricRepository verticaMetricRepository,
                                      MonPersisterConfiguration configuration,
+                                     Environment environment,
                                      @Assisted("ordinal") int ordinal,
                                      @Assisted("numProcessors") int numProcessors,
                                      @Assisted("batchSize") int batchSize) {
 
         this.verticaMetricRepository = verticaMetricRepository;
         this.configuration = configuration;
+        this.environment = environment;
+        this.metricCounter = this.environment.metrics().counter(this.getClass().getName() + "." + "metrics-added-to-batch-counter");
+        this.definitionCounter = this.environment.metrics().counter(this.getClass().getName() + "." + "metric-definitions-added-to-batch-counter");
+        this.dimensionCounter = this.environment.metrics().counter(this.getClass().getName() + "." + "metric-dimensions-added-to-batch-counter");
+        this.definitionDimensionsCounter = this.environment.metrics().counter(this.getClass().getName() + "." + "metric-definition-dimensions-added-to-batch-counter");
+        this.metricMessageMeter = this.environment.metrics().meter(this.getClass().getName() + "." + "metrics-messages-processed-meter");
+        this.commitMeter = this.environment.metrics().meter(this.getClass().getName() + "." + "commits-executed-meter");
+        this.commitTimer = this.environment.metrics().timer(this.getClass().getName() + "." + "total-commit-and-flush-timer");
+
         this.secondsBetweenFlushes = configuration.getMonDeDuperConfiguration().getDedupeRunFrequencySeconds();
         this.millisBetweenFlushes = secondsBetweenFlushes * 1000;
 
@@ -160,7 +169,7 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
         }
 
         if (sequence % batchSize == (batchSize - 1)) {
-            TimerContext context = commitTimer.time();
+            Timer.Context context = commitTimer.time();
             flush();
             context.stop();
             commitMeter.mark();

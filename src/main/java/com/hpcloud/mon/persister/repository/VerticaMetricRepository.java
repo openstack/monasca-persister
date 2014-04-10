@@ -1,11 +1,10 @@
 package com.hpcloud.mon.persister.repository;
 
+import com.codahale.metrics.Timer;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
-import com.yammer.metrics.Metrics;
-import com.yammer.metrics.core.Timer;
-import com.yammer.metrics.core.TimerContext;
+import io.dropwizard.setup.Environment;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.PreparedBatch;
 import org.slf4j.Logger;
@@ -22,6 +21,7 @@ public class VerticaMetricRepository extends VerticaRepository {
     private static final Logger logger = LoggerFactory.getLogger(VerticaMetricRepository.class);
 
     private final MonPersisterConfiguration configuration;
+    private final Environment environment;
 
     private final Cache<Sha1HashId, Sha1HashId> definitionsIdCache;
     private final Cache<Sha1HashId, Sha1HashId> dimensionsIdCache;
@@ -66,15 +66,20 @@ public class VerticaMetricRepository extends VerticaRepository {
     private final String dimensionsTempStagingTableInsertStmt;
     private final String definitionDimensionsTempStagingTableInsertStmt;
 
-    private final Timer commitTimer = Metrics.newTimer(this.getClass(), "commits-timer");
-    private final Timer flushTimer = Metrics.newTimer(this.getClass(), "staging-tables-flushed-timer");
+    private final Timer commitTimer;
+    private final Timer flushTimer;
 
     @Inject
-    public VerticaMetricRepository(DBI dbi, MonPersisterConfiguration configuration) throws NoSuchAlgorithmException, SQLException {
+    public VerticaMetricRepository(DBI dbi, MonPersisterConfiguration configuration,
+                                   Environment environment) throws NoSuchAlgorithmException, SQLException {
         super(dbi);
         logger.debug("Instantiating: " + this);
 
         this.configuration = configuration;
+        this.environment = environment;
+        this.commitTimer = this.environment.metrics().timer(this.getClass().getName() + "." + "commits-timer");
+        this.flushTimer = this.environment.metrics().timer(this.getClass().getName() + "." + "staging-tables-flushed-timer");
+
 
         definitionsIdCache = CacheBuilder.newBuilder()
                 .maximumSize(configuration.getVerticaMetricRepositoryConfiguration().getMaxCacheSize()).build();
@@ -149,7 +154,7 @@ public class VerticaMetricRepository extends VerticaRepository {
     public void flush() {
         commitBatch();
         long startTime = System.currentTimeMillis();
-        TimerContext context = flushTimer.time();
+        Timer.Context context = flushTimer.time();
         handle.execute(definitionsTempStagingTableInsertStmt);
         handle.execute("truncate table " + definitionsTempStagingTableName);
         handle.execute(dimensionsTempStagingTableInsertStmt);
@@ -166,7 +171,7 @@ public class VerticaMetricRepository extends VerticaRepository {
 
     private void commitBatch() {
         long startTime = System.currentTimeMillis();
-        TimerContext context = commitTimer.time();
+        Timer.Context context = commitTimer.time();
         metricsBatch.execute();
         stagedDefinitionsBatch.execute();
         stagedDimensionsBatch.execute();

@@ -7,7 +7,7 @@ import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionedMessageEv
 import com.hpcloud.mon.persister.disruptor.event.MetricMessageEvent;
 import com.lmax.disruptor.EventTranslator;
 import com.lmax.disruptor.dsl.Disruptor;
-import com.yammer.dropwizard.lifecycle.Managed;
+import io.dropwizard.lifecycle.Managed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

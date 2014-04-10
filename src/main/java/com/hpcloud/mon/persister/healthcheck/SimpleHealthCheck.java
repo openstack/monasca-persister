@@ -1,11 +1,11 @@
 package com.hpcloud.mon.persister.healthcheck;
 
-import com.yammer.metrics.core.HealthCheck;
+import com.codahale.metrics.health.HealthCheck;
 
 public class SimpleHealthCheck extends HealthCheck {
 
-    public SimpleHealthCheck(String name) {
-        super(name);
+    public SimpleHealthCheck() {
+
     }
 
     @Override

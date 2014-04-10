@@ -13,7 +13,7 @@ import com.hpcloud.mon.persister.disruptor.event.MetricMessageEventHandler;
 import com.hpcloud.mon.persister.disruptor.event.MetricMessageEventHandlerFactory;
 import com.hpcloud.mon.persister.repository.RepositoryCommitHeartbeat;
 import com.lmax.disruptor.ExceptionHandler;
-import com.yammer.dropwizard.config.Environment;
+import io.dropwizard.setup.Environment;
 import org.skife.jdbi.v2.DBI;
 
 public class MonPersisterModule extends AbstractModule {

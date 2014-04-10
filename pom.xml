@@ -64,9 +64,14 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.yammer.dropwizard</groupId>
+            <groupId>io.dropwizard</groupId>
             <artifactId>dropwizard-core</artifactId>
-            <version>0.6.2</version>
+            <version>0.7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.dropwizard</groupId>
+            <artifactId>dropwizard-jdbi</artifactId>
+            <version>0.7.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>
@@ -93,11 +98,7 @@
             <artifactId>disruptor</artifactId>
             <version>3.2.0</version>
         </dependency>
-        <dependency>
-            <groupId>com.yammer.dropwizard</groupId>
-            <artifactId>dropwizard-jdbi</artifactId>
-            <version>0.6.2</version>
-        </dependency>
+
         <dependency>
             <groupId>com.vertica</groupId>
             <artifactId>vertica-jdbc</artifactId>
@@ -117,11 +118,6 @@
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
             <version>1.5</version>
-        </dependency>
-        <dependency>
-            <groupId>com.yammer.metrics</groupId>
-            <artifactId>metrics-core</artifactId>
-            <version>2.2.0</version>
         </dependency>
     </dependencies>
 
@@ -169,7 +165,8 @@
                                         implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.hpcloud.mon.persister.MonPersisterService</mainClass>
+                                    <mainClass>com.hpcloud.mon.persister.MonPersisterApplication
+                                    </mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
