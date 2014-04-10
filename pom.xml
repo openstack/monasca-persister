@@ -11,6 +11,14 @@
     <repositories>
         <repository>
             <id>nexus 3rd party</id>
+            <url>http://nexus.paas.hpcloud.net:8081/nexus/content/repositories/releases</url>
+        </repository>
+        <repository>
+            <id>ps-snapshots</id>
+            <url>http://nexus.paas.hpcloud.net:8081/nexus/content/repositories/snapshots/</url>
+        </repository>
+        <repository>
+            <id>ps-3rd-party</id>
             <url>http://nexus.paas.hpcloud.net:8081/nexus/content/repositories/thirdparty</url>
         </repository>
     </repositories>
