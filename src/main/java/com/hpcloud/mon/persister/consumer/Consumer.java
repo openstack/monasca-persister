@@ -2,7 +2,7 @@ package com.hpcloud.mon.persister.consumer;
 
 import com.google.inject.Inject;
 import com.lmax.disruptor.dsl.Disruptor;
-import com.yammer.dropwizard.lifecycle.Managed;
+import io.dropwizard.lifecycle.Managed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

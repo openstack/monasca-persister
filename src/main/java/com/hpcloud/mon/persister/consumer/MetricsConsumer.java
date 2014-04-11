@@ -1,4 +1,4 @@
-package com.hpcloud.mon.persister.consumer;
+papackage com.hpcloud.mon.persister.consumer;
 
 import com.google.inject.Inject;
 import com.hpcloud.mon.persister.disruptor.MetricDisruptor;

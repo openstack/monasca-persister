@@ -1,8 +1,8 @@
 package com.hpcloud.mon.persister.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.yammer.dropwizard.config.Configuration;
-import com.yammer.dropwizard.db.DatabaseConfiguration;
+import io.dropwizard.Configuration;
+import io.dropwizard.db.DataSourceFactory;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -46,10 +46,10 @@ public class MonPersisterConfiguration extends Configuration {
     @Valid
     @NotNull
     @JsonProperty
-    private final DatabaseConfiguration databaseConfiguration = new DatabaseConfiguration();
+    private final DataSourceFactory dataSourceFactory = new DataSourceFactory();
 
-    public DatabaseConfiguration getDatabaseConfiguration() {
-        return databaseConfiguration;
+    public DataSourceFactory getDataSourceFactory() {
+        return dataSourceFactory;
     }
 
     @Valid
