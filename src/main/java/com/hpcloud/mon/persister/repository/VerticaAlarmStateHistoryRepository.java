@@ -1,10 +1,9 @@
 package com.hpcloud.mon.persister.repository;
 
+import com.codahale.metrics.Timer;
 import com.hpcloud.mon.common.event.AlarmStateTransitionedEvent;
 import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
-import com.yammer.metrics.Metrics;
-import com.yammer.metrics.core.Timer;
-import com.yammer.metrics.core.TimerContext;
+import io.dropwizard.setup.Environment;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.PreparedBatch;
 import org.slf4j.Logger;
@@ -21,18 +20,23 @@ public class VerticaAlarmStateHistoryRepository extends VerticaRepository {
 
     private static final Logger logger = LoggerFactory.getLogger(VerticaAlarmStateHistoryRepository.class);
     private final MonPersisterConfiguration configuration;
+    private final Environment environment;
+
     private static final String SQL_INSERT_INTO_ALARM_HISTORY =
             "insert into MonAlarms.StateHistory (tenant_id, alarm_id, alarm_name, alarm_description, old_state, new_state, reason, time_stamp) values (:tenant_id, :alarm_id, :alarm_name, :alarm_description, :old_state, :new_state, :reason, :time_stamp)";
     private PreparedBatch batch;
-    private final Timer commitTimer = Metrics.newTimer(this.getClass(), "commits-timer");
+    private final Timer commitTimer;
     private final SimpleDateFormat simpleDateFormat;
 
     @Inject
-    public VerticaAlarmStateHistoryRepository(DBI dbi, MonPersisterConfiguration configuration) throws NoSuchAlgorithmException, SQLException {
+    public VerticaAlarmStateHistoryRepository(DBI dbi, MonPersisterConfiguration configuration,
+                                              Environment environment) throws NoSuchAlgorithmException, SQLException {
         super(dbi);
         logger.debug("Instantiating: " + this);
 
         this.configuration = configuration;
+        this.environment = environment;
+        this.commitTimer = this.environment.metrics().timer(this.getClass().getName() + "." + "commits-timer");
 
         handle.getConnection().setAutoCommit(false);
         batch = handle.prepareBatch(SQL_INSERT_INTO_ALARM_HISTORY);
@@ -61,7 +65,7 @@ public class VerticaAlarmStateHistoryRepository extends VerticaRepository {
 
     private void commitBatch() {
         long startTime = System.currentTimeMillis();
-        TimerContext context = commitTimer.time();
+        Timer.Context context = commitTimer.time();
         batch.execute();
         handle.commit();
         handle.begin();

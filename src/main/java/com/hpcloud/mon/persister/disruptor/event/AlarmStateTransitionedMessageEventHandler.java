@@ -1,20 +1,17 @@
 package com.hpcloud.mon.persister.disruptor.event;
 
+import com.codahale.metrics.Counter;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
 import com.hpcloud.mon.common.event.AlarmStateTransitionedEvent;
+import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
 import com.hpcloud.mon.persister.repository.VerticaAlarmStateHistoryRepository;
 import com.lmax.disruptor.EventHandler;
-import com.yammer.metrics.Metrics;
-import com.yammer.metrics.core.Counter;
-import com.yammer.metrics.core.Meter;
-import com.yammer.metrics.core.Timer;
-import com.yammer.metrics.core.TimerContext;
+import io.dropwizard.setup.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.TimeUnit;
 
 public class AlarmStateTransitionedMessageEventHandler implements EventHandler<AlarmStateTransitionedMessageEvent> {
 
@@ -29,21 +26,29 @@ public class AlarmStateTransitionedMessageEventHandler implements EventHandler<A
 
     private final VerticaAlarmStateHistoryRepository repository;
     private final MonPersisterConfiguration configuration;
+    private final Environment environment;
 
-    private final Counter batchCounter = Metrics.newCounter(this.getClass(), "alarm-added-to-batch-batchCounter");
-    private final Meter processedMeter = Metrics.newMeter(this.getClass(), "Alarm", "alarm-messages-processed-processedMeter", TimeUnit.SECONDS);
-    private final Meter commitMeter = Metrics.newMeter(this.getClass(), "Metric", "commits-executed-processedMeter", TimeUnit.SECONDS);
-    private final Timer commitTimer = Metrics.newTimer(this.getClass(), "total-commit-and-flush-timer");
+    private final Counter batchCounter;
+    private final Meter processedMeter;
+    private final Meter commitMeter;
+    private final Timer commitTimer;
 
     @Inject
     public AlarmStateTransitionedMessageEventHandler(VerticaAlarmStateHistoryRepository repository,
                                                      MonPersisterConfiguration configuration,
+                                                     Environment environment,
                                                      @Assisted("ordinal") int ordinal,
                                                      @Assisted("numProcessors") int numProcessors,
                                                      @Assisted("batchSize") int batchSize) {
 
         this.repository = repository;
         this.configuration = configuration;
+        this.environment = environment;
+        this.batchCounter = this.environment.metrics().counter(this.getClass().getName() + "." + "alarm-added-to-batch-batchCounter");
+        this.processedMeter = this.environment.metrics().meter(this.getClass().getName() + "." + "alarm-messages-processed-processedMeter");
+        this.commitMeter = this.environment.metrics().meter(this.getClass().getName() + "." + "commits-executed-processedMeter");
+        this.commitTimer = this.environment.metrics().timer(this.getClass().getName() + "." + "total-commit-and-flush-timer");
+
         this.secondsBetweenFlushes = configuration.getMonDeDuperConfiguration().getDedupeRunFrequencySeconds();
         this.millisBetweenFlushes = secondsBetweenFlushes * 1000;
 
@@ -80,7 +85,7 @@ public class AlarmStateTransitionedMessageEventHandler implements EventHandler<A
         repository.addToBatch(message);
 
         if (sequence % batchSize == (batchSize - 1)) {
-            TimerContext context = commitTimer.time();
+            Timer.Context context = commitTimer.time();
             flush();
             context.stop();
             commitMeter.mark();
