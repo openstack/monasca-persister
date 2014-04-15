@@ -3,8 +3,8 @@ package com.hpcloud.mon.persister.disruptor;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
-import com.hpcloud.mon.persister.disruptor.event.MetricMessageEventFactory;
-import com.hpcloud.mon.persister.disruptor.event.MetricMessageEventHandlerFactory;
+import com.hpcloud.mon.persister.disruptor.event.MetricFactory;
+import com.hpcloud.mon.persister.disruptor.event.MetricHandlerFactory;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.ExceptionHandler;
 import org.slf4j.Logger;
@@ -18,17 +18,17 @@ public class MetricDisruptorProvider implements Provider<MetricDisruptor> {
     private static final Logger logger = LoggerFactory.getLogger(MetricDisruptorProvider.class);
 
     private final MonPersisterConfiguration configuration;
-    private final MetricMessageEventHandlerFactory metricMessageEventHandlerFactory;
+    private final MetricHandlerFactory eventHandlerFactory;
     private final ExceptionHandler exceptionHandler;
     private final MetricDisruptor instance;
 
     @Inject
     public MetricDisruptorProvider(MonPersisterConfiguration configuration,
-                                   MetricMessageEventHandlerFactory metricMessageEventHandlerFactory,
+                                   MetricHandlerFactory eventHandlerFactory,
                                    ExceptionHandler exceptionHandler) {
 
         this.configuration = configuration;
-        this.metricMessageEventHandlerFactory = metricMessageEventHandlerFactory;
+        this.eventHandlerFactory = eventHandlerFactory;
         this.exceptionHandler = exceptionHandler;
         this.instance = createInstance();
     }
@@ -38,12 +38,12 @@ public class MetricDisruptorProvider implements Provider<MetricDisruptor> {
         logger.debug("Creating disruptor...");
 
         Executor executor = Executors.newCachedThreadPool();
-        MetricMessageEventFactory metricMessageEventFactory = new MetricMessageEventFactory();
+        MetricFactory eventFactory = new MetricFactory();
 
         int bufferSize = configuration.getDisruptorConfiguration().getBufferSize();
         logger.debug("Buffer size for instance of disruptor [" + bufferSize + "]");
 
-        MetricDisruptor disruptor = new MetricDisruptor(metricMessageEventFactory, bufferSize, executor);
+        MetricDisruptor disruptor = new MetricDisruptor(eventFactory, bufferSize, executor);
         disruptor.handleExceptionsWith(exceptionHandler);
 
         int batchSize = configuration.getVerticaOutputProcessorConfiguration().getBatchSize();
@@ -55,7 +55,7 @@ public class MetricDisruptorProvider implements Provider<MetricDisruptor> {
         EventHandler[] eventHandlers = new EventHandler[numOutputProcessors];
 
         for (int i = 0; i < numOutputProcessors; ++i) {
-            eventHandlers[i] = metricMessageEventHandlerFactory.create(i, numOutputProcessors, batchSize);
+            eventHandlers[i] = eventHandlerFactory.create(i, numOutputProcessors, batchSize);
         }
 
         disruptor.handleEventsWith(eventHandlers);

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.hpcloud.mon.persister.disruptor.AlarmStateHistoryDisruptor;
-import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionedMessageEvent;
+import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionedEventHolder;
 import com.lmax.disruptor.EventTranslator;
 import kafka.consumer.ConsumerIterator;
 import kafka.consumer.KafkaStream;
@@ -45,14 +45,14 @@ public class KafkaAlarmStateTransitionConsumerRunnableBasic implements Runnable 
             logger.debug("Thread " + threadNumber + ": " + s);
 
             try {
-                final AlarmStateTransitionedEvent message = objectMapper.readValue(s, AlarmStateTransitionedEvent.class);
+                final AlarmStateTransitionedEvent event = objectMapper.readValue(s, AlarmStateTransitionedEvent.class);
 
-                logger.debug(message.toString());
+                logger.debug(event.toString());
 
-                disruptor.publishEvent(new EventTranslator<AlarmStateTransitionedMessageEvent>() {
+                disruptor.publishEvent(new EventTranslator<AlarmStateTransitionedEventHolder>() {
                     @Override
-                    public void translateTo(AlarmStateTransitionedMessageEvent event, long sequence) {
-                        event.setMessage(message);
+                    public void translateTo(AlarmStateTransitionedEventHolder eventHolder, long sequence) {
+                        eventHolder.setEvent(event);
                     }
                 });
             } catch (Exception e) {

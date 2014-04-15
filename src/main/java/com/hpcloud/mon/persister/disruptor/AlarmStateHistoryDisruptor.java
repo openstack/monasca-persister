@@ -1,6 +1,6 @@
 package com.hpcloud.mon.persister.disruptor;
 
-import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionedMessageEvent;
+import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionedEventHolder;
 import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.WaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -8,7 +8,7 @@ import com.lmax.disruptor.dsl.ProducerType;
 
 import java.util.concurrent.Executor;
 
-public class AlarmStateHistoryDisruptor extends Disruptor<AlarmStateTransitionedMessageEvent> {
+public class AlarmStateHistoryDisruptor extends Disruptor<AlarmStateTransitionedEventHolder> {
     public AlarmStateHistoryDisruptor(EventFactory eventFactory, int ringBufferSize, Executor executor) {
         super(eventFactory, ringBufferSize, executor);
     }

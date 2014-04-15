@@ -3,8 +3,8 @@ package com.hpcloud.mon.persister.repository;
 import com.google.inject.Inject;
 import com.hpcloud.mon.persister.disruptor.AlarmStateHistoryDisruptor;
 import com.hpcloud.mon.persister.disruptor.MetricDisruptor;
-import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionedMessageEvent;
-import com.hpcloud.mon.persister.disruptor.event.MetricMessageEvent;
+import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionedEventHolder;
+import com.hpcloud.mon.persister.disruptor.event.MetricHolder;
 import com.lmax.disruptor.EventTranslator;
 import com.lmax.disruptor.dsl.Disruptor;
 import io.dropwizard.lifecycle.Managed;
@@ -58,18 +58,18 @@ public class RepositoryCommitHeartbeat implements Managed {
 
                     // Send heartbeat
                     logger.debug("Sending heartbeat message");
-                    metricDisruptor.publishEvent(new EventTranslator<MetricMessageEvent>() {
+                    metricDisruptor.publishEvent(new EventTranslator<MetricHolder>() {
 
                         @Override
-                        public void translateTo(MetricMessageEvent event, long sequence) {
+                        public void translateTo(MetricHolder event, long sequence) {
                             event.setEnvelope(null);
                         }
                     });
-                    alarmHistoryDisruptor.publishEvent(new EventTranslator<AlarmStateTransitionedMessageEvent>() {
+                    alarmHistoryDisruptor.publishEvent(new EventTranslator<AlarmStateTransitionedEventHolder>() {
 
                         @Override
-                        public void translateTo(AlarmStateTransitionedMessageEvent event, long sequence) {
-                            event.setMessage(null);
+                        public void translateTo(AlarmStateTransitionedEventHolder event, long sequence) {
+                            event.setEvent(null);
                         }
                     });
 

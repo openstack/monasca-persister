@@ -5,8 +5,8 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import com.hpcloud.mon.common.model.metric.Metric;
 import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
-import com.hpcloud.mon.persister.message.MetricMessage;
 import com.hpcloud.mon.persister.repository.Sha1HashId;
 import com.hpcloud.mon.persister.repository.VerticaMetricRepository;
 import com.lmax.disruptor.EventHandler;
@@ -21,10 +21,11 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.TreeMap;
 
-public class MetricMessageEventHandler implements EventHandler<MetricMessageEvent> {
+public class MetricHandler implements EventHandler<MetricHolder> {
 
-    private static final Logger logger = LoggerFactory.getLogger(MetricMessageEventHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(MetricHandler.class);
     private static final String TENANT_ID = "tenantId";
+    private static final String REGION = "region";
 
     private final int ordinal;
     private final int numProcessors;
@@ -44,17 +45,17 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
     private final Counter definitionCounter;
     private final Counter dimensionCounter;
     private final Counter definitionDimensionsCounter;
-    private final Meter metricMessageMeter;
+    private final Meter metricMeter;
     private final Meter commitMeter;
     private final Timer commitTimer;
 
     @Inject
-    public MetricMessageEventHandler(VerticaMetricRepository verticaMetricRepository,
-                                     MonPersisterConfiguration configuration,
-                                     Environment environment,
-                                     @Assisted("ordinal") int ordinal,
-                                     @Assisted("numProcessors") int numProcessors,
-                                     @Assisted("batchSize") int batchSize) {
+    public MetricHandler(VerticaMetricRepository verticaMetricRepository,
+                         MonPersisterConfiguration configuration,
+                         Environment environment,
+                         @Assisted("ordinal") int ordinal,
+                         @Assisted("numProcessors") int numProcessors,
+                         @Assisted("batchSize") int batchSize) {
 
         this.verticaMetricRepository = verticaMetricRepository;
         this.configuration = configuration;
@@ -63,7 +64,7 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
         this.definitionCounter = this.environment.metrics().counter(this.getClass().getName() + "." + "metric-definitions-added-to-batch-counter");
         this.dimensionCounter = this.environment.metrics().counter(this.getClass().getName() + "." + "metric-dimensions-added-to-batch-counter");
         this.definitionDimensionsCounter = this.environment.metrics().counter(this.getClass().getName() + "." + "metric-definition-dimensions-added-to-batch-counter");
-        this.metricMessageMeter = this.environment.metrics().meter(this.getClass().getName() + "." + "metrics-messages-processed-meter");
+        this.metricMeter = this.environment.metrics().meter(this.getClass().getName() + "." + "metrics-messages-processed-meter");
         this.commitMeter = this.environment.metrics().meter(this.getClass().getName() + "." + "commits-executed-meter");
         this.commitTimer = this.environment.metrics().timer(this.getClass().getName() + "." + "total-commit-and-flush-timer");
 
@@ -81,9 +82,9 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
     }
 
     @Override
-    public void onEvent(MetricMessageEvent metricMessageEvent, long sequence, boolean b) throws Exception {
+    public void onEvent(MetricHolder metricEvent, long sequence, boolean b) throws Exception {
 
-        if (metricMessageEvent.getMetricEnvelope() == null) {
+        if (metricEvent.getMetricEnvelope() == null) {
             logger.debug("Received heartbeat message. Checking last flush time.");
             if (millisSinceLastFlush + millisBetweenFlushes < System.currentTimeMillis()) {
                 logger.debug("It's been more than " + secondsBetweenFlushes + " seconds since last flush. Flushing staging tables now...");
@@ -98,34 +99,39 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
             return;
         }
 
-        metricMessageMeter.mark();
+        metricMeter.mark();
 
         logger.debug("Sequence number: " + sequence +
                 " Ordinal: " + ordinal +
-                " Event: " + metricMessageEvent.getMetricEnvelope().metric);
+                " Event: " + metricEvent.getMetricEnvelope().metric);
 
-        MetricMessage metricMessage = metricMessageEvent.getMetricEnvelope().metric;
-        Map<String, Object> meta = metricMessageEvent.getMetricEnvelope().meta;
+        Metric metric = metricEvent.getMetricEnvelope().metric;
+        Map<String, Object> meta = metricEvent.getMetricEnvelope().meta;
 
         String tenantId = "";
         if (!meta.containsKey(TENANT_ID)) {
             logger.warn("Failed to find 'tenantId' in message envelope meta data. Metric message may be mal-formed. Setting 'tenantId' to empty string.");
-            logger.warn(metricMessage.toString());
+            logger.warn(metric.toString());
             logger.warn("meta" + meta.toString());
         } else {
             tenantId = (String) meta.get(TENANT_ID);
         }
 
-        String definitionIdStringToHash = metricMessage.getName() + tenantId + metricMessage.getRegion();
+        String region = "";
+        if (meta.containsKey(REGION)) {
+            region = (String) meta.get(REGION);
+        }
+
+        String definitionIdStringToHash = metric.getName() + tenantId + region;
         byte[] definitionIdSha1Hash = DigestUtils.sha(definitionIdStringToHash);
         Sha1HashId definitionSha1HashId = new Sha1HashId((definitionIdSha1Hash));
-        verticaMetricRepository.addToBatchStagingDefinitions(definitionSha1HashId, metricMessage.getName(), tenantId, metricMessage.getRegion());
+        verticaMetricRepository.addToBatchStagingDefinitions(definitionSha1HashId, metric.getName(), tenantId, region);
         definitionCounter.inc();
 
         String dimensionIdStringToHash = "";
-        if (metricMessage.getDimensions() != null) {
+        if (metric.getDimensions() != null) {
             // Sort the dimensions on name and value.
-            TreeMap<String, String> dimensionTreeMap = new TreeMap<>(metricMessage.getDimensions());
+            TreeMap<String, String> dimensionTreeMap = new TreeMap<>(metric.getDimensions());
             for (String dimensionName : dimensionTreeMap.keySet()) {
                 String dimensionValue = dimensionTreeMap.get(dimensionName);
                 dimensionIdStringToHash += dimensionName + dimensionValue;
@@ -134,8 +140,8 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
 
         byte[] dimensionIdSha1Hash = DigestUtils.sha(dimensionIdStringToHash);
         Sha1HashId dimensionsSha1HashId = new Sha1HashId(dimensionIdSha1Hash);
-        if (metricMessage.getDimensions() != null) {
-            TreeMap<String, String> dimensionTreeMap = new TreeMap<>(metricMessage.getDimensions());
+        if (metric.getDimensions() != null) {
+            TreeMap<String, String> dimensionTreeMap = new TreeMap<>(metric.getDimensions());
             for (String dimensionName : dimensionTreeMap.keySet()) {
                 String dimensionValue = dimensionTreeMap.get(dimensionName);
                 verticaMetricRepository.addToBatchStagingDimensions(dimensionsSha1HashId, dimensionName, dimensionValue);
@@ -149,22 +155,19 @@ public class MetricMessageEventHandler implements EventHandler<MetricMessageEven
         verticaMetricRepository.addToBatchStagingdefinitionDimensions(definitionDimensionsSha1HashId, definitionSha1HashId, dimensionsSha1HashId);
         definitionDimensionsCounter.inc();
 
-        if (metricMessage.getValue() != null && metricMessage.getTimestamp() != null) {
-            String timeStamp = simpleDateFormat.format(new Date(Long.parseLong(metricMessage.getTimestamp()) * 1000));
-            Double value = metricMessage.getValue();
+        if (metric.getTimeValues() == null) {
+            String timeStamp = simpleDateFormat.format(new Date(metric.getTimestamp() * 1000));
+            double value = metric.getValue();
             verticaMetricRepository.addToBatchMetrics(definitionDimensionsSha1HashId, timeStamp, value);
             metricCounter.inc();
-
         }
-        if (metricMessage.getTime_values() != null) {
-            if (metricMessage.getTime_values() != null) {
-                for (Double[] timeValuePairs : metricMessage.getTime_values()) {
-                    String timeStamp = simpleDateFormat.format(new Date((long) (timeValuePairs[0] * 1000)));
-                    Double value = timeValuePairs[1];
-                    verticaMetricRepository.addToBatchMetrics(definitionDimensionsSha1HashId, timeStamp, value);
-                    metricCounter.inc();
+        else {
+            for (double[] timeValuePairs : metric.getTimeValues()) {
+                String timeStamp = simpleDateFormat.format(new Date((long) (timeValuePairs[0] * 1000)));
+                double value = timeValuePairs[1];
+                verticaMetricRepository.addToBatchMetrics(definitionDimensionsSha1HashId, timeStamp, value);
+                metricCounter.inc();
 
-                }
             }
         }
 

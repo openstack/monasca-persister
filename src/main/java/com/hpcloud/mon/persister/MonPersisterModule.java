@@ -7,10 +7,9 @@ import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
 import com.hpcloud.mon.persister.consumer.*;
 import com.hpcloud.mon.persister.dbi.DBIProvider;
 import com.hpcloud.mon.persister.disruptor.*;
-import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionedMessageEventHandler;
-import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionedMessageEventHandlerFactory;
-import com.hpcloud.mon.persister.disruptor.event.MetricMessageEventHandler;
-import com.hpcloud.mon.persister.disruptor.event.MetricMessageEventHandlerFactory;
+import com.hpcloud.mon.persister.disruptor.event.*;
+import com.hpcloud.mon.persister.disruptor.event.MetricHandler;
+import com.hpcloud.mon.persister.disruptor.event.MetricHandlerFactory;
 import com.hpcloud.mon.persister.repository.RepositoryCommitHeartbeat;
 import com.lmax.disruptor.ExceptionHandler;
 import io.dropwizard.setup.Environment;
@@ -33,12 +32,12 @@ public class MonPersisterModule extends AbstractModule {
         bind(Environment.class).toInstance(environment);
 
         install(new FactoryModuleBuilder()
-                .implement(MetricMessageEventHandler.class, MetricMessageEventHandler.class)
-                .build(MetricMessageEventHandlerFactory.class));
+                .implement(MetricHandler.class, MetricHandler.class)
+                .build(MetricHandlerFactory.class));
 
         install(new FactoryModuleBuilder()
-                .implement(AlarmStateTransitionedMessageEventHandler.class, AlarmStateTransitionedMessageEventHandler.class)
-                .build(AlarmStateTransitionedMessageEventHandlerFactory.class));
+                .implement(AlarmStateTransitionedEventHandler.class, AlarmStateTransitionedEventHandler.class)
+                .build(AlarmStateTransitionedEventHandlerFactory.class));
 
         install(new FactoryModuleBuilder()
                 .implement(KafkaMetricsConsumerRunnableBasic.class, KafkaMetricsConsumerRunnableBasic.class)

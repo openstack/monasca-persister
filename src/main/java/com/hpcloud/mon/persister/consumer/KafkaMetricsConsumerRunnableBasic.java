@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.hpcloud.mon.persister.disruptor.MetricDisruptor;
-import com.hpcloud.mon.persister.disruptor.event.MetricMessageEvent;
-import com.hpcloud.mon.persister.message.MetricEnvelope;
+import com.hpcloud.mon.persister.disruptor.event.MetricHolder;
+import com.hpcloud.mon.common.model.metric.MetricEnvelope;
 import com.lmax.disruptor.EventTranslator;
 import kafka.consumer.ConsumerIterator;
 import kafka.consumer.KafkaStream;
@@ -49,9 +49,9 @@ public class KafkaMetricsConsumerRunnableBasic implements Runnable {
 
                     logger.debug(envelope.toString());
 
-                    disruptor.publishEvent(new EventTranslator<MetricMessageEvent>() {
+                    disruptor.publishEvent(new EventTranslator<MetricHolder>() {
                         @Override
-                        public void translateTo(MetricMessageEvent event, long sequence) {
+                        public void translateTo(MetricHolder event, long sequence) {
                             event.setEnvelope(envelope);
                         }
 

@@ -13,9 +13,9 @@ import io.dropwizard.setup.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AlarmStateTransitionedMessageEventHandler implements EventHandler<AlarmStateTransitionedMessageEvent> {
+public class AlarmStateTransitionedEventHandler implements EventHandler<AlarmStateTransitionedEventHolder> {
 
-    private static final Logger logger = LoggerFactory.getLogger(AlarmStateTransitionedMessageEventHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(AlarmStateTransitionedEventHandler.class);
     private final int ordinal;
     private final int numProcessors;
     private final int batchSize;
@@ -34,12 +34,12 @@ public class AlarmStateTransitionedMessageEventHandler implements EventHandler<A
     private final Timer commitTimer;
 
     @Inject
-    public AlarmStateTransitionedMessageEventHandler(VerticaAlarmStateHistoryRepository repository,
-                                                     MonPersisterConfiguration configuration,
-                                                     Environment environment,
-                                                     @Assisted("ordinal") int ordinal,
-                                                     @Assisted("numProcessors") int numProcessors,
-                                                     @Assisted("batchSize") int batchSize) {
+    public AlarmStateTransitionedEventHandler(VerticaAlarmStateHistoryRepository repository,
+                                              MonPersisterConfiguration configuration,
+                                              Environment environment,
+                                              @Assisted("ordinal") int ordinal,
+                                              @Assisted("numProcessors") int numProcessors,
+                                              @Assisted("batchSize") int batchSize) {
 
         this.repository = repository;
         this.configuration = configuration;
@@ -58,9 +58,9 @@ public class AlarmStateTransitionedMessageEventHandler implements EventHandler<A
     }
 
     @Override
-    public void onEvent(AlarmStateTransitionedMessageEvent event, long sequence, boolean b) throws Exception {
+    public void onEvent(AlarmStateTransitionedEventHolder eventHolder, long sequence, boolean b) throws Exception {
 
-        if (event.getMessage() == null) {
+        if (eventHolder.getEvent() == null) {
             logger.debug("Received heartbeat message. Checking last flush time.");
             if (millisSinceLastFlush + millisBetweenFlushes < System.currentTimeMillis()) {
                 logger.debug("It's been more than " + secondsBetweenFlushes + " seconds since last flush. Flushing staging tables now...");
@@ -79,10 +79,10 @@ public class AlarmStateTransitionedMessageEventHandler implements EventHandler<A
 
         logger.debug("Sequence number: " + sequence +
                 " Ordinal: " + ordinal +
-                " Event: " + event.getMessage());
+                " Event: " + eventHolder.getEvent());
 
-        AlarmStateTransitionedEvent message = event.getMessage();
-        repository.addToBatch(message);
+        AlarmStateTransitionedEvent event = eventHolder.getEvent();
+        repository.addToBatch(event);
 
         if (sequence % batchSize == (batchSize - 1)) {
             Timer.Context context = commitTimer.time();
