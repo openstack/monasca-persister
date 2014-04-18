@@ -23,7 +23,7 @@ public class VerticaAlarmStateHistoryRepository extends VerticaRepository {
     private final Environment environment;
 
     private static final String SQL_INSERT_INTO_ALARM_HISTORY =
-            "insert into MonAlarms.StateHistory (tenant_id, alarm_id, alarm_name, alarm_description, old_state, new_state, reason, time_stamp) values (:tenant_id, :alarm_id, :alarm_name, :alarm_description, :old_state, :new_state, :reason, :time_stamp)";
+            "insert into MonAlarms.StateHistory (tenant_id, alarm_id, old_state, new_state, reason, reason_data, time_stamp) values (:tenant_id, :alarm_id, :old_state, :new_state, :reason, :reason_data, :time_stamp)";
     private PreparedBatch batch;
     private final Timer commitTimer;
     private final SimpleDateFormat simpleDateFormat;
@@ -51,12 +51,11 @@ public class VerticaAlarmStateHistoryRepository extends VerticaRepository {
         batch.add()
                 .bind(0, message.tenantId)
                 .bind(1, message.alarmId)
-                .bind(2, message.alarmName)
-                .bind(3, message.alarmDescription)
-                .bind(4, message.oldState.name())
-                .bind(5, message.newState.name())
-                .bind(6, message.stateChangeReason)
-                .bind(7, timeStamp);
+                .bind(2, message.oldState.name())
+                .bind(3, message.newState.name())
+                .bind(4, message.stateChangeReason)
+                .bind(5, "{}")
+                .bind(6, timeStamp);
     }
 
     public void flush() {
