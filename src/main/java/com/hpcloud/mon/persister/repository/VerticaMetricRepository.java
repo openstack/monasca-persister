@@ -123,11 +123,13 @@ public class VerticaMetricRepository extends VerticaRepository {
     }
 
     public void addToBatchMetrics(Sha1HashId defId, String timeStamp, double value) {
+        logger.debug("Adding metric to batch: defId: {}, timeStamp: {}, value: {}", defId, timeStamp, value);
         metricsBatch.add().bind(0, defId.getSha1Hash()).bind(1, timeStamp).bind(2, value);
     }
 
     public void addToBatchStagingDefinitions(Sha1HashId defId, String name, String tenantId, String region) {
         if (definitionsIdCache.getIfPresent(defId) == null) {
+            logger.debug("Adding definition to batch: defId: {}, name: {}, tenantId: {}, region: {}", defId, name, tenantId, region);
             stagedDefinitionsBatch.add().bind(0, defId.getSha1Hash()).bind(1, name).bind(2, tenantId).bind(3, region);
             definitionIdSet.add(defId);
         }
@@ -135,6 +137,7 @@ public class VerticaMetricRepository extends VerticaRepository {
 
     public void addToBatchStagingDimensions(Sha1HashId dimSetId, String name, String value) {
         if (dimensionsIdCache.getIfPresent(dimSetId) == null) {
+            logger.debug("Adding dimension to batch: dimSetId: {}, name: {}, value: {}", dimSetId, name, value);
             stagedDimensionsBatch.add().bind(0, dimSetId.getSha1Hash())
                     .bind(1, name)
                     .bind(2, value);
@@ -144,6 +147,7 @@ public class VerticaMetricRepository extends VerticaRepository {
 
     public void addToBatchStagingdefinitionDimensions(Sha1HashId defDimsId, Sha1HashId defId, Sha1HashId dimId) {
         if (definitionDimensionsIdCache.getIfPresent(defDimsId) == null) {
+            logger.debug("Adding definitionDimension to batch: defDimsId: {}, defId: {}, dimId: {}", defDimsId, defId, dimId);
             stageddefinitionDimensionsBatch.add().bind(0, defDimsId.getSha1Hash()).bind(1, defId.getSha1Hash()).bind(2, dimId.getSha1Hash());
             definitionDimensionsIdSet.add(defDimsId);
         }
