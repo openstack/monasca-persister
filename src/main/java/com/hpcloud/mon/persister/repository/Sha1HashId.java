@@ -38,4 +38,8 @@ public class Sha1HashId {
     public byte[] getSha1Hash() {
         return sha1Hash;
     }
+
+    public String hexString() {
+        return Hex.encodeHexString(sha1Hash);
+    }
 }
