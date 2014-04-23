@@ -133,8 +133,12 @@ public class MetricHandler implements EventHandler<MetricHolder> {
             // Sort the dimensions on name and value.
             TreeMap<String, String> dimensionTreeMap = new TreeMap<>(metric.getDimensions());
             for (String dimensionName : dimensionTreeMap.keySet()) {
-                String dimensionValue = dimensionTreeMap.get(dimensionName);
-                dimensionIdStringToHash += dimensionName + dimensionValue;
+                if (dimensionName != null && !dimensionName.isEmpty()) {
+                    String dimensionValue = dimensionTreeMap.get(dimensionName);
+                    if (dimensionValue != null && !dimensionValue.isEmpty()) {
+                        dimensionIdStringToHash += dimensionName + dimensionValue;
+                    }
+                }
             }
         }
 
@@ -143,9 +147,13 @@ public class MetricHandler implements EventHandler<MetricHolder> {
         if (metric.getDimensions() != null) {
             TreeMap<String, String> dimensionTreeMap = new TreeMap<>(metric.getDimensions());
             for (String dimensionName : dimensionTreeMap.keySet()) {
-                String dimensionValue = dimensionTreeMap.get(dimensionName);
-                verticaMetricRepository.addToBatchStagingDimensions(dimensionsSha1HashId, dimensionName, dimensionValue);
-                dimensionCounter.inc();
+                if (dimensionName != null && !dimensionName.isEmpty()) {
+                    String dimensionValue = dimensionTreeMap.get(dimensionName);
+                    if (dimensionValue != null && !dimensionValue.isEmpty()) {
+                        verticaMetricRepository.addToBatchStagingDimensions(dimensionsSha1HashId, dimensionName, dimensionValue);
+                        dimensionCounter.inc();
+                    }
+                }
             }
         }
 
@@ -160,8 +168,7 @@ public class MetricHandler implements EventHandler<MetricHolder> {
             double value = metric.getValue();
             verticaMetricRepository.addToBatchMetrics(definitionDimensionsSha1HashId, timeStamp, value);
             metricCounter.inc();
-        }
-        else {
+        } else {
             for (double[] timeValuePairs : metric.getTimeValues()) {
                 String timeStamp = simpleDateFormat.format(new Date((long) (timeValuePairs[0] * 1000)));
                 double value = timeValuePairs[1];

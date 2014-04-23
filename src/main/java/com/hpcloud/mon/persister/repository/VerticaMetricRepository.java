@@ -80,7 +80,6 @@ public class VerticaMetricRepository extends VerticaRepository {
         this.commitTimer = this.environment.metrics().timer(this.getClass().getName() + "." + "commits-timer");
         this.flushTimer = this.environment.metrics().timer(this.getClass().getName() + "." + "staging-tables-flushed-timer");
 
-
         definitionsIdCache = CacheBuilder.newBuilder()
                 .maximumSize(configuration.getVerticaMetricRepositoryConfiguration().getMaxCacheSize()).build();
         dimensionsIdCache = CacheBuilder.newBuilder().maximumSize(configuration.getVerticaMetricRepositoryConfiguration().getMaxCacheSize()).build();
@@ -152,20 +151,28 @@ public class VerticaMetricRepository extends VerticaRepository {
     }
 
     public void flush() {
-        commitBatch();
-        long startTime = System.currentTimeMillis();
-        Timer.Context context = flushTimer.time();
-        handle.execute(definitionsTempStagingTableInsertStmt);
-        handle.execute("truncate table " + definitionsTempStagingTableName);
-        handle.execute(dimensionsTempStagingTableInsertStmt);
-        handle.execute("truncate table " + dimensionsTempStagingTableName);
-        handle.execute(definitionDimensionsTempStagingTableInsertStmt);
-        handle.execute("truncate table " + definitionDimensionsTempStagingTableName);
-        handle.commit();
-        handle.begin();
-        context.stop();
-        long endTime = System.currentTimeMillis();
-        logger.debug("Flushing staging tables took " + (endTime - startTime) / 1000 + " seconds");
+        try {
+            commitBatch();
+            long startTime = System.currentTimeMillis();
+            Timer.Context context = flushTimer.time();
+            handle.execute(definitionsTempStagingTableInsertStmt);
+            handle.execute("truncate table " + definitionsTempStagingTableName);
+            handle.execute(dimensionsTempStagingTableInsertStmt);
+            handle.execute("truncate table " + dimensionsTempStagingTableName);
+            handle.execute(definitionDimensionsTempStagingTableInsertStmt);
+            handle.execute("truncate table " + definitionDimensionsTempStagingTableName);
+            handle.commit();
+            handle.begin();
+            context.stop();
+            long endTime = System.currentTimeMillis();
+            logger.debug("Flushing staging tables took " + (endTime - startTime) / 1000 + " seconds");
+        } catch (Exception e) {
+            logger.error("Failed to write measurements, definitions, or dimensions to database", e);
+            if (handle.isInTransaction()) {
+                handle.rollback();
+            }
+            handle.begin();
+        }
 
     }
 
