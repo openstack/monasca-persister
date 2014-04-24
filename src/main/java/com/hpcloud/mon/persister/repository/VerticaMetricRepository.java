@@ -36,15 +36,15 @@ public class VerticaMetricRepository extends VerticaRepository {
 
     private static final String DEFINITIONS_TEMP_STAGING_TABLE = "(" +
             "   id BINARY(20) NOT NULL," +
-            "   name VARCHAR NOT NULL," +
+            "   name VARCHAR(255) NOT NULL," +
             "   tenant_id VARCHAR(14) NOT NULL," +
-            "   region VARCHAR NOT NULL" +
+            "   region VARCHAR(255) NOT NULL" +
             ")";
 
     private static final String DIMENSIONS_TEMP_STAGING_TABLE = "(" +
             "    dimension_set_id BINARY(20) NOT NULL," +
-            "    name VARCHAR NOT NULL," +
-            "    value VARCHAR NOT NULL" +
+            "    name VARCHAR(255) NOT NULL," +
+            "    value VARCHAR(255) NOT NULL" +
             ")";
 
     private static final String DEFINITIONS_DIMENSIONS_TEMP_STAGING_TABLE = "(" +
