@@ -123,13 +123,13 @@ public class VerticaMetricRepository extends VerticaRepository {
     }
 
     public void addToBatchMetrics(Sha1HashId defDimsId, String timeStamp, double value) {
-        logger.debug("Adding metric to batch: defDimsId: {}, timeStamp: {}, value: {}", defDimsId.hexString(), timeStamp, value);
+        logger.debug("Adding metric to batch: defDimsId: {}, timeStamp: {}, value: {}", defDimsId.toHexString(), timeStamp, value);
         metricsBatch.add().bind("definition_dimension_id", defDimsId.getSha1Hash()).bind("time_stamp", timeStamp).bind("value", value);
     }
 
     public void addToBatchStagingDefinitions(Sha1HashId defId, String name, String tenantId, String region) {
         if (definitionsIdCache.getIfPresent(defId) == null) {
-            logger.debug("Adding definition to batch: defId: {}, name: {}, tenantId: {}, region: {}", defId.hexString(), name, tenantId, region);
+            logger.debug("Adding definition to batch: defId: {}, name: {}, tenantId: {}, region: {}", defId.toHexString(), name, tenantId, region);
             stagedDefinitionsBatch.add().bind("id", defId.getSha1Hash()).bind("name", name).bind("tenant_id", tenantId).bind("region", region);
             definitionIdSet.add(defId);
         }
@@ -137,7 +137,7 @@ public class VerticaMetricRepository extends VerticaRepository {
 
     public void addToBatchStagingDimensions(Sha1HashId dimSetId, String name, String value) {
         if (dimensionsIdCache.getIfPresent(dimSetId) == null) {
-            logger.debug("Adding dimension to batch: dimSetId: {}, name: {}, value: {}", dimSetId.hexString(), name, value);
+            logger.debug("Adding dimension to batch: dimSetId: {}, name: {}, value: {}", dimSetId.toHexString(), name, value);
             stagedDimensionsBatch.add().bind("dimension_set_id", dimSetId.getSha1Hash())
                     .bind("name", name)
                     .bind("value", value);
@@ -147,7 +147,7 @@ public class VerticaMetricRepository extends VerticaRepository {
 
     public void addToBatchStagingdefinitionDimensions(Sha1HashId defDimsId, Sha1HashId defId, Sha1HashId dimId) {
         if (definitionDimensionsIdCache.getIfPresent(defDimsId) == null) {
-            logger.debug("Adding definitionDimension to batch: defDimsId: {}, defId: {}, dimId: {}", defDimsId.hexString(), defId, dimId);
+            logger.debug("Adding definitionDimension to batch: defDimsId: {}, defId: {}, dimId: {}", defDimsId.toHexString(), defId, dimId);
             stageddefinitionDimensionsBatch.add().bind("id", defDimsId.getSha1Hash()).bind("definition_id", defId.getSha1Hash()).bind("dimension_set_id", dimId.getSha1Hash());
             definitionDimensionsIdSet.add(defDimsId);
         }

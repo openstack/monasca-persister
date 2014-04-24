@@ -21,6 +21,8 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.TreeMap;
 
+import static com.hpcloud.mon.persister.repository.VerticaMetricsConstants.MAX_COLUMN_LENGTH;
+
 public class MetricHandler implements EventHandler<MetricHolder> {
 
     private static final Logger logger = LoggerFactory.getLogger(MetricHandler.class);
@@ -122,10 +124,10 @@ public class MetricHandler implements EventHandler<MetricHolder> {
             region = (String) meta.get(REGION);
         }
 
-        String definitionIdStringToHash = metric.getName() + tenantId + region;
+        String definitionIdStringToHash = trunc(metric.getName(), MAX_COLUMN_LENGTH) + tenantId + trunc(region, MAX_COLUMN_LENGTH);
         byte[] definitionIdSha1Hash = DigestUtils.sha(definitionIdStringToHash);
         Sha1HashId definitionSha1HashId = new Sha1HashId((definitionIdSha1Hash));
-        verticaMetricRepository.addToBatchStagingDefinitions(definitionSha1HashId, metric.getName(), tenantId, region);
+        verticaMetricRepository.addToBatchStagingDefinitions(definitionSha1HashId, trunc(metric.getName(), MAX_COLUMN_LENGTH), tenantId, trunc(region, MAX_COLUMN_LENGTH));
         definitionCounter.inc();
 
         String dimensionIdStringToHash = "";
@@ -136,7 +138,7 @@ public class MetricHandler implements EventHandler<MetricHolder> {
                 if (dimensionName != null && !dimensionName.isEmpty()) {
                     String dimensionValue = dimensionTreeMap.get(dimensionName);
                     if (dimensionValue != null && !dimensionValue.isEmpty()) {
-                        dimensionIdStringToHash += dimensionName + dimensionValue;
+                        dimensionIdStringToHash += trunc(dimensionName, MAX_COLUMN_LENGTH) + trunc(dimensionValue, MAX_COLUMN_LENGTH);
                     }
                 }
             }
@@ -150,14 +152,14 @@ public class MetricHandler implements EventHandler<MetricHolder> {
                 if (dimensionName != null && !dimensionName.isEmpty()) {
                     String dimensionValue = dimensionTreeMap.get(dimensionName);
                     if (dimensionValue != null && !dimensionValue.isEmpty()) {
-                        verticaMetricRepository.addToBatchStagingDimensions(dimensionsSha1HashId, dimensionName, dimensionValue);
+                        verticaMetricRepository.addToBatchStagingDimensions(dimensionsSha1HashId, trunc(dimensionName, MAX_COLUMN_LENGTH), trunc(dimensionValue, MAX_COLUMN_LENGTH));
                         dimensionCounter.inc();
                     }
                 }
             }
         }
 
-        String definitionDimensionsIdStringToHash = definitionSha1HashId.toString() + dimensionsSha1HashId.toString();
+        String definitionDimensionsIdStringToHash = definitionSha1HashId.toHexString() + dimensionsSha1HashId.toHexString();
         byte[] definitionDimensionsIdSha1Hash = DigestUtils.sha(definitionDimensionsIdStringToHash);
         Sha1HashId definitionDimensionsSha1HashId = new Sha1HashId(definitionDimensionsIdSha1Hash);
         verticaMetricRepository.addToBatchStagingdefinitionDimensions(definitionDimensionsSha1HashId, definitionSha1HashId, dimensionsSha1HashId);
@@ -189,6 +191,18 @@ public class MetricHandler implements EventHandler<MetricHolder> {
     private void flush() {
         verticaMetricRepository.flush();
         millisSinceLastFlush = System.currentTimeMillis();
+    }
+
+    private String trunc(String s, int l) {
+
+        if (s == null) {
+            return "";
+        } else if (s.length() <= l) {
+            return s;
+        } else {
+            return s.substring(0, l);
+        }
+
     }
 }
 

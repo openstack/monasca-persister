@@ -39,7 +39,7 @@ public class Sha1HashId {
         return sha1Hash;
     }
 
-    public String hexString() {
+    public String toHexString() {
         return Hex.encodeHexString(sha1Hash);
     }
 }
