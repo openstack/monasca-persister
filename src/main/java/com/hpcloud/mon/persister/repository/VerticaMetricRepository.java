@@ -32,7 +32,7 @@ public class VerticaMetricRepository extends VerticaRepository {
     private final Set<Sha1HashId> definitionDimensionsIdSet = new HashSet<>();
 
     private static final String SQL_INSERT_INTO_METRICS =
-            "insert into MonMetrics.measurements (definition_dimensions_id, time_stamp, value) values (:metric_definition_id, :time_stamp, :value)";
+            "insert into MonMetrics.measurements (definition_dimensions_id, time_stamp, value) values (:definition_dimension_id, :time_stamp, :value)";
 
     private static final String DEFINITIONS_TEMP_STAGING_TABLE = "(" +
             "   id BINARY(20) NOT NULL," +
@@ -124,7 +124,7 @@ public class VerticaMetricRepository extends VerticaRepository {
 
     public void addToBatchMetrics(Sha1HashId defDimsId, String timeStamp, double value) {
         logger.debug("Adding metric to batch: defDimsId: {}, timeStamp: {}, value: {}", defDimsId.hexString(), timeStamp, value);
-        metricsBatch.add().bind("definition_dimensions_id", defDimsId.getSha1Hash()).bind("time_stamp", timeStamp).bind("value", value);
+        metricsBatch.add().bind("definition_dimension_id", defDimsId.getSha1Hash()).bind("time_stamp", timeStamp).bind("value", value);
     }
 
     public void addToBatchStagingDefinitions(Sha1HashId defId, String name, String tenantId, String region) {
