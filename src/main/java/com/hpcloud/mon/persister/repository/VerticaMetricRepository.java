@@ -122,15 +122,15 @@ public class VerticaMetricRepository extends VerticaRepository {
         handle.begin();
     }
 
-    public void addToBatchMetrics(Sha1HashId defId, String timeStamp, double value) {
-        logger.debug("Adding metric to batch: defId: {}, timeStamp: {}, value: {}", defId.hexString(), timeStamp, value);
-        metricsBatch.add().bind(0, defId.getSha1Hash()).bind(1, timeStamp).bind(2, value);
+    public void addToBatchMetrics(Sha1HashId defDimsId, String timeStamp, double value) {
+        logger.debug("Adding metric to batch: defDimsId: {}, timeStamp: {}, value: {}", defDimsId.hexString(), timeStamp, value);
+        metricsBatch.add().bind("definition_dimensions_id", defDimsId.getSha1Hash()).bind("time_stamp", timeStamp).bind("value", value);
     }
 
     public void addToBatchStagingDefinitions(Sha1HashId defId, String name, String tenantId, String region) {
         if (definitionsIdCache.getIfPresent(defId) == null) {
             logger.debug("Adding definition to batch: defId: {}, name: {}, tenantId: {}, region: {}", defId.hexString(), name, tenantId, region);
-            stagedDefinitionsBatch.add().bind(0, defId.getSha1Hash()).bind(1, name).bind(2, tenantId).bind(3, region);
+            stagedDefinitionsBatch.add().bind("id", defId.getSha1Hash()).bind("name", name).bind("tenant_id", tenantId).bind("region", region);
             definitionIdSet.add(defId);
         }
     }
@@ -138,9 +138,9 @@ public class VerticaMetricRepository extends VerticaRepository {
     public void addToBatchStagingDimensions(Sha1HashId dimSetId, String name, String value) {
         if (dimensionsIdCache.getIfPresent(dimSetId) == null) {
             logger.debug("Adding dimension to batch: dimSetId: {}, name: {}, value: {}", dimSetId.hexString(), name, value);
-            stagedDimensionsBatch.add().bind(0, dimSetId.getSha1Hash())
-                    .bind(1, name)
-                    .bind(2, value);
+            stagedDimensionsBatch.add().bind("dimension_set_id", dimSetId.getSha1Hash())
+                    .bind("name", name)
+                    .bind("value", value);
             dimensionIdSet.add(dimSetId);
         }
     }
@@ -148,7 +148,7 @@ public class VerticaMetricRepository extends VerticaRepository {
     public void addToBatchStagingdefinitionDimensions(Sha1HashId defDimsId, Sha1HashId defId, Sha1HashId dimId) {
         if (definitionDimensionsIdCache.getIfPresent(defDimsId) == null) {
             logger.debug("Adding definitionDimension to batch: defDimsId: {}, defId: {}, dimId: {}", defDimsId.hexString(), defId, dimId);
-            stageddefinitionDimensionsBatch.add().bind(0, defDimsId.getSha1Hash()).bind(1, defId.getSha1Hash()).bind(2, dimId.getSha1Hash());
+            stageddefinitionDimensionsBatch.add().bind("id", defDimsId.getSha1Hash()).bind("definition_id", defId.getSha1Hash()).bind("dimension_set_id", dimId.getSha1Hash());
             definitionDimensionsIdSet.add(defDimsId);
         }
 
