@@ -193,7 +193,7 @@ public class VerticaMetricRepository extends VerticaRepository {
             long startTime = System.currentTimeMillis();
             Timer.Context context = flushTimer.time();
             executeBatches();
-            writeRowsFromTempStagingTablesToPermenantTables();
+            writeRowsFromTempStagingTablesToPermTables();
             handle.commit();
             handle.begin();
             long endTime = System.currentTimeMillis();
@@ -234,7 +234,7 @@ public class VerticaMetricRepository extends VerticaRepository {
         clearTempCaches();
     }
 
-    private void writeRowsFromTempStagingTablesToPermenantTables() {
+    private void writeRowsFromTempStagingTablesToPermTables() {
         handle.execute(definitionsTempStagingTableInsertStmt);
         handle.execute("truncate table " + definitionsTempStagingTableName);
         handle.execute(dimensionsTempStagingTableInsertStmt);
