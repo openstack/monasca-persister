@@ -22,6 +22,7 @@ import java.util.TimeZone;
 import java.util.TreeMap;
 
 import static com.hpcloud.mon.persister.repository.VerticaMetricsConstants.MAX_COLUMN_LENGTH;
+import static com.hpcloud.mon.persister.repository.VerticaMetricsConstants.MAX_TENANT_ID_LENGTH;
 
 public class MetricHandler implements EventHandler<MetricHolder> {
 
@@ -103,33 +104,40 @@ public class MetricHandler implements EventHandler<MetricHolder> {
 
         metricMeter.mark();
 
-        logger.debug("Sequence number: " + sequence +
-                " Ordinal: " + ordinal +
-                " Event: " + metricEvent.getMetricEnvelope().metric);
-
         Metric metric = metricEvent.getMetricEnvelope().metric;
         Map<String, Object> meta = metricEvent.getMetricEnvelope().meta;
 
+        logger.debug("sequence number: " + sequence);
+        logger.debug("ordinal: " + ordinal);
+        logger.debug("metric: " + metric.toString());
+        logger.debug("meta: " + meta.toString());
+
         String tenantId = "";
-        if (!meta.containsKey(TENANT_ID)) {
-            logger.warn("Failed to find 'tenantId' in message envelope meta data. Metric message may be mal-formed. Setting 'tenantId' to empty string.");
-            logger.warn(metric.toString());
-            logger.warn("meta" + meta.toString());
-        } else {
+        if (meta.containsKey(TENANT_ID)) {
             tenantId = (String) meta.get(TENANT_ID);
+        } else {
+            logger.warn("Failed to find tenantId in message envelope meta data. Metric message may be mal-formed. Setting tenantId to empty string.");
+            logger.warn("metric: " + metric.toString());
+            logger.warn("meta: " + meta.toString());
         }
 
         String region = "";
         if (meta.containsKey(REGION)) {
             region = (String) meta.get(REGION);
+        } else {
+            logger.warn("Failed to find region in message envelope meta data. Metric message may be mal-formed. Setting region to empty string.");
+            logger.warn("metric: " + metric.toString());
+            logger.warn("meta: " + meta.toString());
         }
 
-        String definitionIdStringToHash = trunc(metric.getName(), MAX_COLUMN_LENGTH) + tenantId + trunc(region, MAX_COLUMN_LENGTH);
+        // Add the definition to the batch.
+        String definitionIdStringToHash = trunc(metric.getName(), MAX_COLUMN_LENGTH) + trunc(tenantId, MAX_TENANT_ID_LENGTH) + trunc(region, MAX_COLUMN_LENGTH);
         byte[] definitionIdSha1Hash = DigestUtils.sha(definitionIdStringToHash);
         Sha1HashId definitionSha1HashId = new Sha1HashId((definitionIdSha1Hash));
-        verticaMetricRepository.addToBatchStagingDefinitions(definitionSha1HashId, trunc(metric.getName(), MAX_COLUMN_LENGTH), tenantId, trunc(region, MAX_COLUMN_LENGTH));
+        verticaMetricRepository.addToBatchStagingDefinitions(definitionSha1HashId, trunc(metric.getName(), MAX_COLUMN_LENGTH), trunc(tenantId, MAX_TENANT_ID_LENGTH), trunc(region, MAX_COLUMN_LENGTH));
         definitionCounter.inc();
 
+        // Calculate dimensions sha1 hash id.
         String dimensionIdStringToHash = "";
         if (metric.getDimensions() != null) {
             // Sort the dimensions on name and value.
@@ -146,6 +154,8 @@ public class MetricHandler implements EventHandler<MetricHolder> {
 
         byte[] dimensionIdSha1Hash = DigestUtils.sha(dimensionIdStringToHash);
         Sha1HashId dimensionsSha1HashId = new Sha1HashId(dimensionIdSha1Hash);
+
+        // Add the dimension name/values to the batch.
         if (metric.getDimensions() != null) {
             TreeMap<String, String> dimensionTreeMap = new TreeMap<>(metric.getDimensions());
             for (String dimensionName : dimensionTreeMap.keySet()) {
@@ -159,25 +169,26 @@ public class MetricHandler implements EventHandler<MetricHolder> {
             }
         }
 
+        // Add the definition dimensions to the batch.
         String definitionDimensionsIdStringToHash = definitionSha1HashId.toHexString() + dimensionsSha1HashId.toHexString();
         byte[] definitionDimensionsIdSha1Hash = DigestUtils.sha(definitionDimensionsIdStringToHash);
         Sha1HashId definitionDimensionsSha1HashId = new Sha1HashId(definitionDimensionsIdSha1Hash);
         verticaMetricRepository.addToBatchStagingdefinitionDimensions(definitionDimensionsSha1HashId, definitionSha1HashId, dimensionsSha1HashId);
         definitionDimensionsCounter.inc();
 
-        if (metric.getTimeValues() == null) {
-            String timeStamp = simpleDateFormat.format(new Date(metric.getTimestamp() * 1000));
-            double value = metric.getValue();
-            verticaMetricRepository.addToBatchMetrics(definitionDimensionsSha1HashId, timeStamp, value);
-            metricCounter.inc();
-        } else {
+        // Add the measurements to the batch.
+        if (metric.getTimeValues() != null) {
             for (double[] timeValuePairs : metric.getTimeValues()) {
                 String timeStamp = simpleDateFormat.format(new Date((long) (timeValuePairs[0] * 1000)));
                 double value = timeValuePairs[1];
                 verticaMetricRepository.addToBatchMetrics(definitionDimensionsSha1HashId, timeStamp, value);
                 metricCounter.inc();
-
             }
+        } else {
+            String timeStamp = simpleDateFormat.format(new Date(metric.getTimestamp() * 1000));
+            double value = metric.getValue();
+            verticaMetricRepository.addToBatchMetrics(definitionDimensionsSha1HashId, timeStamp, value);
+            metricCounter.inc();
         }
 
         if (sequence % batchSize == (batchSize - 1)) {
@@ -186,6 +197,7 @@ public class MetricHandler implements EventHandler<MetricHolder> {
             context.stop();
             commitMeter.mark();
         }
+
     }
 
     private void flush() {
@@ -200,7 +212,10 @@ public class MetricHandler implements EventHandler<MetricHolder> {
         } else if (s.length() <= l) {
             return s;
         } else {
-            return s.substring(0, l);
+            String r = s.substring(0, l);
+            logger.warn("Input string exceeded max column length. Truncating input string {} to {} chars", s, l);
+            logger.warn("Resulting string {}", r);
+            return r;
         }
 
     }

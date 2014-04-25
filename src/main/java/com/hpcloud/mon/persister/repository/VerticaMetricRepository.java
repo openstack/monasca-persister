@@ -34,6 +34,8 @@ public class VerticaMetricRepository extends VerticaRepository {
     private static final String SQL_INSERT_INTO_METRICS =
             "insert into MonMetrics.measurements (definition_dimensions_id, time_stamp, value) values (:definition_dimension_id, :time_stamp, :value)";
 
+    // If any of the columns change size be sure to update VerticaMetricConstants.java as well.
+
     private static final String DEFINITIONS_TEMP_STAGING_TABLE = "(" +
             "   id BINARY(20) NOT NULL," +
             "   name VARCHAR(255) NOT NULL," +
@@ -56,7 +58,7 @@ public class VerticaMetricRepository extends VerticaRepository {
     private PreparedBatch metricsBatch;
     private PreparedBatch stagedDefinitionsBatch;
     private PreparedBatch stagedDimensionsBatch;
-    private PreparedBatch stageddefinitionDimensionsBatch;
+    private PreparedBatch stagedDefinitionDimensionsBatch;
 
     private final String definitionsTempStagingTableName;
     private final String dimensionsTempStagingTableName;
@@ -66,7 +68,6 @@ public class VerticaMetricRepository extends VerticaRepository {
     private final String dimensionsTempStagingTableInsertStmt;
     private final String definitionDimensionsTempStagingTableInsertStmt;
 
-    private final Timer commitTimer;
     private final Timer flushTimer;
 
     @Inject
@@ -77,7 +78,6 @@ public class VerticaMetricRepository extends VerticaRepository {
 
         this.configuration = configuration;
         this.environment = environment;
-        this.commitTimer = this.environment.metrics().timer(this.getClass().getName() + "." + "commits-timer");
         this.flushTimer = this.environment.metrics().timer(this.getClass().getName() + "." + "staging-tables-flushed-timer");
 
         definitionsIdCache = CacheBuilder.newBuilder()
@@ -118,7 +118,7 @@ public class VerticaMetricRepository extends VerticaRepository {
         metricsBatch = handle.prepareBatch(SQL_INSERT_INTO_METRICS);
         stagedDefinitionsBatch = handle.prepareBatch("insert into " + definitionsTempStagingTableName + " values (:id, :name, :tenant_id, :region)");
         stagedDimensionsBatch = handle.prepareBatch("insert into " + dimensionsTempStagingTableName + " values (:dimension_set_id, :name, :value)");
-        stageddefinitionDimensionsBatch = handle.prepareBatch("insert into " + definitionDimensionsTempStagingTableName + " values (:id, :definition_id, :dimension_set_id)");
+        stagedDefinitionDimensionsBatch = handle.prepareBatch("insert into " + definitionDimensionsTempStagingTableName + " values (:id, :definition_id, :dimension_set_id)");
         handle.begin();
     }
 
@@ -148,7 +148,7 @@ public class VerticaMetricRepository extends VerticaRepository {
     public void addToBatchStagingdefinitionDimensions(Sha1HashId defDimsId, Sha1HashId defId, Sha1HashId dimId) {
         if (definitionDimensionsIdCache.getIfPresent(defDimsId) == null) {
             logger.debug("Adding definitionDimension to batch: defDimsId: {}, defId: {}, dimId: {}", defDimsId.toHexString(), defId, dimId);
-            stageddefinitionDimensionsBatch.add().bind("id", defDimsId.getSha1Hash()).bind("definition_id", defId.getSha1Hash()).bind("dimension_set_id", dimId.getSha1Hash());
+            stagedDefinitionDimensionsBatch.add().bind("id", defDimsId.getSha1Hash()).bind("definition_id", defId.getSha1Hash()).bind("dimension_set_id", dimId.getSha1Hash());
             definitionDimensionsIdSet.add(defDimsId);
         }
 
@@ -156,60 +156,62 @@ public class VerticaMetricRepository extends VerticaRepository {
 
     public void flush() {
         try {
-            commitBatch();
             long startTime = System.currentTimeMillis();
             Timer.Context context = flushTimer.time();
-            handle.execute(definitionsTempStagingTableInsertStmt);
-            handle.execute("truncate table " + definitionsTempStagingTableName);
-            handle.execute(dimensionsTempStagingTableInsertStmt);
-            handle.execute("truncate table " + dimensionsTempStagingTableName);
-            handle.execute(definitionDimensionsTempStagingTableInsertStmt);
-            handle.execute("truncate table " + definitionDimensionsTempStagingTableName);
+            executeBatches();
+            writeRowsFromTempStagingTablesToPermenantTables();
             handle.commit();
             handle.begin();
-            context.stop();
             long endTime = System.currentTimeMillis();
-            logger.debug("Flushing staging tables took " + (endTime - startTime) / 1000 + " seconds");
+            context.stop();
+            logger.debug("Writing measurements, definitions, and dimensions to database took " + (endTime - startTime) / 1000 + " seconds");
+            updateIdCaches();
         } catch (Exception e) {
             logger.error("Failed to write measurements, definitions, or dimensions to database", e);
             if (handle.isInTransaction()) {
                 handle.rollback();
             }
+            clearTempCaches();
             handle.begin();
         }
-
     }
 
-    private void commitBatch() {
-        long startTime = System.currentTimeMillis();
-        Timer.Context context = commitTimer.time();
+    private void executeBatches() {
+
         metricsBatch.execute();
         stagedDefinitionsBatch.execute();
         stagedDimensionsBatch.execute();
-        stageddefinitionDimensionsBatch.execute();
-        handle.commit();
-        updateIdCaches();
-        handle.begin();
-        context.stop();
-        long endTime = System.currentTimeMillis();
-        logger.debug("Committing batch took " + (endTime - startTime) / 1000 + " seconds");
+        stagedDefinitionDimensionsBatch.execute();
     }
 
     private void updateIdCaches() {
         for (Sha1HashId defId : definitionIdSet) {
             definitionsIdCache.put(defId, defId);
         }
-        definitionIdSet.clear();
 
         for (Sha1HashId dimId : dimensionIdSet) {
             dimensionsIdCache.put(dimId, dimId);
         }
-        dimensionIdSet.clear();
 
         for (Sha1HashId defDimsId : definitionDimensionsIdSet) {
             definitionDimensionsIdCache.put(defDimsId, defDimsId);
         }
-        definitionDimensionsIdSet.clear();
 
+        clearTempCaches();
+    }
+
+    private void writeRowsFromTempStagingTablesToPermenantTables() {
+        handle.execute(definitionsTempStagingTableInsertStmt);
+        handle.execute("truncate table " + definitionsTempStagingTableName);
+        handle.execute(dimensionsTempStagingTableInsertStmt);
+        handle.execute("truncate table " + dimensionsTempStagingTableName);
+        handle.execute(definitionDimensionsTempStagingTableInsertStmt);
+        handle.execute("truncate table " + definitionDimensionsTempStagingTableName);
+    }
+
+    private void clearTempCaches() {
+        definitionIdSet.clear();
+        dimensionIdSet.clear();
+        definitionDimensionsIdSet.clear();
     }
 }
