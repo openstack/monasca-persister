@@ -116,7 +116,7 @@ public class MetricHandler implements EventHandler<MetricHolder> {
         if (meta.containsKey(TENANT_ID)) {
             tenantId = (String) meta.get(TENANT_ID);
         } else {
-            logger.warn("Failed to find tenantId in message envelope meta data. Metric message may be mal-formed. Setting tenantId to empty string.");
+            logger.warn("Failed to find tenantId in message envelope meta data. Metric message may be malformed. Setting tenantId to empty string.");
             logger.warn("metric: " + metric.toString());
             logger.warn("meta: " + meta.toString());
         }
@@ -125,7 +125,7 @@ public class MetricHandler implements EventHandler<MetricHolder> {
         if (meta.containsKey(REGION)) {
             region = (String) meta.get(REGION);
         } else {
-            logger.warn("Failed to find region in message envelope meta data. Metric message may be mal-formed. Setting region to empty string.");
+            logger.warn("Failed to find region in message envelope meta data. Metric message may be malformed. Setting region to empty string.");
             logger.warn("metric: " + metric.toString());
             logger.warn("meta: " + meta.toString());
         }
