@@ -1,5 +1,6 @@
 package com.hpcloud.mon.persister.repository;
 
+import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -69,23 +70,37 @@ public class VerticaMetricRepository extends VerticaRepository {
     private final String definitionDimensionsTempStagingTableInsertStmt;
 
     private final Timer flushTimer;
+    public final Meter measurementMeter;
+    public final Meter definitionCacheMissMeter;
+    public final Meter dimensionCacheMissMeter;
+    public final Meter definitionDimensionCacheMissMeter;
+    public final Meter definitionCacheHitMeter;
+    public final Meter dimensionCacheHitMeter;
+    public final Meter definitionDimensionCacheHitMeter;
 
     @Inject
     public VerticaMetricRepository(DBI dbi, MonPersisterConfiguration configuration,
                                    Environment environment) throws NoSuchAlgorithmException, SQLException {
         super(dbi);
-        logger.debug("Instantiating: " + this);
+        logger.debug("Instantiating: " + this.getClass().getName());
 
         this.configuration = configuration;
         this.environment = environment;
-        this.flushTimer = this.environment.metrics().timer(this.getClass().getName() + "." + "staging-tables-flushed-timer");
+        this.flushTimer = this.environment.metrics().timer(this.getClass().getName() + "." + "flush-timer");
+        this.measurementMeter = this.environment.metrics().meter(this.getClass().getName() + "." + "measurement-meter");
+        this.definitionCacheMissMeter = this.environment.metrics().meter(this.getClass().getName() + "." + "definition-cache-miss-meter");
+        this.dimensionCacheMissMeter = this.environment.metrics().meter(this.getClass().getName() + "." + "dimension-cache-miss-meter");
+        this.definitionDimensionCacheMissMeter = this.environment.metrics().meter(this.getClass().getName() + "." + "definition-dimension-cache-miss-meter");
+        this.definitionCacheHitMeter = this.environment.metrics().meter(this.getClass().getName() + "." + "definition-cache-hit-meter");
+        this.dimensionCacheHitMeter = this.environment.metrics().meter(this.getClass().getName() + "." + "dimension-cache-hit-meter");
+        this.definitionDimensionCacheHitMeter = this.environment.metrics().meter(this.getClass().getName() + "." + "definition-dimension-cache-hit-meter");
 
         definitionsIdCache = CacheBuilder.newBuilder()
                 .maximumSize(configuration.getVerticaMetricRepositoryConfiguration().getMaxCacheSize()).build();
         dimensionsIdCache = CacheBuilder.newBuilder().maximumSize(configuration.getVerticaMetricRepositoryConfiguration().getMaxCacheSize()).build();
         definitionDimensionsIdCache = CacheBuilder.newBuilder().maximumSize(configuration.getVerticaMetricRepositoryConfiguration().getMaxCacheSize()).build();
 
-        logger.info("Building temp staging tables...");
+        logger.info("preparing database and building sql statements...");
 
         String uniqueName = this.toString().replaceAll("\\.", "_").replaceAll("\\@", "_");
         this.definitionsTempStagingTableName = uniqueName + "_staged_definitions";
@@ -106,25 +121,36 @@ public class VerticaMetricRepository extends VerticaRepository {
         this.definitionDimensionsTempStagingTableInsertStmt = "insert into MonMetrics.definitionDimensions select distinct * from " + definitionDimensionsTempStagingTableName + " where id not in (select id from MonMetrics.definitionDimensions)";
         logger.debug("definitionDimensions insert stmt: " + definitionDimensionsTempStagingTableInsertStmt);
 
+        logger.debug("dropping temp staging tables if they already exist...");
         handle.execute("drop table if exists " + definitionsTempStagingTableName + " cascade");
         handle.execute("drop table if exists " + dimensionsTempStagingTableName + " cascade");
         handle.execute("drop table if exists " + definitionDimensionsTempStagingTableName + " cascade");
 
+        logger.debug("creating temp staging tables...");
         handle.execute("create local temp table " + definitionsTempStagingTableName + " " + DEFINITIONS_TEMP_STAGING_TABLE + " on commit preserve rows");
         handle.execute("create local temp table " + dimensionsTempStagingTableName + " " + DIMENSIONS_TEMP_STAGING_TABLE + " on commit preserve rows");
         handle.execute("create local temp table " + definitionDimensionsTempStagingTableName + " " + DEFINITIONS_DIMENSIONS_TEMP_STAGING_TABLE + " on commit preserve rows");
 
         handle.getConnection().setAutoCommit(false);
+
+        logger.debug("preparing batches...");
         metricsBatch = handle.prepareBatch(SQL_INSERT_INTO_METRICS);
         stagedDefinitionsBatch = handle.prepareBatch("insert into " + definitionsTempStagingTableName + " values (:id, :name, :tenant_id, :region)");
         stagedDimensionsBatch = handle.prepareBatch("insert into " + dimensionsTempStagingTableName + " values (:dimension_set_id, :name, :value)");
         stagedDefinitionDimensionsBatch = handle.prepareBatch("insert into " + definitionDimensionsTempStagingTableName + " values (:id, :definition_id, :dimension_set_id)");
+
+        logger.debug("opening transaction...");
         handle.begin();
+
+        logger.debug("completed database preparations");
+
+        logger.debug(this.getClass().getName() + "is fully instantiated");
     }
 
     public void addToBatchMetrics(Sha1HashId defDimsId, String timeStamp, double value) {
         logger.debug("Adding metric to batch: defDimsId: {}, timeStamp: {}, value: {}", defDimsId.toHexString(), timeStamp, value);
         metricsBatch.add().bind("definition_dimension_id", defDimsId.getSha1Hash()).bind("time_stamp", timeStamp).bind("value", value);
+        measurementMeter.mark();
     }
 
     public void addToBatchStagingDefinitions(Sha1HashId defId, String name, String tenantId, String region) {
@@ -132,6 +158,9 @@ public class VerticaMetricRepository extends VerticaRepository {
             logger.debug("Adding definition to batch: defId: {}, name: {}, tenantId: {}, region: {}", defId.toHexString(), name, tenantId, region);
             stagedDefinitionsBatch.add().bind("id", defId.getSha1Hash()).bind("name", name).bind("tenant_id", tenantId).bind("region", region);
             definitionIdSet.add(defId);
+            definitionCacheMissMeter.mark();
+        } else {
+            definitionCacheHitMeter.mark();
         }
     }
 
@@ -142,6 +171,9 @@ public class VerticaMetricRepository extends VerticaRepository {
                     .bind("name", name)
                     .bind("value", value);
             dimensionIdSet.add(dimSetId);
+            dimensionCacheMissMeter.mark();
+        } else {
+            dimensionCacheHitMeter.mark();
         }
     }
 
@@ -150,8 +182,10 @@ public class VerticaMetricRepository extends VerticaRepository {
             logger.debug("Adding definitionDimension to batch: defDimsId: {}, defId: {}, dimId: {}", defDimsId.toHexString(), defId, dimId);
             stagedDefinitionDimensionsBatch.add().bind("id", defDimsId.getSha1Hash()).bind("definition_id", defId.getSha1Hash()).bind("dimension_set_id", dimId.getSha1Hash());
             definitionDimensionsIdSet.add(defDimsId);
+            definitionDimensionCacheMissMeter.mark();
+        } else {
+            definitionDimensionCacheHitMeter.mark();
         }
-
     }
 
     public void flush() {
