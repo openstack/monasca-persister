@@ -75,7 +75,15 @@ public class VerticaAlarmStateHistoryRepository extends VerticaRepository {
     }
 
     public void flush() {
-        commitBatch();
+        try {
+            commitBatch();
+        } catch (Exception e) {
+            logger.error("Failed to write alarms to database", e);
+            if (handle.isInTransaction()) {
+                handle.rollback();
+            }
+            handle.begin();
+        }
     }
 
     private void commitBatch() {
