@@ -28,7 +28,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <artifactNamedVersion>${project.name}-${project.version}-${timestamp}-${buildNumber}
         </artifactNamedVersion>
-        <mon.common.version>1.0.0.50</mon.common.version>
+        <mon.common.version>1.0.0.51</mon.common.version>
     </properties>
 
     <!--Needed for buildnumber-maven-plugin-->
