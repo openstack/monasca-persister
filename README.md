@@ -1,10 +1,11 @@
 mon-persister
 =============
 
-Monitoring persister to read metrics and related messages from Kafka and write to persistent data store
+The Monitoring Persister consumes metrics and alarm state transitions from the Message Queue and stores them in the Metrics and Alarms database.
 
+The Persister uses the DropWizard which provides a nice application framework. Although the Persister isn't primarly a Web service, it exposes an http endpoint that provides an interface through which metrics about the Persister can be queried as well as health status. 
 
-Basic design is to have one Kafka consumer feed a Disruptor that has Vertica output processors.
+The basic design of the Persister is to have one Kafka consumer feeds a Disruptor, https://github.com/LMAX-Exchange/disruptor, that has output processors that does batch writes to the Metrics and Alarms database. 
 
 # License
 
