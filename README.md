@@ -7,6 +7,14 @@ The Persister uses the DropWizard which provides a nice application framework. A
 
 The basic design of the Persister is to have one Kafka consumer feeds a Disruptor, https://github.com/LMAX-Exchange/disruptor, that has output processors that does batch writes to the Metrics and Alarms database. 
 
+# TODO
+
+* Purge metrics on shutdown
+* Add more robust offset management.
+* Add better handlign of SQL exceptions
+* Complete health check
+* Specify the names of the metrics that are available for monitoring.
+
 # License
 
 Copyright (c) 2014 Hewlett-Packard Development Company, L.P.
