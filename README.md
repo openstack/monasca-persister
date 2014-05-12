@@ -3,17 +3,17 @@ mon-persister
 
 The Monitoring Persister consumes metrics and alarm state transitions from the Message Queue and stores them in the Metrics and Alarms database.
 
-The Persister uses the DropWizard which provides a nice application framework. Although the Persister isn't primarly a Web service, it exposes an http endpoint that provides an interface through which metrics about the Persister can be queried as well as health status. 
+Although the Persister isn't primarly a Web service it uses DropWizard which provides a nice Web appliction framework to exposes an http endpoint that provides an interface through which metrics about the Persister can be queried as well as health status. 
 
 The basic design of the Persister is to have one Kafka consumer feeds a Disruptor, https://github.com/LMAX-Exchange/disruptor, that has output processors that does batch writes to the Metrics and Alarms database. 
 
 # TODO
 
 * Purge metrics on shutdown
-* Add more robust offset management.
-* Add better handlign of SQL exceptions
-* Complete health check
-* Specify the names of the metrics that are available for monitoring.
+* Add more robust offset management in Kafka. Currently, the offset is advanced as each message is read. If the Persister stops prior to when the metric is commited to the Metrics and Alarms database, the metric will be lost. 
+* Add better handling of SQL exceptions.
+* Complete health check.
+* Specify and document the names of the metrics that are available for monitoring of the Persister.
 
 # License
 
