@@ -10,7 +10,7 @@ The basic design of the Persister is to have one Kafka consumer feeds a Disrupto
 # TODO
 
 * Purge metrics on shutdown
-* Add more robust offset management in Kafka. Currently, the offset is advanced as each message is read. If the Persister stops prior to when the metric is commited to the Metrics and Alarms database, the metric will be lost. 
+* Add more robust offset management in Kafka. Currently, the offset is advanced as each message is read. If the Persister stops after the metric has been read and prior to it being committed to the Metrics and Alarms database, the metric will be lost. 
 * Add better handling of SQL exceptions.
 * Complete health check.
 * Specify and document the names of the metrics that are available for monitoring of the Persister.
