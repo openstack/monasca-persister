@@ -56,7 +56,7 @@ public class VerticaMetricRepository extends VerticaRepository {
     private static final String DEFINITIONS_TEMP_STAGING_TABLE = "(" +
             "   id BINARY(20) NOT NULL," +
             "   name VARCHAR(255) NOT NULL," +
-            "   tenant_id VARCHAR(40) NOT NULL," +
+            "   tenant_id VARCHAR(255) NOT NULL," +
             "   region VARCHAR(255) NOT NULL" +
             ")";
 
