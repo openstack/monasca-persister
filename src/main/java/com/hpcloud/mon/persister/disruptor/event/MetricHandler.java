@@ -22,7 +22,6 @@ import java.util.TimeZone;
 import java.util.TreeMap;
 
 import static com.hpcloud.mon.persister.repository.VerticaMetricsConstants.MAX_COLUMN_LENGTH;
-import static com.hpcloud.mon.persister.repository.VerticaMetricsConstants.MAX_TENANT_ID_LENGTH;
 
 public class MetricHandler implements EventHandler<MetricHolder> {
 
@@ -131,10 +130,10 @@ public class MetricHandler implements EventHandler<MetricHolder> {
         }
 
         // Add the definition to the batch.
-        String definitionIdStringToHash = trunc(metric.getName(), MAX_COLUMN_LENGTH) + trunc(tenantId, MAX_TENANT_ID_LENGTH) + trunc(region, MAX_COLUMN_LENGTH);
+        String definitionIdStringToHash = trunc(metric.getName(), MAX_COLUMN_LENGTH) + trunc(tenantId, MAX_COLUMN_LENGTH) + trunc(region, MAX_COLUMN_LENGTH);
         byte[] definitionIdSha1Hash = DigestUtils.sha(definitionIdStringToHash);
         Sha1HashId definitionSha1HashId = new Sha1HashId((definitionIdSha1Hash));
-        verticaMetricRepository.addToBatchStagingDefinitions(definitionSha1HashId, trunc(metric.getName(), MAX_COLUMN_LENGTH), trunc(tenantId, MAX_TENANT_ID_LENGTH), trunc(region, MAX_COLUMN_LENGTH));
+        verticaMetricRepository.addToBatchStagingDefinitions(definitionSha1HashId, trunc(metric.getName(), MAX_COLUMN_LENGTH), trunc(tenantId, MAX_COLUMN_LENGTH), trunc(region, MAX_COLUMN_LENGTH));
         definitionCounter.inc();
 
         // Calculate dimensions sha1 hash id.
