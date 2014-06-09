@@ -7,8 +7,8 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.hpcloud.mon.common.model.metric.Metric;
 import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
+import com.hpcloud.mon.persister.repository.MetricRepository;
 import com.hpcloud.mon.persister.repository.Sha1HashId;
-import com.hpcloud.mon.persister.repository.VerticaMetricRepository;
 import com.lmax.disruptor.EventHandler;
 import io.dropwizard.setup.Environment;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -39,7 +39,7 @@ public class MetricHandler implements EventHandler<MetricHolder> {
     private final long millisBetweenFlushes;
     private final int secondsBetweenFlushes;
 
-    private final VerticaMetricRepository verticaMetricRepository;
+    private final MetricRepository verticaMetricRepository;
     private final MonPersisterConfiguration configuration;
     private final Environment environment;
 
@@ -52,14 +52,14 @@ public class MetricHandler implements EventHandler<MetricHolder> {
     private final Timer commitTimer;
 
     @Inject
-    public MetricHandler(VerticaMetricRepository verticaMetricRepository,
+    public MetricHandler(MetricRepository metricRepository,
                          MonPersisterConfiguration configuration,
                          Environment environment,
                          @Assisted("ordinal") int ordinal,
                          @Assisted("numProcessors") int numProcessors,
                          @Assisted("batchSize") int batchSize) {
 
-        this.verticaMetricRepository = verticaMetricRepository;
+        this.verticaMetricRepository = metricRepository;
         this.configuration = configuration;
         this.environment = environment;
         this.metricCounter = this.environment.metrics().counter(this.getClass().getName() + "." + "metrics-added-to-batch-counter");
@@ -133,7 +133,7 @@ public class MetricHandler implements EventHandler<MetricHolder> {
         String definitionIdStringToHash = trunc(metric.getName(), MAX_COLUMN_LENGTH) + trunc(tenantId, MAX_COLUMN_LENGTH) + trunc(region, MAX_COLUMN_LENGTH);
         byte[] definitionIdSha1Hash = DigestUtils.sha(definitionIdStringToHash);
         Sha1HashId definitionSha1HashId = new Sha1HashId((definitionIdSha1Hash));
-        verticaMetricRepository.addToBatchStagingDefinitions(definitionSha1HashId, trunc(metric.getName(), MAX_COLUMN_LENGTH), trunc(tenantId, MAX_COLUMN_LENGTH), trunc(region, MAX_COLUMN_LENGTH));
+        verticaMetricRepository.addDefinitionToBatch(definitionSha1HashId, trunc(metric.getName(), MAX_COLUMN_LENGTH), trunc(tenantId, MAX_COLUMN_LENGTH), trunc(region, MAX_COLUMN_LENGTH));
         definitionCounter.inc();
 
         // Calculate dimensions sha1 hash id.
@@ -161,7 +161,7 @@ public class MetricHandler implements EventHandler<MetricHolder> {
                 if (dimensionName != null && !dimensionName.isEmpty()) {
                     String dimensionValue = dimensionTreeMap.get(dimensionName);
                     if (dimensionValue != null && !dimensionValue.isEmpty()) {
-                        verticaMetricRepository.addToBatchStagingDimensions(dimensionsSha1HashId, trunc(dimensionName, MAX_COLUMN_LENGTH), trunc(dimensionValue, MAX_COLUMN_LENGTH));
+                        verticaMetricRepository.addDimensionToBatch(dimensionsSha1HashId, trunc(dimensionName, MAX_COLUMN_LENGTH), trunc(dimensionValue, MAX_COLUMN_LENGTH));
                         dimensionCounter.inc();
                     }
                 }
@@ -172,7 +172,7 @@ public class MetricHandler implements EventHandler<MetricHolder> {
         String definitionDimensionsIdStringToHash = definitionSha1HashId.toHexString() + dimensionsSha1HashId.toHexString();
         byte[] definitionDimensionsIdSha1Hash = DigestUtils.sha(definitionDimensionsIdStringToHash);
         Sha1HashId definitionDimensionsSha1HashId = new Sha1HashId(definitionDimensionsIdSha1Hash);
-        verticaMetricRepository.addToBatchStagingdefinitionDimensions(definitionDimensionsSha1HashId, definitionSha1HashId, dimensionsSha1HashId);
+        verticaMetricRepository.addDefinitionDimensionToBatch(definitionDimensionsSha1HashId, definitionSha1HashId, dimensionsSha1HashId);
         definitionDimensionsCounter.inc();
 
         // Add the measurements to the batch.
@@ -180,13 +180,13 @@ public class MetricHandler implements EventHandler<MetricHolder> {
             for (double[] timeValuePairs : metric.getTimeValues()) {
                 String timeStamp = simpleDateFormat.format(new Date((long) (timeValuePairs[0] * 1000)));
                 double value = timeValuePairs[1];
-                verticaMetricRepository.addToBatchMetrics(definitionDimensionsSha1HashId, timeStamp, value);
+                verticaMetricRepository.addMetricToBatch(definitionDimensionsSha1HashId, timeStamp, value);
                 metricCounter.inc();
             }
         } else {
             String timeStamp = simpleDateFormat.format(new Date(metric.getTimestamp() * 1000));
             double value = metric.getValue();
-            verticaMetricRepository.addToBatchMetrics(definitionDimensionsSha1HashId, timeStamp, value);
+            verticaMetricRepository.addMetricToBatch(definitionDimensionsSha1HashId, timeStamp, value);
             metricCounter.inc();
         }
 

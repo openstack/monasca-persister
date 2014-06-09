@@ -56,29 +56,29 @@ public class KafkaStreams {
         return new ConsumerConfig(kafkaProperties);
     }
 
-    private Properties createKafkaProperties(KafkaConfiguration kafkaConfiguration) {
+    private Properties createKafkaProperties(KafkaConfiguration metricsKafkaConfiguration) {
         Properties properties = new Properties();
 
-        properties.put("group.id", kafkaConfiguration.getGroupId());
-        properties.put("zookeeper.connect", kafkaConfiguration.getZookeeperConnect());
-        properties.put("consumer.id", kafkaConfiguration.getConsumerId());
-        properties.put("socket.timeout.ms", kafkaConfiguration.getSocketTimeoutMs().toString());
-        properties.put("socket.receive.buffer.bytes", kafkaConfiguration.getSocketReceiveBufferBytes().toString());
-        properties.put("fetch.message.max.bytes", kafkaConfiguration.getFetchMessageMaxBytes().toString());
-        properties.put("auto.commit.enable", kafkaConfiguration.getAutoCommitEnable().toString());
-        properties.put("auto.commit.interval.ms", kafkaConfiguration.getAutoCommitIntervalMs().toString());
-        properties.put("queued.max.message.chunks", kafkaConfiguration.getQueuedMaxMessageChunks().toString());
-        properties.put("rebalance.max.retries", kafkaConfiguration.getRebalanceMaxRetries().toString());
-        properties.put("fetch.min.bytes", kafkaConfiguration.getFetchMinBytes().toString());
-        properties.put("fetch.wait.max.ms", kafkaConfiguration.getFetchWaitMaxMs().toString());
-        properties.put("rebalance.backoff.ms", kafkaConfiguration.getRebalanceBackoffMs().toString());
-        properties.put("refresh.leader.backoff.ms", kafkaConfiguration.getRefreshLeaderBackoffMs().toString());
-        properties.put("auto.offset.reset", kafkaConfiguration.getAutoOffsetReset());
-        properties.put("consumer.timeout.ms", kafkaConfiguration.getConsumerTimeoutMs().toString());
-        properties.put("client.id", kafkaConfiguration.getClientId());
-        properties.put("zookeeper.session.timeout.ms", kafkaConfiguration.getZookeeperSessionTimeoutMs().toString());
-        properties.put("zookeeper.connection.timeout.ms", kafkaConfiguration.getZookeeperConnectionTimeoutMs().toString());
-        properties.put("zookeeper.sync.time.ms", kafkaConfiguration.getZookeeperSyncTimeMs().toString());
+        properties.put("group.id", metricsKafkaConfiguration.getGroupId());
+        properties.put("zookeeper.connect", metricsKafkaConfiguration.getZookeeperConnect());
+        properties.put("consumer.id", metricsKafkaConfiguration.getConsumerId());
+        properties.put("socket.timeout.ms", metricsKafkaConfiguration.getSocketTimeoutMs().toString());
+        properties.put("socket.receive.buffer.bytes", metricsKafkaConfiguration.getSocketReceiveBufferBytes().toString());
+        properties.put("fetch.message.max.bytes", metricsKafkaConfiguration.getFetchMessageMaxBytes().toString());
+        properties.put("auto.commit.enable", metricsKafkaConfiguration.getAutoCommitEnable().toString());
+        properties.put("auto.commit.interval.ms", metricsKafkaConfiguration.getAutoCommitIntervalMs().toString());
+        properties.put("queued.max.message.chunks", metricsKafkaConfiguration.getQueuedMaxMessageChunks().toString());
+        properties.put("rebalance.max.retries", metricsKafkaConfiguration.getRebalanceMaxRetries().toString());
+        properties.put("fetch.min.bytes", metricsKafkaConfiguration.getFetchMinBytes().toString());
+        properties.put("fetch.wait.max.ms", metricsKafkaConfiguration.getFetchWaitMaxMs().toString());
+        properties.put("rebalance.backoff.ms", metricsKafkaConfiguration.getRebalanceBackoffMs().toString());
+        properties.put("refresh.leader.backoff.ms", metricsKafkaConfiguration.getRefreshLeaderBackoffMs().toString());
+        properties.put("auto.offset.reset", metricsKafkaConfiguration.getAutoOffsetReset());
+        properties.put("consumer.timeout.ms", metricsKafkaConfiguration.getConsumerTimeoutMs().toString());
+        properties.put("client.id", metricsKafkaConfiguration.getClientId());
+        properties.put("zookeeper.session.timeout.ms", metricsKafkaConfiguration.getZookeeperSessionTimeoutMs().toString());
+        properties.put("zookeeper.connection.timeout.ms", metricsKafkaConfiguration.getZookeeperConnectionTimeoutMs().toString());
+        properties.put("zookeeper.sync.time.ms", metricsKafkaConfiguration.getZookeeperSyncTimeMs().toString());
 
         for (String key : properties.stringPropertyNames()) {
             logger.info(KAFKA_CONFIGURATION + " " + key + " = " + properties.getProperty(key));

@@ -88,4 +88,22 @@ public class MonPersisterConfiguration extends Configuration {
     public VerticaMetricRepositoryConfiguration getVerticaMetricRepositoryConfiguration() {
         return verticaMetricRepositoryConfiguration;
     }
+
+    @Valid
+    @NotNull
+    @JsonProperty
+    private final DatabaseConfiguration databaseConfiguration = new DatabaseConfiguration();
+
+    public DatabaseConfiguration getDatabaseConfiguration () {
+        return databaseConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty
+    private final InfluxDBConfiguration influxDBConfiguration = new InfluxDBConfiguration();
+
+    public InfluxDBConfiguration getInfluxDBConfiguration() {
+        return influxDBConfiguration;
+    }
 }

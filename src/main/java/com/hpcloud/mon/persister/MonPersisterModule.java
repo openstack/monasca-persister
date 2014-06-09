@@ -26,7 +26,10 @@ import com.hpcloud.mon.persister.disruptor.*;
 import com.hpcloud.mon.persister.disruptor.event.*;
 import com.hpcloud.mon.persister.disruptor.event.MetricHandler;
 import com.hpcloud.mon.persister.disruptor.event.MetricHandlerFactory;
+import com.hpcloud.mon.persister.repository.InfluxDBMetricRepository;
+import com.hpcloud.mon.persister.repository.MetricRepository;
 import com.hpcloud.mon.persister.repository.RepositoryCommitHeartbeat;
+import com.hpcloud.mon.persister.repository.VerticaMetricRepository;
 import com.lmax.disruptor.ExceptionHandler;
 import io.dropwizard.setup.Environment;
 import org.skife.jdbi.v2.DBI;
@@ -71,7 +74,21 @@ public class MonPersisterModule extends AbstractModule {
         bind(AlarmStateHistoryDisruptor.class)
                 .toProvider(AlarmHistoryDisruptorProvider.class).in(Scopes.SINGLETON);
 
-        bind(DBI.class).toProvider(DBIProvider.class).in(Scopes.SINGLETON);
+        if (configuration.getDatabaseConfiguration().getDatabaseType().equals("vertica")) {
+            bind(DBI.class).toProvider(DBIProvider.class).in(Scopes.SINGLETON);
+            bind(MetricRepository.class).to(VerticaMetricRepository.class);
+        } else if (configuration.getDatabaseConfiguration().getDatabaseType().equals("influxdb")) {
+            // Todo.  Get rid of the DBI provider if the database type is 'influxdb'.
+            // Right now this is still used for alarms.
+            bind(DBI.class).toProvider(DBIProvider.class).in(Scopes.SINGLETON);
+            bind(MetricRepository.class).to(InfluxDBMetricRepository.class);
+        } else {
+            System.out.println("Unknown database type encountered: " + configuration.getDatabaseConfiguration().getDatabaseType());
+            System.out.println("Supported databases are 'vertica' and 'influxdb'");
+            System.out.println("Check your config file.");
+            System.exit(1);
+        }
+
         bind(KafkaStreams.class).toProvider(KafkaStreamsProvider.class).in(Scopes.SINGLETON);
         bind(MetricsConsumer.class);
         bind(AlarmStateTransitionsConsumer.class);
