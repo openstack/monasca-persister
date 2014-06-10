@@ -1,5 +1,7 @@
 package com.hpcloud.mon.persister.repository;
 
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
 import io.dropwizard.setup.Environment;
@@ -25,6 +27,9 @@ public class InfluxDBMetricRepository implements MetricRepository {
     private final Map<Sha1HashId, List<Dimension>> dimensionMap = new HashMap<>();
     private final Map<Sha1HashId, DefinitionDimension> definitionDimensionMap = new HashMap<>();
 
+    private final com.codahale.metrics.Timer flushTimer;
+    public final Meter measurementMeter;
+
     @Inject
     public InfluxDBMetricRepository(MonPersisterConfiguration configuration,
                                     Environment environment) {
@@ -33,8 +38,10 @@ public class InfluxDBMetricRepository implements MetricRepository {
         influxDB = InfluxDBFactory.connect(configuration.getInfluxDBConfiguration().getUrl(),
                 configuration.getInfluxDBConfiguration().getUser(),
                 configuration.getInfluxDBConfiguration().getPassword());
-//        this.influxDB.createDatabase(configuration.getInfluxDBConfiguration().getName(),
-//                configuration.getInfluxDBConfiguration().getReplicationFactor());
+
+        this.flushTimer = this.environment.metrics().timer(this.getClass().getName() + "." + "flush-timer");
+        this.measurementMeter = this.environment.metrics().meter(this.getClass().getName() + "." + "measurement-meter");
+
     }
 
     @Override
@@ -72,9 +79,14 @@ public class InfluxDBMetricRepository implements MetricRepository {
     public void flush() {
 
         try {
+            long startTime = System.currentTimeMillis();
+            Timer.Context context = flushTimer.time();
             Map<Sha1HashId, Map<Set<String>, List<Point>>> defMap = getInfluxDBFriendlyMap();
             Serie[] series = getSeries(defMap);
             this.influxDB.write(this.configuration.getInfluxDBConfiguration().getName(), series, TimeUnit.SECONDS);
+            long endTime = System.currentTimeMillis();
+            context.stop();
+            logger.debug("Writing measurements, definitions, and dimensions to database took " + (endTime - startTime) / 1000 + " seconds");
         } catch (Exception e) {
             logger.error("Failed to write measurements to database", e);
         }

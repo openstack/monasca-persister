@@ -56,14 +56,12 @@ public class MonPersisterConfiguration extends Configuration {
     @Valid
     @NotNull
     @JsonProperty
-    private final VerticaOutputProcessorConfiguration verticaOutputProcessorConfiguration = new VerticaOutputProcessorConfiguration();
+    private final OutputProcessorConfiguration outputProcessorConfiguration = new OutputProcessorConfiguration();
 
-    public VerticaOutputProcessorConfiguration getVerticaOutputProcessorConfiguration() {
-        return verticaOutputProcessorConfiguration;
+    public OutputProcessorConfiguration getOutputProcessorConfiguration() {
+        return outputProcessorConfiguration;
     }
 
-    @Valid
-    @NotNull
     @JsonProperty
     private final DataSourceFactory dataSourceFactory = new DataSourceFactory();
 

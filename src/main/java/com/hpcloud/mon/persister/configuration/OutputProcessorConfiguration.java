@@ -21,7 +21,7 @@ package com.hpcloud.mon.persister.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class VerticaOutputProcessorConfiguration {
+public class OutputProcessorConfiguration {
 
     @JsonProperty
     Integer batchSize;

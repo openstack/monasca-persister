@@ -61,7 +61,7 @@ public class AlarmHistoryDisruptorProvider implements Provider<AlarmStateHistory
         AlarmStateHistoryDisruptor disruptor = new AlarmStateHistoryDisruptor(eventFactory, bufferSize, executor);
         disruptor.handleExceptionsWith(exceptionHandler);
 
-        int batchSize = configuration.getVerticaOutputProcessorConfiguration().getBatchSize();
+        int batchSize = configuration.getOutputProcessorConfiguration().getBatchSize();
         logger.debug("Batch size for each output processor [" + batchSize + "]");
 
         int numOutputProcessors = configuration.getDisruptorConfiguration().getNumProcessors();

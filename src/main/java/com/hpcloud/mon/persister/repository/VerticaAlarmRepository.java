@@ -32,9 +32,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
-public class VerticaAlarmStateHistoryRepository extends VerticaRepository {
+public class VerticaAlarmRepository extends VerticaRepository implements AlarmRepository {
 
-    private static final Logger logger = LoggerFactory.getLogger(VerticaAlarmStateHistoryRepository.class);
+    private static final Logger logger = LoggerFactory.getLogger(VerticaAlarmRepository.class);
     private final MonPersisterConfiguration configuration;
     private final Environment environment;
 
@@ -45,8 +45,8 @@ public class VerticaAlarmStateHistoryRepository extends VerticaRepository {
     private final SimpleDateFormat simpleDateFormat;
 
     @Inject
-    public VerticaAlarmStateHistoryRepository(DBI dbi, MonPersisterConfiguration configuration,
-                                              Environment environment) throws NoSuchAlgorithmException, SQLException {
+    public VerticaAlarmRepository(DBI dbi, MonPersisterConfiguration configuration,
+                                  Environment environment) throws NoSuchAlgorithmException, SQLException {
         super(dbi);
         logger.debug("Instantiating: " + this);
 

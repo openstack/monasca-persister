@@ -62,7 +62,7 @@ public class MetricDisruptorProvider implements Provider<MetricDisruptor> {
         MetricDisruptor disruptor = new MetricDisruptor(eventFactory, bufferSize, executor);
         disruptor.handleExceptionsWith(exceptionHandler);
 
-        int batchSize = configuration.getVerticaOutputProcessorConfiguration().getBatchSize();
+        int batchSize = configuration.getOutputProcessorConfiguration().getBatchSize();
         logger.debug("Batch size for each output processor [" + batchSize + "]");
 
         int numOutputProcessors = configuration.getDisruptorConfiguration().getNumProcessors();

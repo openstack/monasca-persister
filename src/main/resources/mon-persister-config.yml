@@ -3,7 +3,7 @@ name: mon-persister
 #Kafka settings.
 kafkaConfiguration:
 # See http://kafka.apache.org/documentation.html#api for semantics and defaults.
-# !! topic is hard-coded now.  changing topic doesn't do anything.  topics are hard-coded as 'metrics' and 'alarms'. !!
+# !! topic is hard-coded now.  changing topic doesn't do anything.  topics are hard-coded as 'metrics' and 'alarm-state-transitions'. !!
   topic:  metrics
   numThreads: 1
   groupId: 1
@@ -33,7 +33,7 @@ disruptorConfiguration:
   bufferSize:  1048576
   numProcessors: 1
 
-verticaOutputProcessorConfiguration:
+outputProcessorConfiguration:
   batchSize: 100
 
 monDeDuperConfiguration:
@@ -45,7 +45,7 @@ verticaMetricRepositoryConfiguration:
 databaseConfiguration:
 # vertica | influxdb
   databaseType: influxdb
-  #databaseType: vertica
+#  databaseType: vertica
 
 influxDBConfiguration:
   name: mon
@@ -54,35 +54,35 @@ influxDBConfiguration:
   user:  root
   password: root
 
-dataSourceFactory:
-  driverClass: com.vertica.jdbc.Driver
-#  url: jdbc:vertica://mon-aw1rdd1-vertica0001.rndd.aw1.hpcloud.net:5433/som
-  # my Vertica DB in the cloud
-  #url: jdbc:vertica://15.185.94.245:5433/som
-  url: jdbc:vertica://192.168.10.4:5433/mon
-#  user: persister
-  #user: mon_persister
-  user: dbadmin
-  password: password
-  properties:
-    ssl: false
-  # the maximum amount of time to wait on an empty pool before throwing an exception
-  maxWaitForConnection: 1s
-
-  # the SQL query to run when validating a connection's liveness
-  validationQuery: "/* MyService Health Check */ SELECT 1"
-
-  # the minimum number of connections to keep open
-  minSize: 8
-
-  # the maximum number of connections to keep open
-  maxSize: 41
-
-  # whether or not idle connections should be validated
-  checkConnectionWhileIdle: false
-
-  # the maximum lifetime of an idle connection
-  maxConnectionAge: 1 minute
+#dataSourceFactory:
+#  driverClass: com.vertica.jdbc.Driver
+##  url: jdbc:vertica://mon-aw1rdd1-vertica0001.rndd.aw1.hpcloud.net:5433/som
+#  # my Vertica DB in the cloud
+#  #url: jdbc:vertica://15.185.94.245:5433/som
+#  url: jdbc:vertica://192.168.10.4:5433/mon
+##  user: persister
+#  #user: mon_persister
+#  user: dbadmin
+#  password: password
+#  properties:
+#    ssl: false
+#  # the maximum amount of time to wait on an empty pool before throwing an exception
+#  maxWaitForConnection: 1s
+#
+#  # the SQL query to run when validating a connection's liveness
+#  validationQuery: "/* MyService Health Check */ SELECT 1"
+#
+#  # the minimum number of connections to keep open
+#  minSize: 8
+#
+#  # the maximum number of connections to keep open
+#  maxSize: 41
+#
+#  # whether or not idle connections should be validated
+#  checkConnectionWhileIdle: false
+#
+#  # the maximum lifetime of an idle connection
+#  maxConnectionAge: 1 minute
 
 metrics:
   frequency: 1 second

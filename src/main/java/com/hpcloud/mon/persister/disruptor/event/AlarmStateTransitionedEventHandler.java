@@ -7,7 +7,8 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.hpcloud.mon.common.event.AlarmStateTransitionedEvent;
 import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
-import com.hpcloud.mon.persister.repository.VerticaAlarmStateHistoryRepository;
+import com.hpcloud.mon.persister.repository.AlarmRepository;
+import com.hpcloud.mon.persister.repository.VerticaAlarmRepository;
 import com.lmax.disruptor.EventHandler;
 import io.dropwizard.setup.Environment;
 import org.slf4j.Logger;
@@ -24,7 +25,7 @@ public class AlarmStateTransitionedEventHandler implements EventHandler<AlarmSta
     private final long millisBetweenFlushes;
     private final int secondsBetweenFlushes;
 
-    private final VerticaAlarmStateHistoryRepository repository;
+    private final AlarmRepository repository;
     private final MonPersisterConfiguration configuration;
     private final Environment environment;
 
@@ -34,7 +35,7 @@ public class AlarmStateTransitionedEventHandler implements EventHandler<AlarmSta
     private final Timer commitTimer;
 
     @Inject
-    public AlarmStateTransitionedEventHandler(VerticaAlarmStateHistoryRepository repository,
+    public AlarmStateTransitionedEventHandler(AlarmRepository repository,
                                               MonPersisterConfiguration configuration,
                                               Environment environment,
                                               @Assisted("ordinal") int ordinal,
