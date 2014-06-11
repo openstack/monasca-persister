@@ -34,17 +34,20 @@ public class KafkaStreams {
     private static final String KAFKA_CONFIGURATION = "Kafka configuration:";
     private static final Logger logger = LoggerFactory.getLogger(KafkaStreams.class);
 
+    private final MonPersisterConfiguration configuration;
+
     private final ConsumerConnector consumerConnector;
     private final Map<String, List<KafkaStream<byte[], byte[]>>> consumerMap;
 
     public KafkaStreams(MonPersisterConfiguration configuration) {
+        this.configuration = configuration;
         Properties kafkaProperties = createKafkaProperties(configuration.getKafkaConfiguration());
         ConsumerConfig consumerConfig = createConsumerConfig(kafkaProperties);
         consumerConnector = Consumer.createJavaConsumerConnector(consumerConfig);
         Map<String, Integer> topicCountMap = new HashMap<>();
         Integer numThreads = configuration.getKafkaConfiguration().getNumThreads();
-        topicCountMap.put("metrics", (int) numThreads);
-        topicCountMap.put("alarm-state-transitions", (int) numThreads);
+        topicCountMap.put(this.configuration.getMetricConfiguration().getTopic(), (int) numThreads);
+        topicCountMap.put(this.configuration.getAlarmHistoryConfiguration().getTopic(), (int) numThreads);
         consumerMap = consumerConnector.createMessageStreams(topicCountMap);
     }
 

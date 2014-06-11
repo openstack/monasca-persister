@@ -37,6 +37,6 @@ public class KafkaAlarmStateTransitionConsumer extends KafkaConsumer {
 
     @Override
     protected String getStreamName() {
-        return "alarm-state-transitions";
+        return this.configuration.getAlarmHistoryConfiguration().getTopic();
     }
 }

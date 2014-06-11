@@ -31,6 +31,8 @@ public abstract class KafkaConsumer {
     private static final String KAFKA_CONFIGURATION = "Kafka configuration:";
     private static final Logger logger = LoggerFactory.getLogger(KafkaConsumer.class);
 
+    protected final MonPersisterConfiguration configuration;
+
     private final Integer numThreads;
     private ExecutorService executorService;
     @Inject
@@ -41,6 +43,8 @@ public abstract class KafkaConsumer {
 
     @Inject
     public KafkaConsumer(MonPersisterConfiguration configuration) {
+
+        this.configuration = configuration;
 
         this.numThreads = configuration.getKafkaConfiguration().getNumThreads();
         logger.info(KAFKA_CONFIGURATION + " numThreads = " + numThreads);

@@ -1,10 +1,14 @@
 name: mon-persister
 
+alarmHistoryConfiguration:
+  topic:  alarm-state-transitions
+
+metricConfiguration:
+  topic:  metrics
+
 #Kafka settings.
 kafkaConfiguration:
 # See http://kafka.apache.org/documentation.html#api for semantics and defaults.
-# !! topic is hard-coded now.  changing topic doesn't do anything.  topics are hard-coded as 'metrics' and 'alarm-state-transitions'. !!
-  topic:  metrics
   numThreads: 1
   groupId: 1
   #zookeeperConnect: localhost:2181

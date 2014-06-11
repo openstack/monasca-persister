@@ -35,6 +35,20 @@ public class MonPersisterConfiguration extends Configuration {
         return name;
     }
 
+    @JsonProperty
+    @NotNull
+    @Valid
+    private final AlarmHistoryConfiguration alarmHistoryConfiguration = new AlarmHistoryConfiguration();
+
+    public AlarmHistoryConfiguration getAlarmHistoryConfiguration() { return alarmHistoryConfiguration; }
+
+    @JsonProperty
+    @NotNull
+    @Valid
+    private final MetricConfiguration metricConfiguration = new MetricConfiguration();
+
+    public MetricConfiguration getMetricConfiguration() { return metricConfiguration; }
+
     @Valid
     @NotNull
     @JsonProperty

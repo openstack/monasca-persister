@@ -37,6 +37,6 @@ public class KafkaMetricsConsumer extends KafkaConsumer {
 
     @Override
     protected String getStreamName() {
-        return "metrics";
+        return this.configuration.getMetricConfiguration().getTopic();
     }
 }
