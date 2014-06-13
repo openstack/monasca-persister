@@ -28,7 +28,7 @@ public class InfluxDBAlarmRepository implements AlarmRepository {
             "new_state",
             "reason",
             "reason_data",
-            "time_stamp"};
+            "time"};
 
     private static final int ALARM_STATE_HISTORY_COLUMN_NUMBER = 7;
 

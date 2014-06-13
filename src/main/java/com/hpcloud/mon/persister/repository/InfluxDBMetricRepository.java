@@ -11,6 +11,7 @@ import org.influxdb.dto.Serie;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -29,6 +30,8 @@ public class InfluxDBMetricRepository implements MetricRepository {
 
     private final com.codahale.metrics.Timer flushTimer;
     public final Meter measurementMeter;
+
+    private static final SimpleDateFormat measurementTimeStampSimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss zzz");
 
     @Inject
     public InfluxDBMetricRepository(MonPersisterConfiguration configuration,
@@ -124,8 +127,8 @@ public class InfluxDBMetricRepository implements MetricRepository {
                     logger.debug("Adding column name[{}]: " + dimName, j);
                     colNameStringArry[j++] = dimName;
                 }
-                logger.debug("Adding column name[{}]: time_stamp", j);
-                colNameStringArry[j++] = "time_stamp";
+                logger.debug("Adding column name[{}]: time", j);
+                colNameStringArry[j++] = "time";
                 logger.debug("Adding column name[{}]: value", j);
                 colNameStringArry[j++] = "value";
 
@@ -167,10 +170,11 @@ public class InfluxDBMetricRepository implements MetricRepository {
                         }
                         logger.debug("Adding column value[{}][{}]: " + dimVal, k, l);
                         colValsObjectArry[k][l++] = dimVal;
-
                     }
-                    logger.debug("Adding column value[{}][{}]: " + point.measurement.timeStamp, k, l);
-                    colValsObjectArry[k][l++] = point.measurement.timeStamp;
+                    Date d = measurementTimeStampSimpleDateFormat.parse(point.measurement.timeStamp + " UTC");
+                    Long time = d.getTime() / 1000;
+                    logger.debug("Adding column value[{}][{}]: " + time, k, l);
+                    colValsObjectArry[k][l++] = time;
                     logger.debug("Adding column value[{}][{}]: " + point.measurement.value, k, l);
                     colValsObjectArry[k][l++] = point.measurement.value;
                     k++;
