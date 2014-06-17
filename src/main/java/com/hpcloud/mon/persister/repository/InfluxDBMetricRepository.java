@@ -177,6 +177,7 @@ public class InfluxDBMetricRepository implements MetricRepository {
                     colValsObjectArry[k][l++] = time;
                     logger.debug("Adding column value[{}][{}]: " + point.measurement.value, k, l);
                     colValsObjectArry[k][l++] = point.measurement.value;
+                    measurementMeter.mark();
                     k++;
                 }
                 serie.setPoints(colValsObjectArry);
