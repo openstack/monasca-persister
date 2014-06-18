@@ -98,18 +98,7 @@ public class InfluxDBAlarmRepository implements AlarmRepository {
             serie.setColumns(this.colNamesStringArry);
 
             if (logger.isDebugEnabled()) {
-                logger.debug("Added array of column names to serie");
-                StringBuffer sb = new StringBuffer();
-                boolean first = true;
-                for (String colName : serie.getColumns()) {
-                    if (first) {
-                        first = false;
-                    } else {
-                        sb.append(",");
-                    }
-                    sb.append(colName);
-                }
-                logger.debug("Array of column names: [" + sb.toString() + "]");
+                logColumnNames(serie);
             }
 
             Object[][] colValsObjectArry = new Object[this.alarmStateTransitionedEventList.size()][ALARM_STATE_HISTORY_NUM_COLUMNS];
@@ -129,22 +118,7 @@ public class InfluxDBAlarmRepository implements AlarmRepository {
             serie.setPoints(colValsObjectArry);
 
             if (logger.isDebugEnabled()) {
-                logger.debug("Added array of array of column values to serie");
-                int outerIdx = 0;
-                for (Object[] colValArry : serie.getPoints()) {
-                    StringBuffer sb = new StringBuffer();
-                    boolean first = true;
-                    for (Object colVal : colValArry) {
-                        if (first) {
-                            first = false;
-                        } else {
-                            sb.append(",");
-                        }
-                        sb.append(colVal);
-                    }
-                    logger.debug("Array of column values[{}]: [" + sb.toString() + "]", outerIdx);
-                    outerIdx++;
-                }
+                logColValues(serie);
             }
 
             Serie[] series = {serie};
@@ -160,5 +134,39 @@ public class InfluxDBAlarmRepository implements AlarmRepository {
         }
 
         this.alarmStateTransitionedEventList.clear();
+    }
+
+    private void logColValues(Serie serie) {
+        logger.debug("Added array of array of column values to serie");
+        int outerIdx = 0;
+        for (Object[] colValArry : serie.getPoints()) {
+            StringBuffer sb = new StringBuffer();
+            boolean first = true;
+            for (Object colVal : colValArry) {
+                if (first) {
+                    first = false;
+                } else {
+                    sb.append(",");
+                }
+                sb.append(colVal);
+            }
+            logger.debug("Array of column values[{}]: [" + sb.toString() + "]", outerIdx);
+            outerIdx++;
+        }
+    }
+
+    private void logColumnNames(Serie serie) {
+        logger.debug("Added array of column names to serie");
+        StringBuffer sb = new StringBuffer();
+        boolean first = true;
+        for (String colName : serie.getColumns()) {
+            if (first) {
+                first = false;
+            } else {
+                sb.append(",");
+            }
+            sb.append(colName);
+        }
+        logger.debug("Array of column names: [" + sb.toString() + "]");
     }
 }

@@ -151,18 +151,7 @@ public class InfluxDBMetricRepository implements MetricRepository {
                 serie.setColumns(colNameStringArry);
 
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Added array of column names to serie");
-                    StringBuffer sb = new StringBuffer();
-                    boolean first = true;
-                    for (String colName : serie.getColumns()) {
-                        if (first) {
-                            first = false;
-                        } else {
-                            sb.append(",");
-                        }
-                        sb.append(colName);
-                    }
-                    logger.debug("Array of column names: [" + sb.toString() + "]");
+                    logColNames(serie);
                 }
 
                 List<Point> pointList = dimNameSetMap.get(dimNameSet);
@@ -199,22 +188,7 @@ public class InfluxDBMetricRepository implements MetricRepository {
                 serie.setPoints(colValsObjectArry);
 
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Added array of array of column values to serie");
-                    int outerIdx = 0;
-                    for (Object[] colValArry : serie.getPoints()) {
-                        StringBuffer sb = new StringBuffer();
-                        boolean first = true;
-                        for (Object colVal : colValArry) {
-                            if (first) {
-                                first = false;
-                            } else {
-                                sb.append(",");
-                            }
-                            sb.append(colVal);
-                        }
-                        logger.debug("Array of column values[{}]: [" + sb.toString() + "]", outerIdx);
-                        outerIdx++;
-                    }
+                    logColValues(serie);
                 }
 
             }
@@ -223,6 +197,40 @@ public class InfluxDBMetricRepository implements MetricRepository {
 
         }
         return series;
+    }
+
+    private void logColValues(Serie serie) {
+        logger.debug("Added array of array of column values to serie");
+        int outerIdx = 0;
+        for (Object[] colValArry : serie.getPoints()) {
+            StringBuffer sb = new StringBuffer();
+            boolean first = true;
+            for (Object colVal : colValArry) {
+                if (first) {
+                    first = false;
+                } else {
+                    sb.append(",");
+                }
+                sb.append(colVal);
+            }
+            logger.debug("Array of column values[{}]: [" + sb.toString() + "]", outerIdx);
+            outerIdx++;
+        }
+    }
+
+    private void logColNames(Serie serie) {
+        logger.debug("Added array of column names to serie");
+        StringBuffer sb = new StringBuffer();
+        boolean first = true;
+        for (String colName : serie.getColumns()) {
+            if (first) {
+                first = false;
+            } else {
+                sb.append(",");
+            }
+            sb.append(colName);
+        }
+        logger.debug("Array of column names: [" + sb.toString() + "]");
     }
 
     /**
