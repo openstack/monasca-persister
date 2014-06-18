@@ -111,7 +111,6 @@ public class MonPersisterConfiguration extends Configuration {
     }
 
     @Valid
-    @NotNull
     @JsonProperty
     private final InfluxDBConfiguration influxDBConfiguration = new InfluxDBConfiguration();
 
