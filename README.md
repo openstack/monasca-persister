@@ -9,6 +9,14 @@ The basic design of the Persister is to have one Kafka consumer publish to a Dis
 
 The number of output processors/threads in the Persister can be specified to scale to more messages. To horizontally scale and provide fault-tolerance any number of Persisters can be started as consumers from the the Message Queue. 
 
+# Build
+
+Requires mon-common from https://github.com/hpcloud-mon/mon-common. Download and build following instructions in its README.md. Then build mon-persister by:
+
+```
+mvn clean package
+```
+
 # TODO
 
 * Purge metrics on shutdown
