@@ -16,20 +16,23 @@
  */
 package com.hpcloud.mon.persister.consumer;
 
+import com.hpcloud.mon.persister.disruptor.ManagedDisruptor;
+
 import com.google.inject.Inject;
-import com.lmax.disruptor.dsl.Disruptor;
-import io.dropwizard.lifecycle.Managed;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Consumer implements Managed {
+import io.dropwizard.lifecycle.Managed;
+
+public class Consumer<T> implements Managed {
 
     private static final Logger logger = LoggerFactory.getLogger(Consumer.class);
     private final KafkaConsumer consumer;
-    private final Disruptor disruptor;
+    private final ManagedDisruptor<T> disruptor;
 
     @Inject
-    public Consumer(KafkaConsumer kafkaConsumer, Disruptor disruptor) {
+    public Consumer(KafkaConsumer kafkaConsumer, ManagedDisruptor<T> disruptor) {
         this.consumer = kafkaConsumer;
         this.disruptor = disruptor;
     }

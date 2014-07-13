@@ -29,16 +29,10 @@ import org.slf4j.LoggerFactory;
 
 public class RepositoryCommitHeartbeat implements Managed {
 
-    private static Logger logger = LoggerFactory.getLogger(RepositoryCommitHeartbeat.class);
-
-    private final MetricDisruptor metricDisruptor;
-    private final AlarmStateHistoryDisruptor alarmHistoryDisruptor;
     private final HeartbeatRunnable deduperRunnable;
 
     @Inject
     public RepositoryCommitHeartbeat(MetricDisruptor metricDisruptor, AlarmStateHistoryDisruptor alarmHistoryDisruptor) {
-        this.metricDisruptor = metricDisruptor;
-        this.alarmHistoryDisruptor = alarmHistoryDisruptor;
         this.deduperRunnable = new HeartbeatRunnable(metricDisruptor, alarmHistoryDisruptor);
     }
 
@@ -51,15 +45,19 @@ public class RepositoryCommitHeartbeat implements Managed {
 
     @Override
     public void stop() throws Exception {
+      this.deduperRunnable.stop();
     }
 
     private static class HeartbeatRunnable implements Runnable {
 
         private static final Logger logger = LoggerFactory.getLogger(HeartbeatRunnable.class);
-        private final Disruptor metricDisruptor;
-        private final Disruptor alarmHistoryDisruptor;
+        private final Disruptor<MetricHolder> metricDisruptor;
+        private final Disruptor<AlarmStateTransitionedEventHolder> alarmHistoryDisruptor;
 
-        private HeartbeatRunnable(Disruptor metricDisruptor, Disruptor alarmHistoryDisruptor) {
+        private boolean stop = false;
+
+        private HeartbeatRunnable(MetricDisruptor metricDisruptor,
+            AlarmStateHistoryDisruptor alarmHistoryDisruptor) {
             this.metricDisruptor = metricDisruptor;
             this.alarmHistoryDisruptor = alarmHistoryDisruptor;
         }
@@ -69,7 +67,13 @@ public class RepositoryCommitHeartbeat implements Managed {
             for (; ; ) {
                 try {
                     // Send a heartbeat every second.
-                    Thread.sleep(1000);
+                    synchronized (this) {
+                      this.wait(1000);
+                      if (stop) {
+                        logger.debug("Heartbeat thread is exiting");
+                        break;
+                      }
+                    }
                     logger.debug("Waking up after sleeping 1 seconds, yawn...");
 
                     // Send heartbeat
@@ -95,6 +99,11 @@ public class RepositoryCommitHeartbeat implements Managed {
 
             }
 
+        }
+        
+        public synchronized void stop() {
+          stop = true;
+          this.notify();
         }
     }
 }

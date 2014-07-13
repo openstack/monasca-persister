@@ -89,4 +89,8 @@ public class KafkaStreams {
 
         return properties;
     }
+
+    public void stop() {
+      consumerConnector.shutdown();
+    }
 }

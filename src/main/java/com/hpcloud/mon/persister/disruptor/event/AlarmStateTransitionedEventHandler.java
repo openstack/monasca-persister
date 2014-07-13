@@ -16,21 +16,22 @@
  */
 package com.hpcloud.mon.persister.disruptor.event;
 
-import com.codahale.metrics.Counter;
+import com.hpcloud.mon.common.event.AlarmStateTransitionedEvent;
+import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
+import com.hpcloud.mon.persister.repository.AlarmRepository;
+
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import com.hpcloud.mon.common.event.AlarmStateTransitionedEvent;
-import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
-import com.hpcloud.mon.persister.repository.AlarmRepository;
-import com.hpcloud.mon.persister.repository.VerticaAlarmRepository;
 import com.lmax.disruptor.EventHandler;
-import io.dropwizard.setup.Environment;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AlarmStateTransitionedEventHandler implements EventHandler<AlarmStateTransitionedEventHolder> {
+import io.dropwizard.setup.Environment;
+
+public class AlarmStateTransitionedEventHandler implements EventHandler<AlarmStateTransitionedEventHolder>, FlushableHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(AlarmStateTransitionedEventHandler.class);
     private final int ordinal;
@@ -42,10 +43,8 @@ public class AlarmStateTransitionedEventHandler implements EventHandler<AlarmSta
     private final int secondsBetweenFlushes;
 
     private final AlarmRepository repository;
-    private final MonPersisterConfiguration configuration;
     private final Environment environment;
 
-    private final Counter batchCounter;
     private final Meter processedMeter;
     private final Meter commitMeter;
     private final Timer commitTimer;
@@ -59,9 +58,7 @@ public class AlarmStateTransitionedEventHandler implements EventHandler<AlarmSta
                                               @Assisted("batchSize") int batchSize) {
 
         this.repository = repository;
-        this.configuration = configuration;
         this.environment = environment;
-        this.batchCounter = this.environment.metrics().counter(this.getClass().getName() + "." + "alarm-added-to-batch-batchCounter");
         this.processedMeter = this.environment.metrics().meter(this.getClass().getName() + "." + "alarm-messages-processed-processedMeter");
         this.commitMeter = this.environment.metrics().meter(this.getClass().getName() + "." + "commits-executed-processedMeter");
         this.commitTimer = this.environment.metrics().timer(this.getClass().getName() + "." + "total-commit-and-flush-timer");
@@ -109,7 +106,8 @@ public class AlarmStateTransitionedEventHandler implements EventHandler<AlarmSta
         }
     }
 
-    private void flush() {
+    @Override
+    public void flush() {
         repository.flush();
         millisSinceLastFlush = System.currentTimeMillis();
     }

@@ -16,20 +16,25 @@
  */
 package com.hpcloud.mon.persister.disruptor.event;
 
+import static com.hpcloud.mon.persister.repository.VerticaMetricsConstants.MAX_COLUMN_LENGTH;
+
+import com.hpcloud.mon.common.model.metric.Metric;
+import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
+import com.hpcloud.mon.persister.repository.MetricRepository;
+import com.hpcloud.mon.persister.repository.Sha1HashId;
+
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import com.hpcloud.mon.common.model.metric.Metric;
-import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
-import com.hpcloud.mon.persister.repository.MetricRepository;
-import com.hpcloud.mon.persister.repository.Sha1HashId;
 import com.lmax.disruptor.EventHandler;
-import io.dropwizard.setup.Environment;
+
 import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.dropwizard.setup.Environment;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -37,9 +42,7 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.TreeMap;
 
-import static com.hpcloud.mon.persister.repository.VerticaMetricsConstants.MAX_COLUMN_LENGTH;
-
-public class MetricHandler implements EventHandler<MetricHolder> {
+public class MetricHandler implements EventHandler<MetricHolder>, FlushableHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(MetricHandler.class);
     private static final String TENANT_ID = "tenantId";
@@ -56,7 +59,6 @@ public class MetricHandler implements EventHandler<MetricHolder> {
     private final int secondsBetweenFlushes;
 
     private final MetricRepository verticaMetricRepository;
-    private final MonPersisterConfiguration configuration;
     private final Environment environment;
 
     private final Counter metricCounter;
@@ -76,7 +78,6 @@ public class MetricHandler implements EventHandler<MetricHolder> {
                          @Assisted("batchSize") int batchSize) {
 
         this.verticaMetricRepository = metricRepository;
-        this.configuration = configuration;
         this.environment = environment;
         this.metricCounter = this.environment.metrics().counter(this.getClass().getName() + "." + "metrics-added-to-batch-counter");
         this.definitionCounter = this.environment.metrics().counter(this.getClass().getName() + "." + "metric-definitions-added-to-batch-counter");
@@ -215,7 +216,8 @@ public class MetricHandler implements EventHandler<MetricHolder> {
 
     }
 
-    private void flush() {
+    @Override
+    public void flush() {
         verticaMetricRepository.flush();
         millisSinceLastFlush = System.currentTimeMillis();
     }

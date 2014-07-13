@@ -18,11 +18,14 @@ package com.hpcloud.mon.persister.disruptor;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+
 import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
 import com.hpcloud.mon.persister.disruptor.event.MetricFactory;
+import com.hpcloud.mon.persister.disruptor.event.MetricHandler;
 import com.hpcloud.mon.persister.disruptor.event.MetricHandlerFactory;
-import com.lmax.disruptor.EventHandler;
+
 import com.lmax.disruptor.ExceptionHandler;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,13 +71,14 @@ public class MetricDisruptorProvider implements Provider<MetricDisruptor> {
         int numOutputProcessors = configuration.getDisruptorConfiguration().getNumProcessors();
         logger.debug("Number of output processors [" + numOutputProcessors + "]");
 
-        EventHandler[] eventHandlers = new EventHandler[numOutputProcessors];
+        MetricHandler[] metricHandlers = new MetricHandler[numOutputProcessors];
 
         for (int i = 0; i < numOutputProcessors; ++i) {
-            eventHandlers[i] = eventHandlerFactory.create(i, numOutputProcessors, batchSize);
+            metricHandlers[i] = eventHandlerFactory.create(i, numOutputProcessors, batchSize);
         }
 
-        disruptor.handleEventsWith(eventHandlers);
+        disruptor.handleEventsWith(metricHandlers);
+        disruptor.setHandlers(metricHandlers);
         disruptor.start();
 
         logger.debug("Instance of disruptor successfully started");

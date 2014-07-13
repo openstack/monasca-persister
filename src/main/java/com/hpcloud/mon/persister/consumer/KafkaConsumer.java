@@ -17,19 +17,25 @@
 package com.hpcloud.mon.persister.consumer;
 
 import com.google.inject.Inject;
+
 import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
+
 import kafka.consumer.KafkaStream;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public abstract class KafkaConsumer {
 
     private static final String KAFKA_CONFIGURATION = "Kafka configuration:";
     private static final Logger logger = LoggerFactory.getLogger(KafkaConsumer.class);
+
+    private static final int WAIT_TIME = 10;
 
     protected final MonPersisterConfiguration configuration;
 
@@ -38,7 +44,7 @@ public abstract class KafkaConsumer {
     @Inject
     private KafkaStreams kafkaStreams;
 
-    protected abstract Runnable createRunnable(KafkaStream stream, int threadNumber);
+    protected abstract Runnable createRunnable(KafkaStream<byte[], byte[]> stream, int threadNumber);
     protected abstract String getStreamName();
 
     @Inject
@@ -55,15 +61,23 @@ public abstract class KafkaConsumer {
         executorService = Executors.newFixedThreadPool(numThreads);
 
         int threadNumber = 0;
-        for (final KafkaStream stream : streams) {
+        for (final KafkaStream<byte[], byte[]> stream : streams) {
             executorService.submit(createRunnable(stream, threadNumber));
             threadNumber++;
         }
     }
 
     public void stop() {
+        kafkaStreams.stop();
         if (executorService != null) {
             executorService.shutdown();
+            try {
+              if (!executorService.awaitTermination(WAIT_TIME, TimeUnit.SECONDS)) {
+                logger.warn("Did not shut down in %d seconds", WAIT_TIME);
+              }
+            } catch (InterruptedException e) {
+              logger.info("awaitTerminiation interrupted", e);
+            }
         }
     }
 }

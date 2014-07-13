@@ -16,13 +16,15 @@
  */
 package com.hpcloud.mon.persister.disruptor;
 
-import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
 import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionedEventFactory;
+import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionedEventHandler;
 import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionedEventHandlerFactory;
-import com.lmax.disruptor.EventHandler;
+
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.lmax.disruptor.ExceptionHandler;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,13 +69,14 @@ public class AlarmHistoryDisruptorProvider implements Provider<AlarmStateHistory
         int numOutputProcessors = configuration.getDisruptorConfiguration().getNumProcessors();
         logger.debug("Number of output processors [" + numOutputProcessors + "]");
 
-        EventHandler[] eventHandlers = new EventHandler[numOutputProcessors];
+        AlarmStateTransitionedEventHandler[] eventHandlers = new AlarmStateTransitionedEventHandler[numOutputProcessors];
 
         for (int i = 0; i < numOutputProcessors; ++i) {
             eventHandlers[i] = eventHandlerFactory.create(i, numOutputProcessors, batchSize);
         }
 
         disruptor.handleEventsWith(eventHandlers);
+        disruptor.setHandlers(eventHandlers);
         disruptor.start();
 
         logger.debug("Instance of disruptor successfully started");

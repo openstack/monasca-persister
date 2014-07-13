@@ -14,18 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hpcloud.mon.persister.consumer;
+package com.hpcloud.mon.persister.disruptor.event;
 
-import com.hpcloud.mon.persister.disruptor.MetricDisruptor;
-import com.hpcloud.mon.persister.disruptor.event.MetricHolder;
-
-import com.google.inject.Inject;
-
-public class MetricsConsumer extends Consumer<MetricHolder> {
-
-    @Inject
-    public MetricsConsumer(KafkaMetricsConsumer kafkaConsumer, MetricDisruptor disruptor) {
-        super(kafkaConsumer, disruptor);
-    }
-
+public interface FlushableHandler {
+  public void flush();
 }
