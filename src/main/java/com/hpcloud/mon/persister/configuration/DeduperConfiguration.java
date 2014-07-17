@@ -17,16 +17,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.hpcloud.mon.persister.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DeduperConfiguration {
 
-    @JsonProperty
-    Integer dedupeRunFrequencySeconds;
+  @JsonProperty
+  Integer dedupeRunFrequencySeconds;
 
-    public Integer getDedupeRunFrequencySeconds() {
-        return dedupeRunFrequencySeconds;
-    }
+  public Integer getDedupeRunFrequencySeconds() {
+    return dedupeRunFrequencySeconds;
+  }
 }

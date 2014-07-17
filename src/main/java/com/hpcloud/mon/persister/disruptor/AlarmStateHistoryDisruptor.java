@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.hpcloud.mon.persister.disruptor;
 
 import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionedEventHolder;
@@ -25,15 +26,14 @@ import com.lmax.disruptor.dsl.ProducerType;
 import java.util.concurrent.Executor;
 
 public class AlarmStateHistoryDisruptor extends ManagedDisruptor<AlarmStateTransitionedEventHolder> {
-    public AlarmStateHistoryDisruptor(EventFactory<AlarmStateTransitionedEventHolder> eventFactory, int ringBufferSize, Executor executor) {
-        super(eventFactory, ringBufferSize, executor);
-    }
+  public AlarmStateHistoryDisruptor(EventFactory<AlarmStateTransitionedEventHolder> eventFactory,
+      int ringBufferSize, Executor executor) {
+    super(eventFactory, ringBufferSize, executor);
+  }
 
-    public AlarmStateHistoryDisruptor(final EventFactory<AlarmStateTransitionedEventHolder> eventFactory,
-                                      int ringBufferSize,
-                                      Executor executor,
-                                      ProducerType producerType,
-                                      WaitStrategy waitStrategy) {
-        super(eventFactory, ringBufferSize, executor, producerType, waitStrategy);
-    }
+  public AlarmStateHistoryDisruptor(
+      final EventFactory<AlarmStateTransitionedEventHolder> eventFactory, int ringBufferSize,
+      Executor executor, ProducerType producerType, WaitStrategy waitStrategy) {
+    super(eventFactory, ringBufferSize, executor, producerType, waitStrategy);
+  }
 }

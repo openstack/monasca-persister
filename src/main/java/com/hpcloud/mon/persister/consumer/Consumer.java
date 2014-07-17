@@ -14,39 +14,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.hpcloud.mon.persister.consumer;
 
 import com.hpcloud.mon.persister.disruptor.ManagedDisruptor;
 
 import com.google.inject.Inject;
 
+import io.dropwizard.lifecycle.Managed;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.dropwizard.lifecycle.Managed;
-
 public class Consumer<T> implements Managed {
 
-    private static final Logger logger = LoggerFactory.getLogger(Consumer.class);
-    private final KafkaConsumer consumer;
-    private final ManagedDisruptor<T> disruptor;
+  private static final Logger logger = LoggerFactory.getLogger(Consumer.class);
+  private final KafkaConsumer consumer;
+  private final ManagedDisruptor<T> disruptor;
 
-    @Inject
-    public Consumer(KafkaConsumer kafkaConsumer, ManagedDisruptor<T> disruptor) {
-        this.consumer = kafkaConsumer;
-        this.disruptor = disruptor;
-    }
+  @Inject
+  public Consumer(KafkaConsumer kafkaConsumer, ManagedDisruptor<T> disruptor) {
+    this.consumer = kafkaConsumer;
+    this.disruptor = disruptor;
+  }
 
-    @Override
-    public void start() throws Exception {
-        logger.debug("start");
-        consumer.run();
-    }
+  @Override
+  public void start() throws Exception {
+    logger.debug("start");
+    consumer.run();
+  }
 
-    @Override
-    public void stop() throws Exception {
-        logger.debug("stop");
-        consumer.stop();
-        disruptor.shutdown();
-    }
+  @Override
+  public void stop() throws Exception {
+    logger.debug("stop");
+    consumer.stop();
+    disruptor.shutdown();
+  }
 }

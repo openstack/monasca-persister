@@ -14,34 +14,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.hpcloud.mon.persister.disruptor;
 
 import com.lmax.disruptor.ExceptionHandler;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class DisruptorExceptionHandler implements ExceptionHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(DisruptorExceptionHandler.class);
+  private static final Logger logger = LoggerFactory.getLogger(DisruptorExceptionHandler.class);
 
-    @Override
-    public void handleEventException(Throwable ex, long sequence, Object event) {
+  @Override
+  public void handleEventException(Throwable ex, long sequence, Object event) {
 
-        logger.error("Disruptor encountered an exception during normal operation", ex);
-        throw new RuntimeException(ex);
-    }
+    logger.error("Disruptor encountered an exception during normal operation", ex);
+    throw new RuntimeException(ex);
+  }
 
-    @Override
-    public void handleOnStartException(Throwable ex) {
+  @Override
+  public void handleOnStartException(Throwable ex) {
 
-        logger.error("Disruptor encountered an exception during startup", ex);
-        throw new RuntimeException(ex);
-    }
+    logger.error("Disruptor encountered an exception during startup", ex);
+    throw new RuntimeException(ex);
+  }
 
-    @Override
-    public void handleOnShutdownException(Throwable ex) {
+  @Override
+  public void handleOnShutdownException(Throwable ex) {
 
-        logger.error("Disruptor encountered an exception during shutdown", ex);
-        throw new RuntimeException(ex);
-    }
+    logger.error("Disruptor encountered an exception during shutdown", ex);
+    throw new RuntimeException(ex);
+  }
 }

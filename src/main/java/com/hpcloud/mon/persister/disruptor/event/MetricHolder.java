@@ -14,19 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.hpcloud.mon.persister.disruptor.event;
 
 import com.hpcloud.mon.common.model.metric.MetricEnvelope;
 
 public class MetricHolder {
 
-    MetricEnvelope metricEnvelope;
+  MetricEnvelope metricEnvelope;
 
-    public MetricEnvelope getMetricEnvelope() {
-        return metricEnvelope;
-    }
+  public MetricEnvelope getMetricEnvelope() {
+    return metricEnvelope;
+  }
 
-    public void setEnvelope(MetricEnvelope metricEnvelope) {
-        this.metricEnvelope = metricEnvelope;
-    }
+  public void setEnvelope(MetricEnvelope metricEnvelope) {
+    this.metricEnvelope = metricEnvelope;
+  }
 }

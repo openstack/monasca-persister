@@ -17,16 +17,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.hpcloud.mon.persister.resource;
 
 public class PlaceHolder {
-    private final String content;
+  private final String content;
 
-    public PlaceHolder(String content) {
-        this.content = content;
-    }
+  public PlaceHolder(String content) {
+    this.content = content;
+  }
 
-    public String getContent() {
-        return content;
-    }
+  public String getContent() {
+    return content;
+  }
 }

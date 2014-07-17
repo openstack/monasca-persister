@@ -14,16 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hpcloud.mon.persister.disruptor;
 
-import com.google.inject.Inject;
-import com.google.inject.Provider;
+package com.hpcloud.mon.persister.disruptor;
 
 import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
 import com.hpcloud.mon.persister.disruptor.event.MetricFactory;
 import com.hpcloud.mon.persister.disruptor.event.MetricHandler;
 import com.hpcloud.mon.persister.disruptor.event.MetricHandlerFactory;
 
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.lmax.disruptor.ExceptionHandler;
 
 import org.slf4j.Logger;
@@ -34,60 +34,59 @@ import java.util.concurrent.Executors;
 
 public class MetricDisruptorProvider implements Provider<MetricDisruptor> {
 
-    private static final Logger logger = LoggerFactory.getLogger(MetricDisruptorProvider.class);
+  private static final Logger logger = LoggerFactory.getLogger(MetricDisruptorProvider.class);
 
-    private final MonPersisterConfiguration configuration;
-    private final MetricHandlerFactory eventHandlerFactory;
-    private final ExceptionHandler exceptionHandler;
-    private final MetricDisruptor instance;
+  private final MonPersisterConfiguration configuration;
+  private final MetricHandlerFactory eventHandlerFactory;
+  private final ExceptionHandler exceptionHandler;
+  private final MetricDisruptor instance;
 
-    @Inject
-    public MetricDisruptorProvider(MonPersisterConfiguration configuration,
-                                   MetricHandlerFactory eventHandlerFactory,
-                                   ExceptionHandler exceptionHandler) {
+  @Inject
+  public MetricDisruptorProvider(MonPersisterConfiguration configuration,
+      MetricHandlerFactory eventHandlerFactory, ExceptionHandler exceptionHandler) {
 
-        this.configuration = configuration;
-        this.eventHandlerFactory = eventHandlerFactory;
-        this.exceptionHandler = exceptionHandler;
-        this.instance = createInstance();
+    this.configuration = configuration;
+    this.eventHandlerFactory = eventHandlerFactory;
+    this.exceptionHandler = exceptionHandler;
+    this.instance = createInstance();
+  }
+
+  private MetricDisruptor createInstance() {
+
+    logger.debug("Creating disruptor...");
+
+    Executor executor = Executors.newCachedThreadPool();
+    MetricFactory eventFactory = new MetricFactory();
+
+    int bufferSize = configuration.getDisruptorConfiguration().getBufferSize();
+    logger.debug("Buffer size for instance of disruptor [" + bufferSize + "]");
+
+    MetricDisruptor disruptor = new MetricDisruptor(eventFactory, bufferSize, executor);
+    disruptor.handleExceptionsWith(exceptionHandler);
+
+    int batchSize = configuration.getOutputProcessorConfiguration().getBatchSize();
+    logger.debug("Batch size for each output processor [" + batchSize + "]");
+
+    int numOutputProcessors = configuration.getDisruptorConfiguration().getNumProcessors();
+    logger.debug("Number of output processors [" + numOutputProcessors + "]");
+
+    MetricHandler[] metricHandlers = new MetricHandler[numOutputProcessors];
+
+    for (int i = 0; i < numOutputProcessors; ++i) {
+      metricHandlers[i] = eventHandlerFactory.create(i, numOutputProcessors, batchSize);
     }
 
-    private MetricDisruptor createInstance() {
+    disruptor.handleEventsWith(metricHandlers);
+    disruptor.setHandlers(metricHandlers);
+    disruptor.start();
 
-        logger.debug("Creating disruptor...");
+    logger.debug("Instance of disruptor successfully started");
+    logger.debug("Instance of disruptor fully created");
 
-        Executor executor = Executors.newCachedThreadPool();
-        MetricFactory eventFactory = new MetricFactory();
+    return disruptor;
+  }
 
-        int bufferSize = configuration.getDisruptorConfiguration().getBufferSize();
-        logger.debug("Buffer size for instance of disruptor [" + bufferSize + "]");
-
-        MetricDisruptor disruptor = new MetricDisruptor(eventFactory, bufferSize, executor);
-        disruptor.handleExceptionsWith(exceptionHandler);
-
-        int batchSize = configuration.getOutputProcessorConfiguration().getBatchSize();
-        logger.debug("Batch size for each output processor [" + batchSize + "]");
-
-        int numOutputProcessors = configuration.getDisruptorConfiguration().getNumProcessors();
-        logger.debug("Number of output processors [" + numOutputProcessors + "]");
-
-        MetricHandler[] metricHandlers = new MetricHandler[numOutputProcessors];
-
-        for (int i = 0; i < numOutputProcessors; ++i) {
-            metricHandlers[i] = eventHandlerFactory.create(i, numOutputProcessors, batchSize);
-        }
-
-        disruptor.handleEventsWith(metricHandlers);
-        disruptor.setHandlers(metricHandlers);
-        disruptor.start();
-
-        logger.debug("Instance of disruptor successfully started");
-        logger.debug("Instance of disruptor fully created");
-
-        return disruptor;
-    }
-
-    public MetricDisruptor get() {
-        return instance;
-    }
+  public MetricDisruptor get() {
+    return instance;
+  }
 }

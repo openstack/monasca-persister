@@ -14,15 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.hpcloud.mon.persister.consumer;
 
-import com.google.inject.Inject;
 import com.hpcloud.mon.persister.disruptor.AlarmStateHistoryDisruptor;
+import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionedEventHolder;
 
-public class AlarmStateTransitionsConsumer extends Consumer {
+import com.google.inject.Inject;
 
-    @Inject
-    public AlarmStateTransitionsConsumer(KafkaAlarmStateTransitionConsumer kafkaConsumer, AlarmStateHistoryDisruptor disruptor) {
-        super(kafkaConsumer, disruptor);
-    }
+public class AlarmStateTransitionsConsumer extends Consumer<AlarmStateTransitionedEventHolder> {
+
+  @Inject
+  public AlarmStateTransitionsConsumer(KafkaAlarmStateTransitionConsumer kafkaConsumer,
+      AlarmStateHistoryDisruptor disruptor) {
+    super(kafkaConsumer, disruptor);
+  }
 }

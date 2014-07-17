@@ -16,9 +16,9 @@
  */
 package com.hpcloud.mon.persister.consumer;
 
-import com.google.inject.Inject;
-
 import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
+
+import com.google.inject.Inject;
 
 import kafka.consumer.KafkaStream;
 

@@ -17,24 +17,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.hpcloud.mon.persister.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DisruptorConfiguration {
 
-    @JsonProperty
-    Integer bufferSize;
+  @JsonProperty
+  Integer bufferSize;
 
-    public Integer getBufferSize() {
-        return bufferSize;
-    }
+  public Integer getBufferSize() {
+    return bufferSize;
+  }
 
-    @JsonProperty
-    Integer numProcessors;
+  @JsonProperty
+  Integer numProcessors;
 
-    public Integer getNumProcessors() {
-        return numProcessors;
-    }
-
+  public Integer getNumProcessors() {
+    return numProcessors;
+  }
 }

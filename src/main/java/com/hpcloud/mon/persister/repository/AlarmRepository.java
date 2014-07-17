@@ -14,13 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.hpcloud.mon.persister.repository;
 
 import com.hpcloud.mon.common.event.AlarmStateTransitionedEvent;
 
 public interface AlarmRepository {
 
-    public void addToBatch(AlarmStateTransitionedEvent message);
+  public void addToBatch(AlarmStateTransitionedEvent message);
 
-    public void flush();
+  public void flush();
 }

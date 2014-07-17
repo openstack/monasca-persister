@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.hpcloud.mon.persister.disruptor;
 
 import com.hpcloud.mon.persister.disruptor.event.MetricHolder;
@@ -26,15 +27,13 @@ import java.util.concurrent.Executor;
 
 public class MetricDisruptor extends ManagedDisruptor<MetricHolder> {
 
-    public MetricDisruptor(EventFactory<MetricHolder> eventFactory, int ringBufferSize, Executor executor) {
-        super(eventFactory, ringBufferSize, executor);
-    }
+  public MetricDisruptor(EventFactory<MetricHolder> eventFactory, int ringBufferSize,
+      Executor executor) {
+    super(eventFactory, ringBufferSize, executor);
+  }
 
-    public MetricDisruptor(final EventFactory<MetricHolder> eventFactory,
-                           int ringBufferSize,
-                           Executor executor,
-                           ProducerType producerType,
-                           WaitStrategy waitStrategy) {
-        super(eventFactory, ringBufferSize, executor, producerType, waitStrategy);
-    }
+  public MetricDisruptor(final EventFactory<MetricHolder> eventFactory, int ringBufferSize,
+      Executor executor, ProducerType producerType, WaitStrategy waitStrategy) {
+    super(eventFactory, ringBufferSize, executor, producerType, waitStrategy);
+  }
 }

@@ -14,29 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.hpcloud.mon.persister.consumer;
 
-import com.google.inject.Inject;
 import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
+
+import com.google.inject.Inject;
+
 import kafka.consumer.KafkaStream;
 
 public class KafkaMetricsConsumer extends KafkaConsumer {
 
-    @Inject
-    private KafkaMetricsConsumerRunnableBasicFactory factory;
+  @Inject
+  private KafkaMetricsConsumerRunnableBasicFactory factory;
 
-    @Inject
-    public KafkaMetricsConsumer(MonPersisterConfiguration configuration) {
-        super(configuration);
-    }
+  @Inject
+  public KafkaMetricsConsumer(MonPersisterConfiguration configuration) {
+    super(configuration);
+  }
 
-    @Override
-    protected Runnable createRunnable(KafkaStream stream, int threadNumber) {
-        return factory.create(stream, threadNumber);
-    }
+  @Override
+  protected Runnable createRunnable(KafkaStream<byte[], byte[]> stream, int threadNumber) {
+    return factory.create(stream, threadNumber);
+  }
 
-    @Override
-    protected String getStreamName() {
-        return this.configuration.getMetricConfiguration().getTopic();
-    }
+  @Override
+  protected String getStreamName() {
+    return this.configuration.getMetricConfiguration().getTopic();
+  }
 }

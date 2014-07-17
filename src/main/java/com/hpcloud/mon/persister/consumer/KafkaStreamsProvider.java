@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.hpcloud.mon.persister.consumer;
 
 import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
@@ -23,15 +24,15 @@ import javax.inject.Provider;
 
 public class KafkaStreamsProvider implements Provider<KafkaStreams> {
 
-    private final MonPersisterConfiguration configuration;
+  private final MonPersisterConfiguration configuration;
 
-    @Inject
-    public KafkaStreamsProvider(MonPersisterConfiguration configuration) {
-        this.configuration = configuration;
-    }
+  @Inject
+  public KafkaStreamsProvider(MonPersisterConfiguration configuration) {
+    this.configuration = configuration;
+  }
 
-    @Override
-    public KafkaStreams get() {
-        return new KafkaStreams(configuration);
-    }
+  @Override
+  public KafkaStreams get() {
+    return new KafkaStreams(configuration);
+  }
 }

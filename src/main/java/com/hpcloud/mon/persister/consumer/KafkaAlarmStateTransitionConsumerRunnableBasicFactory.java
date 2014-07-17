@@ -14,10 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.hpcloud.mon.persister.consumer;
 
 import kafka.consumer.KafkaStream;
 
 public interface KafkaAlarmStateTransitionConsumerRunnableBasicFactory {
-    KafkaAlarmStateTransitionConsumerRunnableBasic create(KafkaStream stream, int threadNumber);
+  KafkaAlarmStateTransitionConsumerRunnableBasic create(KafkaStream<byte[], byte[]> stream,
+      int threadNumber);
 }

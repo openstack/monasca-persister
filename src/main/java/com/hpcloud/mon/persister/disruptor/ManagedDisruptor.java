@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.hpcloud.mon.persister.disruptor;
 
 import com.hpcloud.mon.persister.disruptor.event.FlushableHandler;
@@ -25,19 +26,16 @@ import com.lmax.disruptor.dsl.ProducerType;
 
 import java.util.concurrent.Executor;
 
-public class ManagedDisruptor<T> extends Disruptor<T>{
+public class ManagedDisruptor<T> extends Disruptor<T> {
   private FlushableHandler[] handlers = new FlushableHandler[0];
 
   public ManagedDisruptor(EventFactory<T> eventFactory, int ringBufferSize, Executor executor) {
-      super(eventFactory, ringBufferSize, executor);
+    super(eventFactory, ringBufferSize, executor);
   }
 
-  public ManagedDisruptor(final EventFactory<T> eventFactory,
-                         int ringBufferSize,
-                         Executor executor,
-                         ProducerType producerType,
-                         WaitStrategy waitStrategy) {
-      super(eventFactory, ringBufferSize, executor, producerType, waitStrategy);
+  public ManagedDisruptor(final EventFactory<T> eventFactory, int ringBufferSize,
+      Executor executor, ProducerType producerType, WaitStrategy waitStrategy) {
+    super(eventFactory, ringBufferSize, executor, producerType, waitStrategy);
   }
 
   @Override

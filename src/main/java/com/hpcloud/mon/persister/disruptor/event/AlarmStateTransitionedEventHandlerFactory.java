@@ -14,12 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.hpcloud.mon.persister.disruptor.event;
 
 import com.google.inject.assistedinject.Assisted;
 
 public interface AlarmStateTransitionedEventHandlerFactory {
-    AlarmStateTransitionedEventHandler create(@Assisted("ordinal") int ordinal,
-                                              @Assisted("numProcessors") int numProcessors,
-                                              @Assisted("batchSize") int batchSize);
+  AlarmStateTransitionedEventHandler create(@Assisted("ordinal") int ordinal,
+      @Assisted("numProcessors") int numProcessors, @Assisted("batchSize") int batchSize);
 }

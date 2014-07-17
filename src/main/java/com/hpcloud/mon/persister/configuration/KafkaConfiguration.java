@@ -17,164 +17,164 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.hpcloud.mon.persister.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class KafkaConfiguration {
 
-    @JsonProperty
-    String topic;
+  @JsonProperty
+  String topic;
 
-    @JsonProperty
-    Integer numThreads;
+  @JsonProperty
+  Integer numThreads;
 
-    @JsonProperty
-    String groupId;
+  @JsonProperty
+  String groupId;
 
-    @JsonProperty
-    String zookeeperConnect;
+  @JsonProperty
+  String zookeeperConnect;
 
-    @JsonProperty
-    String consumerId;
+  @JsonProperty
+  String consumerId;
 
-    @JsonProperty
-    Integer socketTimeoutMs;
+  @JsonProperty
+  Integer socketTimeoutMs;
 
-    @JsonProperty
-    Integer socketReceiveBufferBytes;
+  @JsonProperty
+  Integer socketReceiveBufferBytes;
 
-    @JsonProperty
-    Integer fetchMessageMaxBytes;
+  @JsonProperty
+  Integer fetchMessageMaxBytes;
 
-    @JsonProperty
-    Boolean autoCommitEnable;
+  @JsonProperty
+  Boolean autoCommitEnable;
 
-    @JsonProperty
-    Integer autoCommitIntervalMs;
+  @JsonProperty
+  Integer autoCommitIntervalMs;
 
-    @JsonProperty
-    Integer queuedMaxMessageChunks;
+  @JsonProperty
+  Integer queuedMaxMessageChunks;
 
-    @JsonProperty
-    Integer rebalanceMaxRetries;
+  @JsonProperty
+  Integer rebalanceMaxRetries;
 
-    @JsonProperty
-    Integer fetchMinBytes;
+  @JsonProperty
+  Integer fetchMinBytes;
 
-    @JsonProperty
-    Integer fetchWaitMaxMs;
+  @JsonProperty
+  Integer fetchWaitMaxMs;
 
-    @JsonProperty
-    Integer rebalanceBackoffMs;
+  @JsonProperty
+  Integer rebalanceBackoffMs;
 
-    @JsonProperty
-    Integer refreshLeaderBackoffMs;
+  @JsonProperty
+  Integer refreshLeaderBackoffMs;
 
-    @JsonProperty
-    String autoOffsetReset;
+  @JsonProperty
+  String autoOffsetReset;
 
-    @JsonProperty
-    Integer consumerTimeoutMs;
+  @JsonProperty
+  Integer consumerTimeoutMs;
 
-    @JsonProperty
-    String clientId;
+  @JsonProperty
+  String clientId;
 
-    @JsonProperty
-    Integer zookeeperSessionTimeoutMs;
+  @JsonProperty
+  Integer zookeeperSessionTimeoutMs;
 
-    @JsonProperty
-    Integer zookeeperConnectionTimeoutMs;
+  @JsonProperty
+  Integer zookeeperConnectionTimeoutMs;
 
-    @JsonProperty
-    Integer zookeeperSyncTimeMs;
+  @JsonProperty
+  Integer zookeeperSyncTimeMs;
 
-    public String getTopic() {
-        return topic;
-    }
+  public String getTopic() {
+    return topic;
+  }
 
-    public Integer getNumThreads() {
-        return numThreads;
-    }
+  public Integer getNumThreads() {
+    return numThreads;
+  }
 
-    public String getGroupId() {
-        return groupId;
-    }
+  public String getGroupId() {
+    return groupId;
+  }
 
-    public String getZookeeperConnect() {
-        return zookeeperConnect;
-    }
+  public String getZookeeperConnect() {
+    return zookeeperConnect;
+  }
 
-    public String getConsumerId() {
-        return consumerId;
-    }
+  public String getConsumerId() {
+    return consumerId;
+  }
 
-    public Integer getSocketTimeoutMs() {
-        return socketTimeoutMs;
-    }
+  public Integer getSocketTimeoutMs() {
+    return socketTimeoutMs;
+  }
 
-    public Integer getSocketReceiveBufferBytes() {
-        return socketReceiveBufferBytes;
-    }
+  public Integer getSocketReceiveBufferBytes() {
+    return socketReceiveBufferBytes;
+  }
 
-    public Integer getFetchMessageMaxBytes() {
-        return fetchMessageMaxBytes;
-    }
+  public Integer getFetchMessageMaxBytes() {
+    return fetchMessageMaxBytes;
+  }
 
-    public Boolean getAutoCommitEnable() {
-        return autoCommitEnable;
-    }
+  public Boolean getAutoCommitEnable() {
+    return autoCommitEnable;
+  }
 
-    public Integer getAutoCommitIntervalMs() {
-        return autoCommitIntervalMs;
-    }
+  public Integer getAutoCommitIntervalMs() {
+    return autoCommitIntervalMs;
+  }
 
-    public Integer getQueuedMaxMessageChunks() {
-        return queuedMaxMessageChunks;
-    }
+  public Integer getQueuedMaxMessageChunks() {
+    return queuedMaxMessageChunks;
+  }
 
-    public Integer getRebalanceMaxRetries() {
-        return rebalanceMaxRetries;
-    }
+  public Integer getRebalanceMaxRetries() {
+    return rebalanceMaxRetries;
+  }
 
-    public Integer getFetchMinBytes() {
-        return fetchMinBytes;
-    }
+  public Integer getFetchMinBytes() {
+    return fetchMinBytes;
+  }
 
-    public Integer getFetchWaitMaxMs() {
-        return fetchWaitMaxMs;
-    }
+  public Integer getFetchWaitMaxMs() {
+    return fetchWaitMaxMs;
+  }
 
-    public Integer getRebalanceBackoffMs() {
-        return rebalanceBackoffMs;
-    }
+  public Integer getRebalanceBackoffMs() {
+    return rebalanceBackoffMs;
+  }
 
-    public Integer getRefreshLeaderBackoffMs() {
-        return refreshLeaderBackoffMs;
-    }
+  public Integer getRefreshLeaderBackoffMs() {
+    return refreshLeaderBackoffMs;
+  }
 
-    public String getAutoOffsetReset() {
-        return autoOffsetReset;
-    }
+  public String getAutoOffsetReset() {
+    return autoOffsetReset;
+  }
 
-    public Integer getConsumerTimeoutMs() {
-        return consumerTimeoutMs;
-    }
+  public Integer getConsumerTimeoutMs() {
+    return consumerTimeoutMs;
+  }
 
-    public String getClientId() {
-        return clientId;
-    }
+  public String getClientId() {
+    return clientId;
+  }
 
-    public Integer getZookeeperSessionTimeoutMs() {
-        return zookeeperSessionTimeoutMs;
-    }
+  public Integer getZookeeperSessionTimeoutMs() {
+    return zookeeperSessionTimeoutMs;
+  }
 
-    public Integer getZookeeperConnectionTimeoutMs() {
-        return zookeeperConnectionTimeoutMs;
-    }
+  public Integer getZookeeperConnectionTimeoutMs() {
+    return zookeeperConnectionTimeoutMs;
+  }
 
-    public Integer getZookeeperSyncTimeMs() {
-        return zookeeperSyncTimeMs;
-    }
-
+  public Integer getZookeeperSyncTimeMs() {
+    return zookeeperSyncTimeMs;
+  }
 }

@@ -17,9 +17,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.hpcloud.mon.persister.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
 
@@ -28,93 +30,100 @@ import javax.validation.constraints.NotNull;
 
 public class MonPersisterConfiguration extends Configuration {
 
-    @JsonProperty
-    private String name;
+  @JsonProperty
+  private String name;
 
-    public String getName() {
-        return name;
-    }
+  public String getName() {
+    return name;
+  }
 
-    @JsonProperty
-    @NotNull
-    @Valid
-    private final AlarmHistoryConfiguration alarmHistoryConfiguration = new AlarmHistoryConfiguration();
+  @JsonProperty
+  @NotNull
+  @Valid
+  private final AlarmHistoryConfiguration alarmHistoryConfiguration =
+      new AlarmHistoryConfiguration();
 
-    public AlarmHistoryConfiguration getAlarmHistoryConfiguration() { return alarmHistoryConfiguration; }
+  public AlarmHistoryConfiguration getAlarmHistoryConfiguration() {
+    return alarmHistoryConfiguration;
+  }
 
-    @JsonProperty
-    @NotNull
-    @Valid
-    private final MetricConfiguration metricConfiguration = new MetricConfiguration();
+  @JsonProperty
+  @NotNull
+  @Valid
+  private final MetricConfiguration metricConfiguration = new MetricConfiguration();
 
-    public MetricConfiguration getMetricConfiguration() { return metricConfiguration; }
+  public MetricConfiguration getMetricConfiguration() {
+    return metricConfiguration;
+  }
 
-    @Valid
-    @NotNull
-    @JsonProperty
-    private final KafkaConfiguration kafkaConfiguration = new KafkaConfiguration();
+  @Valid
+  @NotNull
+  @JsonProperty
+  private final KafkaConfiguration kafkaConfiguration = new KafkaConfiguration();
 
-    public KafkaConfiguration getKafkaConfiguration() {
-        return kafkaConfiguration;
-    }
+  public KafkaConfiguration getKafkaConfiguration() {
+    return kafkaConfiguration;
+  }
 
-    @Valid
-    @NotNull
-    @JsonProperty
-    private final DisruptorConfiguration disruptorConfiguration = new DisruptorConfiguration();
+  @Valid
+  @NotNull
+  @JsonProperty
+  private final DisruptorConfiguration disruptorConfiguration = new DisruptorConfiguration();
 
-    public DisruptorConfiguration getDisruptorConfiguration() {
-        return disruptorConfiguration;
-    }
+  public DisruptorConfiguration getDisruptorConfiguration() {
+    return disruptorConfiguration;
+  }
 
-    @Valid
-    @NotNull
-    @JsonProperty
-    private final OutputProcessorConfiguration outputProcessorConfiguration = new OutputProcessorConfiguration();
+  @Valid
+  @NotNull
+  @JsonProperty
+  private final OutputProcessorConfiguration outputProcessorConfiguration =
+      new OutputProcessorConfiguration();
 
-    public OutputProcessorConfiguration getOutputProcessorConfiguration() {
-        return outputProcessorConfiguration;
-    }
+  public OutputProcessorConfiguration getOutputProcessorConfiguration() {
+    return outputProcessorConfiguration;
+  }
 
-    @JsonProperty
-    private final DataSourceFactory dataSourceFactory = new DataSourceFactory();
+  @JsonProperty
+  private final DataSourceFactory dataSourceFactory = new DataSourceFactory();
 
-    public DataSourceFactory getDataSourceFactory() {
-        return dataSourceFactory;
-    }
+  public DataSourceFactory getDataSourceFactory() {
+    return dataSourceFactory;
+  }
 
-    @Valid
-    @NotNull
-    @JsonProperty
-    private final DeduperConfiguration monDeDuperConfiguration = new DeduperConfiguration();
+  @Valid
+  @NotNull
+  @JsonProperty
+  private final DeduperConfiguration monDeDuperConfiguration = new DeduperConfiguration();
 
-    public DeduperConfiguration getMonDeDuperConfiguration() {
-        return monDeDuperConfiguration;
-    }
+  public DeduperConfiguration getMonDeDuperConfiguration() {
+    return monDeDuperConfiguration;
+  }
 
-    @Valid
-    @NotNull
-    @JsonProperty
-    private final VerticaMetricRepositoryConfiguration verticaMetricRepositoryConfiguration = new VerticaMetricRepositoryConfiguration();
+  @Valid
+  @NotNull
+  @JsonProperty
+  private final VerticaMetricRepositoryConfiguration verticaMetricRepositoryConfiguration =
+      new VerticaMetricRepositoryConfiguration();
 
-    public VerticaMetricRepositoryConfiguration getVerticaMetricRepositoryConfiguration() {
-        return verticaMetricRepositoryConfiguration;
-    }
+  public VerticaMetricRepositoryConfiguration getVerticaMetricRepositoryConfiguration() {
+    return verticaMetricRepositoryConfiguration;
+  }
 
-    @Valid
-    @NotNull
-    @JsonProperty
-    private final DatabaseConfiguration databaseConfiguration = new DatabaseConfiguration();
+  @Valid
+  @NotNull
+  @JsonProperty
+  private final DatabaseConfiguration databaseConfiguration = new DatabaseConfiguration();
 
-    public DatabaseConfiguration getDatabaseConfiguration () {
-        return databaseConfiguration;
-    }
+  public DatabaseConfiguration getDatabaseConfiguration() {
+    return databaseConfiguration;
+  }
 
-    @Valid
-    @JsonProperty
-    private final InfluxDBConfiguration influxDBConfiguration = new InfluxDBConfiguration();
+  @Valid
+  @JsonProperty
+  private final InfluxDBConfiguration influxDBConfiguration = new InfluxDBConfiguration();
 
-    public InfluxDBConfiguration getInfluxDBConfiguration() {
-        return influxDBConfiguration;
-    }
+  public InfluxDBConfiguration getInfluxDBConfiguration() {
+    return influxDBConfiguration;
+  }
 }
