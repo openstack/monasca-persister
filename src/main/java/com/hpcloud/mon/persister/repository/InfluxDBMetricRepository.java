@@ -17,11 +17,13 @@
 
 package com.hpcloud.mon.persister.repository;
 
-import com.google.inject.Inject;
+import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
-import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
+import com.google.inject.Inject;
+
+import io.dropwizard.setup.Environment;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.influxdb.InfluxDB;
@@ -41,8 +43,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
-import io.dropwizard.setup.Environment;
-
 public class InfluxDBMetricRepository implements MetricRepository {
 
   private static final Logger logger = LoggerFactory.getLogger(InfluxDBMetricRepository.class);
@@ -59,7 +59,7 @@ public class InfluxDBMetricRepository implements MetricRepository {
   private final com.codahale.metrics.Timer flushTimer;
   public final Meter measurementMeter;
 
-  private static final SimpleDateFormat measurementTimeStampSimpleDateFormat = new
+  private final SimpleDateFormat measurementTimeStampSimpleDateFormat = new
       SimpleDateFormat("yyyy-MM-dd HH:mm:ss zzz");
   private static final Sha1HashId BLANK_SHA_1_HASH_ID = new Sha1HashId(DigestUtils.sha(""));
 
@@ -123,8 +123,8 @@ public class InfluxDBMetricRepository implements MetricRepository {
                           TimeUnit.SECONDS);
       long endTime = System.currentTimeMillis();
       context.stop();
-      logger.debug("Writing measurements, definitions, and dimensions to database took " +
-                   (endTime - startTime) / 1000 + " seconds");
+      logger.debug("Writing measurements, definitions, and dimensions to database took {} seconds",
+          (endTime - startTime) / 1000);
     } catch (Exception e) {
       logger.error("Failed to write measurements to database", e);
     }
@@ -148,7 +148,7 @@ public class InfluxDBMetricRepository implements MetricRepository {
       for (Set<String> dimNameSet : dimNameSetMap.keySet()) {
 
         Serie serie = new Serie(definition.name);
-        logger.debug("Created serie: " + serie.getName());
+        logger.debug("Created serie: {}", serie.getName());
 
         // Add 4 for the tenant id, region, timestamp, and value.
         String[] colNameStringArry = new String[dimNameSet.size() + 4];
@@ -158,7 +158,7 @@ public class InfluxDBMetricRepository implements MetricRepository {
         colNameStringArry[1] = "region";
         int j = 2;
         for (String dimName : dimNameSet) {
-          logger.debug("Adding column name[{}]: " + dimName, j);
+          logger.debug("Adding column name[{}]: {}", j, dimName);
           colNameStringArry[j++] = dimName;
         }
         logger.debug("Adding column name[{}]: time", j);
@@ -181,9 +181,9 @@ public class InfluxDBMetricRepository implements MetricRepository {
         Object[][] colValsObjectArry = new Object[pointList.size()][dimNameSet.size() + 4];
         int k = 0;
         for (Point point : pointList) {
-          logger.debug("Adding column value[{}][0]: " + definition.tenantId, k, 0);
+          logger.debug("Adding column value[{}][0]: {}", k, definition.tenantId);
           colValsObjectArry[k][0] = definition.tenantId;
-          logger.debug("Adding column value[{}][1]: " + definition.region, k, 1);
+          logger.debug("Adding column value[{}][1]: {}", k, definition.region);
           colValsObjectArry[k][1] = definition.region;
           int l = 2;
           for (String dimName : dimNameSet) {
@@ -196,9 +196,9 @@ public class InfluxDBMetricRepository implements MetricRepository {
           }
           Date d = measurementTimeStampSimpleDateFormat.parse(point.measurement.timeStamp + " UTC");
           Long time = d.getTime() / 1000;
-          logger.debug("Adding column value[{}][{}]: " + time, k, l);
+          logger.debug("Adding column value[{}][{}]: {}", k, l, time);
           colValsObjectArry[k][l++] = time;
-          logger.debug("Adding column value[{}][{}]: " + point.measurement.value, k, l);
+          logger.debug("Adding column value[{}][{}]: {}", k, l, point.measurement.value);
           colValsObjectArry[k][l++] = point.measurement.value;
           measurementMeter.mark();
           k++;
@@ -232,7 +232,7 @@ public class InfluxDBMetricRepository implements MetricRepository {
         }
         sb.append(colVal);
       }
-      logger.debug("Array of column values[{}]: [" + sb.toString() + "]", outerIdx);
+      logger.debug("Array of column values[{}]: [{}]", outerIdx, sb);
       outerIdx++;
     }
   }
@@ -249,7 +249,7 @@ public class InfluxDBMetricRepository implements MetricRepository {
       }
       sb.append(colName);
     }
-    logger.debug("Array of column names: [" + sb.toString() + "]");
+    logger.debug("Array of column names: [{}]", sb);
   }
 
   /**

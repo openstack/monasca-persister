@@ -17,9 +17,9 @@
 
 package com.hpcloud.mon.persister.consumer;
 
-import kafka.consumer.KafkaStream;
+import com.hpcloud.mon.persister.pipeline.AlarmStateTransitionPipeline;
 
 public interface KafkaAlarmStateTransitionConsumerRunnableBasicFactory {
-  KafkaAlarmStateTransitionConsumerRunnableBasic create(KafkaStream<byte[], byte[]> stream,
+  KafkaAlarmStateTransitionConsumerRunnableBasic create(AlarmStateTransitionPipeline pipeline, KafkaChannel kafkaChannel,
       int threadNumber);
 }

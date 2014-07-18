@@ -18,68 +18,49 @@
 package com.hpcloud.mon.persister.consumer;
 
 import com.hpcloud.mon.common.model.metric.MetricEnvelope;
-import com.hpcloud.mon.persister.disruptor.MetricDisruptor;
-import com.hpcloud.mon.persister.disruptor.event.MetricHolder;
+import com.hpcloud.mon.persister.pipeline.MetricPipeline;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import com.lmax.disruptor.EventTranslator;
-
-import kafka.consumer.ConsumerIterator;
-import kafka.consumer.KafkaStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class KafkaMetricsConsumerRunnableBasic implements Runnable {
+public class KafkaMetricsConsumerRunnableBasic extends KafkaConsumerRunnableBasic<MetricEnvelope[]> {
 
   private static final Logger logger = LoggerFactory
       .getLogger(KafkaMetricsConsumerRunnableBasic.class);
-  private final KafkaStream<byte[], byte[]> stream;
-  private final int threadNumber;
-  private final MetricDisruptor disruptor;
   private final ObjectMapper objectMapper;
 
   @Inject
-  public KafkaMetricsConsumerRunnableBasic(MetricDisruptor disruptor,
-      @Assisted KafkaStream<byte[], byte[]> stream, @Assisted int threadNumber) {
-    this.stream = stream;
-    this.threadNumber = threadNumber;
-    this.disruptor = disruptor;
+  public KafkaMetricsConsumerRunnableBasic(@Assisted MetricPipeline pipeline,
+      @Assisted KafkaChannel kafkaChannel, @Assisted int threadNumber) {
+    super(kafkaChannel, pipeline, threadNumber);
     this.objectMapper = new ObjectMapper();
     objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     objectMapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
   }
 
-  public void run() {
-    ConsumerIterator<byte[], byte[]> it = stream.iterator();
-    while (it.hasNext()) {
+  @Override
+  protected void publishHeartbeat() {
+    publishEvent(null);
+  }
 
-      final String s = new String(it.next().message());
+  @Override
+  protected void handleMessage(String message) {
+    try {
+      final MetricEnvelope[] envelopes = objectMapper.readValue(message, MetricEnvelope[].class);
 
-      logger.debug("Thread {}: {}", threadNumber, s);
-
-      try {
-        final MetricEnvelope[] envelopes = objectMapper.readValue(s, MetricEnvelope[].class);
-
-        for (final MetricEnvelope envelope : envelopes) {
-
-          logger.debug("{}", envelope);
-
-          disruptor.publishEvent(new EventTranslator<MetricHolder>() {
-            @Override
-            public void translateTo(MetricHolder event, long sequence) {
-              event.setEnvelope(envelope);
-            }
-
-          });
-        }
-      } catch (Exception e) {
-        logger.error("Failed to deserialize JSON message and place on disruptor queue: {}", e);
+      for (final MetricEnvelope envelope : envelopes) {
+        logger.debug("{}", envelope);
       }
+
+      publishEvent(envelopes);
+    } catch (Exception e) {
+      logger.error("Failed to deserialize JSON message and place on pipeline queue: " + message,
+          e);
     }
-    logger.debug("Shutting down Thread: {}", threadNumber);
   }
 }

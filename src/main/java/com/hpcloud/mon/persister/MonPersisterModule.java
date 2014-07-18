@@ -18,36 +18,39 @@
 package com.hpcloud.mon.persister;
 
 import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
-import com.hpcloud.mon.persister.consumer.AlarmStateTransitionsConsumer;
+import com.hpcloud.mon.persister.consumer.AlarmStateTransitionConsumer;
+import com.hpcloud.mon.persister.consumer.AlarmStateTransitionConsumerFactory;
+import com.hpcloud.mon.persister.consumer.KafkaAlarmStateTransitionConsumer;
+import com.hpcloud.mon.persister.consumer.KafkaAlarmStateTransitionConsumerFactory;
 import com.hpcloud.mon.persister.consumer.KafkaAlarmStateTransitionConsumerRunnableBasic;
 import com.hpcloud.mon.persister.consumer.KafkaAlarmStateTransitionConsumerRunnableBasicFactory;
+import com.hpcloud.mon.persister.consumer.KafkaChannel;
+import com.hpcloud.mon.persister.consumer.KafkaChannelFactory;
+import com.hpcloud.mon.persister.consumer.KafkaMetricsConsumer;
+import com.hpcloud.mon.persister.consumer.KafkaMetricsConsumerFactory;
 import com.hpcloud.mon.persister.consumer.KafkaMetricsConsumerRunnableBasic;
 import com.hpcloud.mon.persister.consumer.KafkaMetricsConsumerRunnableBasicFactory;
-import com.hpcloud.mon.persister.consumer.KafkaStreams;
-import com.hpcloud.mon.persister.consumer.KafkaStreamsProvider;
 import com.hpcloud.mon.persister.consumer.MetricsConsumer;
+import com.hpcloud.mon.persister.consumer.MetricsConsumerFactory;
 import com.hpcloud.mon.persister.dbi.DBIProvider;
-import com.hpcloud.mon.persister.disruptor.AlarmHistoryDisruptorProvider;
-import com.hpcloud.mon.persister.disruptor.AlarmStateHistoryDisruptor;
-import com.hpcloud.mon.persister.disruptor.DisruptorExceptionHandler;
-import com.hpcloud.mon.persister.disruptor.MetricDisruptor;
-import com.hpcloud.mon.persister.disruptor.MetricDisruptorProvider;
-import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionedEventHandler;
-import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionedEventHandlerFactory;
-import com.hpcloud.mon.persister.disruptor.event.MetricHandler;
-import com.hpcloud.mon.persister.disruptor.event.MetricHandlerFactory;
+import com.hpcloud.mon.persister.pipeline.AlarmStateTransitionPipeline;
+import com.hpcloud.mon.persister.pipeline.AlarmStateTransitionPipelineFactory;
+import com.hpcloud.mon.persister.pipeline.MetricPipeline;
+import com.hpcloud.mon.persister.pipeline.MetricPipelineFactory;
+import com.hpcloud.mon.persister.pipeline.event.AlarmStateTransitionedEventHandler;
+import com.hpcloud.mon.persister.pipeline.event.AlarmStateTransitionedEventHandlerFactory;
+import com.hpcloud.mon.persister.pipeline.event.MetricHandler;
+import com.hpcloud.mon.persister.pipeline.event.MetricHandlerFactory;
 import com.hpcloud.mon.persister.repository.AlarmRepository;
 import com.hpcloud.mon.persister.repository.InfluxDBAlarmRepository;
 import com.hpcloud.mon.persister.repository.InfluxDBMetricRepository;
 import com.hpcloud.mon.persister.repository.MetricRepository;
-import com.hpcloud.mon.persister.repository.RepositoryCommitHeartbeat;
 import com.hpcloud.mon.persister.repository.VerticaAlarmRepository;
 import com.hpcloud.mon.persister.repository.VerticaMetricRepository;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
-import com.lmax.disruptor.ExceptionHandler;
 
 import io.dropwizard.setup.Environment;
 
@@ -85,12 +88,38 @@ public class MonPersisterModule extends AbstractModule {
         KafkaAlarmStateTransitionConsumerRunnableBasic.class).build(
         KafkaAlarmStateTransitionConsumerRunnableBasicFactory.class));
 
-    bind(ExceptionHandler.class).to(DisruptorExceptionHandler.class);
+    install(new FactoryModuleBuilder().implement(
+        KafkaMetricsConsumer.class,
+        KafkaMetricsConsumer.class).build(
+            KafkaMetricsConsumerFactory.class));
 
-    bind(MetricDisruptor.class).toProvider(MetricDisruptorProvider.class).in(Scopes.SINGLETON);
+    install(new FactoryModuleBuilder().implement(
+        MetricPipeline.class,
+        MetricPipeline.class).build(
+            MetricPipelineFactory.class));
 
-    bind(AlarmStateHistoryDisruptor.class).toProvider(AlarmHistoryDisruptorProvider.class).in(
-        Scopes.SINGLETON);
+    install(new FactoryModuleBuilder().implement(
+        AlarmStateTransitionPipeline.class,
+        AlarmStateTransitionPipeline.class).build(
+            AlarmStateTransitionPipelineFactory.class));
+
+    install(new FactoryModuleBuilder().implement(
+        AlarmStateTransitionConsumer.class,
+        AlarmStateTransitionConsumer.class).build(
+            AlarmStateTransitionConsumerFactory.class));
+
+    install(new FactoryModuleBuilder().implement(
+        KafkaAlarmStateTransitionConsumer.class,
+        KafkaAlarmStateTransitionConsumer.class).build(
+            KafkaAlarmStateTransitionConsumerFactory.class));
+
+    install(new FactoryModuleBuilder().implement(
+        MetricsConsumer.class,
+        MetricsConsumer.class).build(
+            MetricsConsumerFactory.class));
+
+    install(new FactoryModuleBuilder().implement(KafkaChannel.class, KafkaChannel.class).build(
+        KafkaChannelFactory.class));
 
     if (configuration.getDatabaseConfiguration().getDatabaseType().equals("vertica")) {
       bind(DBI.class).toProvider(DBIProvider.class).in(Scopes.SINGLETON);
@@ -106,10 +135,5 @@ public class MonPersisterModule extends AbstractModule {
       System.out.println("Check your config file.");
       System.exit(1);
     }
-
-    bind(KafkaStreams.class).toProvider(KafkaStreamsProvider.class).in(Scopes.SINGLETON);
-    bind(MetricsConsumer.class);
-    bind(AlarmStateTransitionsConsumer.class);
-    bind(RepositoryCommitHeartbeat.class);
   }
 }

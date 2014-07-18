@@ -17,22 +17,17 @@
 
 package com.hpcloud.mon.persister.consumer;
 
-import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
+import com.hpcloud.mon.common.event.AlarmStateTransitionedEvent;
+import com.hpcloud.mon.persister.pipeline.AlarmStateTransitionPipeline;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 
-public class KafkaStreamsProvider implements Provider<KafkaStreams> {
-
-  private final MonPersisterConfiguration configuration;
+public class AlarmStateTransitionConsumer extends Consumer<AlarmStateTransitionedEvent> {
 
   @Inject
-  public KafkaStreamsProvider(MonPersisterConfiguration configuration) {
-    this.configuration = configuration;
-  }
-
-  @Override
-  public KafkaStreams get() {
-    return new KafkaStreams(configuration);
+  public AlarmStateTransitionConsumer(@Assisted KafkaAlarmStateTransitionConsumer kafkaConsumer,
+      @Assisted AlarmStateTransitionPipeline pipeline) {
+    super(kafkaConsumer, pipeline);
   }
 }

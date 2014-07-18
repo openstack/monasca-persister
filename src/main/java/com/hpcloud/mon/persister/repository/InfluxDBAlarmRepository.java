@@ -95,7 +95,7 @@ public class InfluxDBAlarmRepository implements AlarmRepository {
       Timer.Context context = flushTimer.time();
 
       Serie serie = new Serie(ALARM_STATE_HISTORY_NAME);
-      logger.debug("Created serie: " + serie.getName());
+      logger.debug("Created serie: {}", serie.getName());
 
       serie.setColumns(this.colNamesStringArry);
 
@@ -131,7 +131,7 @@ public class InfluxDBAlarmRepository implements AlarmRepository {
 
       context.stop();
       long endTime = System.currentTimeMillis();
-      logger.debug("Commiting batch took " + (endTime - startTime) / 1000 + " seconds");
+      logger.debug("Commiting batch took {} seconds", (endTime - startTime) / 1000);
 
     } catch (Exception e) {
       logger.error("Failed to write alarm state history to database", e);
@@ -154,7 +154,7 @@ public class InfluxDBAlarmRepository implements AlarmRepository {
         }
         sb.append(colVal);
       }
-      logger.debug("Array of column values[{}]: [" + sb.toString() + "]", outerIdx);
+      logger.debug("Array of column values[{}]: [{}]", outerIdx, sb);
       outerIdx++;
     }
   }
@@ -171,6 +171,6 @@ public class InfluxDBAlarmRepository implements AlarmRepository {
       }
       sb.append(colName);
     }
-    logger.debug("Array of column names: [" + sb.toString() + "]");
+    logger.debug("Array of column names: [{}]", sb);
   }
 }

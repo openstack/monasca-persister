@@ -1,24 +1,33 @@
 name: mon-persister
 
 alarmHistoryConfiguration:
+  batchSize: 100
+  numThreads: 1
+  maxBatchTime: 15
+# See http://kafka.apache.org/documentation.html#api for semantics and defaults.
   topic:  alarm-state-transitions
+  groupId: persister_alarms
+  consumerId: 1
+  clientId: 1
 
 metricConfiguration:
+  batchSize: 1000
+  numThreads: 2
+  maxBatchTime: 30
+# See http://kafka.apache.org/documentation.html#api for semantics and defaults.
   topic:  metrics
+  groupId: persister_metrics
+  consumerId: 1
+  clientId: 1
 
 #Kafka settings.
 kafkaConfiguration:
-# See http://kafka.apache.org/documentation.html#api for semantics and defaults.
-  numThreads: 1
-  groupId: 1
   #zookeeperConnect: localhost:2181
+# See http://kafka.apache.org/documentation.html#api for semantics and defaults.
   zookeeperConnect: 192.168.10.4:2181
-  consumerId: 1
   socketTimeoutMs: 30000
   socketReceiveBufferBytes : 65536
   fetchMessageMaxBytes: 1048576
-  autoCommitEnable: true
-  autoCommitIntervalMs: 60000
   queuedMaxMessageChunks: 10
   rebalanceMaxRetries: 4
   fetchMinBytes:  1
@@ -26,22 +35,10 @@ kafkaConfiguration:
   rebalanceBackoffMs: 2000
   refreshLeaderBackoffMs: 200
   autoOffsetReset: largest
-  consumerTimeoutMs:  -1
-  clientId: 1
+  consumerTimeoutMs:  1000
   zookeeperSessionTimeoutMs : 60000
   zookeeperConnectionTimeoutMs : 6000
   zookeeperSyncTimeMs: 2000
-
-
-disruptorConfiguration:
-  bufferSize:  1048576
-  numProcessors: 1
-
-outputProcessorConfiguration:
-  batchSize: 100
-
-monDeDuperConfiguration:
-  dedupeRunFrequencySeconds: 30
 
 verticaMetricRepositoryConfiguration:
   maxCacheSize: 2000000
@@ -54,7 +51,7 @@ databaseConfiguration:
 influxDbConfiguration:
   name: mon
   replicationFactor: 1
-  url: http://127.0.0.1:8086
+  url: http://192.168.10.4:8086
   user:  root
   password: root
 

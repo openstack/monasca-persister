@@ -42,19 +42,19 @@ public class MonPersisterConfiguration extends Configuration {
   @JsonProperty
   @NotNull
   @Valid
-  private final AlarmHistoryConfiguration alarmHistoryConfiguration =
-      new AlarmHistoryConfiguration();
+  private final PipelineConfiguration alarmHistoryConfiguration =
+      new PipelineConfiguration();
 
-  public AlarmHistoryConfiguration getAlarmHistoryConfiguration() {
+  public PipelineConfiguration getAlarmHistoryConfiguration() {
     return alarmHistoryConfiguration;
   }
 
   @JsonProperty
   @NotNull
   @Valid
-  private final MetricConfiguration metricConfiguration = new MetricConfiguration();
+  private final PipelineConfiguration metricConfiguration = new PipelineConfiguration();
 
-  public MetricConfiguration getMetricConfiguration() {
+  public PipelineConfiguration getMetricConfiguration() {
     return metricConfiguration;
   }
 
@@ -67,39 +67,11 @@ public class MonPersisterConfiguration extends Configuration {
     return kafkaConfiguration;
   }
 
-  @Valid
-  @NotNull
-  @JsonProperty
-  private final DisruptorConfiguration disruptorConfiguration = new DisruptorConfiguration();
-
-  public DisruptorConfiguration getDisruptorConfiguration() {
-    return disruptorConfiguration;
-  }
-
-  @Valid
-  @NotNull
-  @JsonProperty
-  private final OutputProcessorConfiguration outputProcessorConfiguration =
-      new OutputProcessorConfiguration();
-
-  public OutputProcessorConfiguration getOutputProcessorConfiguration() {
-    return outputProcessorConfiguration;
-  }
-
   @JsonProperty
   private final DataSourceFactory dataSourceFactory = new DataSourceFactory();
 
   public DataSourceFactory getDataSourceFactory() {
     return dataSourceFactory;
-  }
-
-  @Valid
-  @NotNull
-  @JsonProperty
-  private final DeduperConfiguration monDeDuperConfiguration = new DeduperConfiguration();
-
-  public DeduperConfiguration getMonDeDuperConfiguration() {
-    return monDeDuperConfiguration;
   }
 
   @Valid

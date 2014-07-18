@@ -28,16 +28,7 @@ public class KafkaConfiguration {
   String topic;
 
   @JsonProperty
-  Integer numThreads;
-
-  @JsonProperty
-  String groupId;
-
-  @JsonProperty
   String zookeeperConnect;
-
-  @JsonProperty
-  String consumerId;
 
   @JsonProperty
   Integer socketTimeoutMs;
@@ -47,12 +38,6 @@ public class KafkaConfiguration {
 
   @JsonProperty
   Integer fetchMessageMaxBytes;
-
-  @JsonProperty
-  Boolean autoCommitEnable;
-
-  @JsonProperty
-  Integer autoCommitIntervalMs;
 
   @JsonProperty
   Integer queuedMaxMessageChunks;
@@ -79,9 +64,6 @@ public class KafkaConfiguration {
   Integer consumerTimeoutMs;
 
   @JsonProperty
-  String clientId;
-
-  @JsonProperty
   Integer zookeeperSessionTimeoutMs;
 
   @JsonProperty
@@ -94,20 +76,8 @@ public class KafkaConfiguration {
     return topic;
   }
 
-  public Integer getNumThreads() {
-    return numThreads;
-  }
-
-  public String getGroupId() {
-    return groupId;
-  }
-
   public String getZookeeperConnect() {
     return zookeeperConnect;
-  }
-
-  public String getConsumerId() {
-    return consumerId;
   }
 
   public Integer getSocketTimeoutMs() {
@@ -120,14 +90,6 @@ public class KafkaConfiguration {
 
   public Integer getFetchMessageMaxBytes() {
     return fetchMessageMaxBytes;
-  }
-
-  public Boolean getAutoCommitEnable() {
-    return autoCommitEnable;
-  }
-
-  public Integer getAutoCommitIntervalMs() {
-    return autoCommitIntervalMs;
   }
 
   public Integer getQueuedMaxMessageChunks() {
@@ -160,10 +122,6 @@ public class KafkaConfiguration {
 
   public Integer getConsumerTimeoutMs() {
     return consumerTimeoutMs;
-  }
-
-  public String getClientId() {
-    return clientId;
   }
 
   public Integer getZookeeperSessionTimeoutMs() {

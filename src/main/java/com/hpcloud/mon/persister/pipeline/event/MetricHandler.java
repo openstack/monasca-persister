@@ -15,21 +15,19 @@
  * limitations under the License.
  */
 
-package com.hpcloud.mon.persister.disruptor.event;
+package com.hpcloud.mon.persister.pipeline.event;
 
 import static com.hpcloud.mon.persister.repository.VerticaMetricsConstants.MAX_COLUMN_LENGTH;
 
 import com.hpcloud.mon.common.model.metric.Metric;
-import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
+import com.hpcloud.mon.common.model.metric.MetricEnvelope;
+import com.hpcloud.mon.persister.configuration.PipelineConfiguration;
 import com.hpcloud.mon.persister.repository.MetricRepository;
 import com.hpcloud.mon.persister.repository.Sha1HashId;
 
 import com.codahale.metrics.Counter;
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import com.lmax.disruptor.EventHandler;
 
 import io.dropwizard.setup.Environment;
 
@@ -43,106 +41,65 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.TreeMap;
 
-public class MetricHandler implements EventHandler<MetricHolder>, FlushableHandler {
+public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
 
   private static final Logger logger = LoggerFactory.getLogger(MetricHandler.class);
   private static final String TENANT_ID = "tenantId";
   private static final String REGION = "region";
 
   private final int ordinal;
-  private final int numProcessors;
-  private final int batchSize;
 
   private final SimpleDateFormat simpleDateFormat;
 
-  private long millisSinceLastFlush = System.currentTimeMillis();
-  private final long millisBetweenFlushes;
-  private final int secondsBetweenFlushes;
-
   private final MetricRepository verticaMetricRepository;
-  private final Environment environment;
 
   private final Counter metricCounter;
   private final Counter definitionCounter;
   private final Counter dimensionCounter;
   private final Counter definitionDimensionsCounter;
-  private final Meter metricMeter;
-  private final Meter commitMeter;
-  private final Timer commitTimer;
 
   @Inject
-  public MetricHandler(MetricRepository metricRepository, MonPersisterConfiguration configuration,
+  public MetricHandler(MetricRepository metricRepository, @Assisted PipelineConfiguration configuration,
       Environment environment, @Assisted("ordinal") int ordinal,
-      @Assisted("numProcessors") int numProcessors, @Assisted("batchSize") int batchSize) {
-
+       @Assisted("batchSize") int batchSize) {
+    super(configuration, environment, ordinal, batchSize, MetricHandler.class.getName());
+    final String handlerName = String.format("%s[%d]", MetricHandler.class.getName(), ordinal);
     this.verticaMetricRepository = metricRepository;
-    this.environment = environment;
     this.metricCounter =
-        this.environment.metrics().counter(
-            this.getClass().getName() + "." + "metrics-added-to-batch-counter");
+        environment.metrics().counter(handlerName + "." + "metrics-added-to-batch-counter");
     this.definitionCounter =
-        this.environment.metrics().counter(
-            this.getClass().getName() + "." + "metric-definitions-added-to-batch-counter");
+        environment.metrics().counter(
+            handlerName + "." + "metric-definitions-added-to-batch-counter");
     this.dimensionCounter =
-        this.environment.metrics().counter(
-            this.getClass().getName() + "." + "metric-dimensions-added-to-batch-counter");
+        environment.metrics().counter(
+            handlerName + "." + "metric-dimensions-added-to-batch-counter");
     this.definitionDimensionsCounter =
-        this.environment.metrics()
-            .counter(
-                this.getClass().getName() + "."
-                    + "metric-definition-dimensions-added-to-batch-counter");
-    this.metricMeter =
-        this.environment.metrics().meter(
-            this.getClass().getName() + "." + "metrics-messages-processed-meter");
-    this.commitMeter =
-        this.environment.metrics()
-            .meter(this.getClass().getName() + "." + "commits-executed-meter");
-    this.commitTimer =
-        this.environment.metrics().timer(
-            this.getClass().getName() + "." + "total-commit-and-flush-timer");
-
-    this.secondsBetweenFlushes =
-        configuration.getMonDeDuperConfiguration().getDedupeRunFrequencySeconds();
-    this.millisBetweenFlushes = secondsBetweenFlushes * 1000;
+        environment.metrics().counter(
+            handlerName + "." + "metric-definition-dimensions-added-to-batch-counter");
 
     this.ordinal = ordinal;
-    this.numProcessors = numProcessors;
-    this.batchSize = batchSize;
 
     simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     simpleDateFormat.setTimeZone(TimeZone.getTimeZone("GMT-0"));
-
   }
 
   @Override
-  public void onEvent(MetricHolder metricEvent, long sequence, boolean b) throws Exception {
-
-    if (metricEvent.getMetricEnvelope() == null) {
-      logger.debug("Received heartbeat message. Checking last flush time.");
-      if (millisSinceLastFlush + millisBetweenFlushes < System.currentTimeMillis()) {
-        logger.debug("It's been more than " + secondsBetweenFlushes
-            + " seconds since last flush. Flushing staging tables now...");
-        flush();
-      } else {
-        logger.debug("It has not been more than " + secondsBetweenFlushes
-            + " seconds since last flush. No need to perform flush at this time.");
-      }
-      return;
+  public int process(MetricEnvelope[] metricEnvelopes) throws Exception {
+    int metricCount = 0;
+    for (final MetricEnvelope metricEnvelope : metricEnvelopes) {
+      metricCount += processEnvelope(metricEnvelope);
     }
+    return metricCount;
+  }
 
-    if (((sequence / batchSize) % this.numProcessors) != this.ordinal) {
-      return;
-    }
+  private int processEnvelope(MetricEnvelope metricEnvelope) {
+    int metricCount = 0;
+    Metric metric = metricEnvelope.metric;
+    Map<String, Object> meta = metricEnvelope.meta;
 
-    metricMeter.mark();
-
-    Metric metric = metricEvent.getMetricEnvelope().metric;
-    Map<String, Object> meta = metricEvent.getMetricEnvelope().meta;
-
-    logger.debug("sequence number: " + sequence);
-    logger.debug("ordinal: " + ordinal);
-    logger.debug("metric: " + metric.toString());
-    logger.debug("meta: " + meta.toString());
+    logger.debug("ordinal: {}", ordinal);
+    logger.debug("metric: {}", metric);
+    logger.debug("meta: {}", meta);
 
     String tenantId = "";
     if (meta.containsKey(TENANT_ID)) {
@@ -225,27 +182,21 @@ public class MetricHandler implements EventHandler<MetricHolder>, FlushableHandl
         double value = timeValuePairs[1];
         verticaMetricRepository.addMetricToBatch(definitionDimensionsSha1HashId, timeStamp, value);
         metricCounter.inc();
+        metricCount++;
       }
     } else {
       String timeStamp = simpleDateFormat.format(new Date(metric.getTimestamp() * 1000));
       double value = metric.getValue();
       verticaMetricRepository.addMetricToBatch(definitionDimensionsSha1HashId, timeStamp, value);
       metricCounter.inc();
+      metricCount++;
     }
-
-    if (sequence % batchSize == (batchSize - 1)) {
-      Timer.Context context = commitTimer.time();
-      flush();
-      context.stop();
-      commitMeter.mark();
-    }
-
+    return metricCount;
   }
 
   @Override
-  public void flush() {
+  public void flushRepository() {
     verticaMetricRepository.flush();
-    millisSinceLastFlush = System.currentTimeMillis();
   }
 
   private String trunc(String s, int l) {
@@ -261,6 +212,5 @@ public class MetricHandler implements EventHandler<MetricHolder>, FlushableHandl
       logger.warn("Resulting string {}", r);
       return r;
     }
-
   }
 }

@@ -15,16 +15,12 @@
  * limitations under the License.
  */
 
-package com.hpcloud.mon.persister.configuration;
+package com.hpcloud.mon.persister.consumer;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
+import com.hpcloud.mon.persister.configuration.PipelineConfiguration;
 
-public class MetricConfiguration {
-
-  @JsonProperty
-  String topic;
-
-  public String getTopic() {
-    return topic;
-  }
+public interface KafkaChannelFactory {
+  KafkaChannel create(MonPersisterConfiguration configuration,
+      PipelineConfiguration pipelineConfiguration, int threadNum);
 }

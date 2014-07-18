@@ -15,18 +15,13 @@
  * limitations under the License.
  */
 
-package com.hpcloud.mon.persister.disruptor.event;
+package com.hpcloud.mon.persister.pipeline.event;
 
-import com.hpcloud.mon.common.event.AlarmStateTransitionedEvent;
+import com.hpcloud.mon.persister.configuration.PipelineConfiguration;
 
-public class AlarmStateTransitionedEventHolder {
-  AlarmStateTransitionedEvent event;
+import com.google.inject.assistedinject.Assisted;
 
-  public AlarmStateTransitionedEvent getEvent() {
-    return event;
-  }
-
-  public void setEvent(AlarmStateTransitionedEvent event) {
-    this.event = event;
-  }
+public interface MetricHandlerFactory {
+  MetricHandler create(PipelineConfiguration pipelineConfiguration,
+      @Assisted("ordinal") int ordinal, @Assisted("batchSize") int batchSize);
 }

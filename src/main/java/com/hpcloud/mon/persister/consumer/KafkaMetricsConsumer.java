@@ -17,29 +17,29 @@
 
 package com.hpcloud.mon.persister.consumer;
 
-import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
+import com.hpcloud.mon.common.model.metric.MetricEnvelope;
+import com.hpcloud.mon.persister.pipeline.MetricPipeline;
 
 import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 
-import kafka.consumer.KafkaStream;
-
-public class KafkaMetricsConsumer extends KafkaConsumer {
+public class KafkaMetricsConsumer extends KafkaConsumer<MetricEnvelope[]> {
 
   @Inject
   private KafkaMetricsConsumerRunnableBasicFactory factory;
 
+  private final MetricPipeline pipeline;
+
   @Inject
-  public KafkaMetricsConsumer(MonPersisterConfiguration configuration) {
-    super(configuration);
+  public KafkaMetricsConsumer(@Assisted KafkaChannel kafkaChannel, @Assisted int threadNum,
+      @Assisted MetricPipeline pipeline) {
+    super(kafkaChannel, threadNum);
+    this.pipeline = pipeline;
   }
 
   @Override
-  protected Runnable createRunnable(KafkaStream<byte[], byte[]> stream, int threadNumber) {
-    return factory.create(stream, threadNumber);
-  }
-
-  @Override
-  protected String getStreamName() {
-    return this.configuration.getMetricConfiguration().getTopic();
+  protected KafkaConsumerRunnableBasic<MetricEnvelope[]> createRunnable(KafkaChannel kafkaChannel,
+      int threadNumber) {
+    return factory.create(pipeline, kafkaChannel, threadNumber);
   }
 }

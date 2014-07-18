@@ -17,15 +17,16 @@
 
 package com.hpcloud.mon.persister.consumer;
 
-import com.hpcloud.mon.persister.disruptor.MetricDisruptor;
-import com.hpcloud.mon.persister.disruptor.event.MetricHolder;
+import com.hpcloud.mon.common.model.metric.MetricEnvelope;
+import com.hpcloud.mon.persister.pipeline.MetricPipeline;
 
 import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 
-public class MetricsConsumer extends Consumer<MetricHolder> {
+public class MetricsConsumer extends Consumer<MetricEnvelope[]> {
 
   @Inject
-  public MetricsConsumer(KafkaMetricsConsumer kafkaConsumer, MetricDisruptor disruptor) {
-    super(kafkaConsumer, disruptor);
+  public MetricsConsumer(@Assisted KafkaMetricsConsumer kafkaConsumer, @Assisted MetricPipeline pipeline) {
+    super(kafkaConsumer, pipeline);
   }
 }

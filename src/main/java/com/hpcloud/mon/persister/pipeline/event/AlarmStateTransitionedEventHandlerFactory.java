@@ -15,8 +15,13 @@
  * limitations under the License.
  */
 
-package com.hpcloud.mon.persister.disruptor.event;
+package com.hpcloud.mon.persister.pipeline.event;
 
-public interface FlushableHandler {
-  public void flush();
+import com.hpcloud.mon.persister.configuration.PipelineConfiguration;
+
+import com.google.inject.assistedinject.Assisted;
+
+public interface AlarmStateTransitionedEventHandlerFactory {
+  AlarmStateTransitionedEventHandler create(PipelineConfiguration configuration,
+      @Assisted("ordinal") int ordinal, @Assisted("batchSize") int batchSize);
 }

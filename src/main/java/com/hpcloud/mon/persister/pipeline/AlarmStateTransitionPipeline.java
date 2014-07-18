@@ -15,18 +15,17 @@
  * limitations under the License.
  */
 
-package com.hpcloud.mon.persister.consumer;
+package com.hpcloud.mon.persister.pipeline;
 
-import com.hpcloud.mon.persister.disruptor.AlarmStateHistoryDisruptor;
-import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionedEventHolder;
+import com.hpcloud.mon.common.event.AlarmStateTransitionedEvent;
+import com.hpcloud.mon.persister.pipeline.event.AlarmStateTransitionedEventHandler;
 
 import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 
-public class AlarmStateTransitionsConsumer extends Consumer<AlarmStateTransitionedEventHolder> {
-
+public class AlarmStateTransitionPipeline extends ManagedPipeline<AlarmStateTransitionedEvent> {
   @Inject
-  public AlarmStateTransitionsConsumer(KafkaAlarmStateTransitionConsumer kafkaConsumer,
-      AlarmStateHistoryDisruptor disruptor) {
-    super(kafkaConsumer, disruptor);
+  public AlarmStateTransitionPipeline(@Assisted AlarmStateTransitionedEventHandler handler) {
+    super(handler);
   }
 }

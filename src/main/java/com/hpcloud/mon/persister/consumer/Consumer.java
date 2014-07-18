@@ -17,7 +17,7 @@
 
 package com.hpcloud.mon.persister.consumer;
 
-import com.hpcloud.mon.persister.disruptor.ManagedDisruptor;
+import com.hpcloud.mon.persister.pipeline.ManagedPipeline;
 
 import com.google.inject.Inject;
 
@@ -29,25 +29,25 @@ import org.slf4j.LoggerFactory;
 public class Consumer<T> implements Managed {
 
   private static final Logger logger = LoggerFactory.getLogger(Consumer.class);
-  private final KafkaConsumer consumer;
-  private final ManagedDisruptor<T> disruptor;
+  private final KafkaConsumer<T> consumer;
+  private final ManagedPipeline<T> pipeline;
 
   @Inject
-  public Consumer(KafkaConsumer kafkaConsumer, ManagedDisruptor<T> disruptor) {
+  public Consumer(KafkaConsumer<T> kafkaConsumer, ManagedPipeline<T> pipeline) {
     this.consumer = kafkaConsumer;
-    this.disruptor = disruptor;
+    this.pipeline = pipeline;
   }
 
   @Override
   public void start() throws Exception {
     logger.debug("start");
-    consumer.run();
+    consumer.start();
   }
 
   @Override
   public void stop() throws Exception {
     logger.debug("stop");
     consumer.stop();
-    disruptor.shutdown();
+    pipeline.shutdown();
   }
 }

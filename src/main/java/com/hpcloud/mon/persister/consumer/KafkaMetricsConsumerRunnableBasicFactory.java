@@ -17,8 +17,8 @@
 
 package com.hpcloud.mon.persister.consumer;
 
-import kafka.consumer.KafkaStream;
+import com.hpcloud.mon.persister.pipeline.MetricPipeline;
 
 public interface KafkaMetricsConsumerRunnableBasicFactory {
-  KafkaMetricsConsumerRunnableBasic create(KafkaStream<byte[], byte[]> stream, int threadNumber);
+  KafkaMetricsConsumerRunnableBasic create(MetricPipeline pipeline, KafkaChannel kafkaChannel, int threadNumber);
 }

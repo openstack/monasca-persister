@@ -15,16 +15,18 @@
  * limitations under the License.
  */
 
-package com.hpcloud.mon.persister.configuration;
+package com.hpcloud.mon.persister.pipeline;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hpcloud.mon.common.model.metric.MetricEnvelope;
+import com.hpcloud.mon.persister.pipeline.event.MetricHandler;
 
-public class AlarmHistoryConfiguration {
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 
-  @JsonProperty
-  String topic;
+public class MetricPipeline extends ManagedPipeline<MetricEnvelope[]> {
 
-  public String getTopic() {
-    return topic;
+  @Inject
+  public MetricPipeline(@Assisted MetricHandler metricHandler) {
+    super(metricHandler);
   }
 }

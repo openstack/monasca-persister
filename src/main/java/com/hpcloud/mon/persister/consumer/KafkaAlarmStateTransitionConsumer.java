@@ -17,29 +17,29 @@
 
 package com.hpcloud.mon.persister.consumer;
 
-import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
+import com.hpcloud.mon.common.event.AlarmStateTransitionedEvent;
+import com.hpcloud.mon.persister.pipeline.AlarmStateTransitionPipeline;
 
 import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 
-import kafka.consumer.KafkaStream;
-
-public class KafkaAlarmStateTransitionConsumer extends KafkaConsumer {
+public class KafkaAlarmStateTransitionConsumer extends KafkaConsumer<AlarmStateTransitionedEvent> {
 
   @Inject
   private KafkaAlarmStateTransitionConsumerRunnableBasicFactory factory;
 
+  private final AlarmStateTransitionPipeline pipeline;
+
   @Inject
-  public KafkaAlarmStateTransitionConsumer(MonPersisterConfiguration configuration) {
-    super(configuration);
+  public KafkaAlarmStateTransitionConsumer(@Assisted KafkaChannel kafkaChannel,
+      @Assisted int threadNum, @Assisted final AlarmStateTransitionPipeline pipeline) {
+    super(kafkaChannel, threadNum);
+    this.pipeline = pipeline;
   }
 
   @Override
-  protected Runnable createRunnable(KafkaStream<byte[], byte[]> stream, int threadNumber) {
-    return factory.create(stream, threadNumber);
-  }
-
-  @Override
-  protected String getStreamName() {
-    return this.configuration.getAlarmHistoryConfiguration().getTopic();
+  protected KafkaConsumerRunnableBasic<AlarmStateTransitionedEvent> createRunnable(
+      KafkaChannel kafkaChannel, int threadNumber) {
+    return factory.create(pipeline, kafkaChannel, threadNumber);
   }
 }

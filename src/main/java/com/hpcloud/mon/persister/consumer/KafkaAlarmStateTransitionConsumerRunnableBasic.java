@@ -18,67 +18,50 @@
 package com.hpcloud.mon.persister.consumer;
 
 import com.hpcloud.mon.common.event.AlarmStateTransitionedEvent;
-import com.hpcloud.mon.persister.disruptor.AlarmStateHistoryDisruptor;
-import com.hpcloud.mon.persister.disruptor.event.AlarmStateTransitionedEventHolder;
+import com.hpcloud.mon.persister.pipeline.AlarmStateTransitionPipeline;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import com.lmax.disruptor.EventTranslator;
-
-import kafka.consumer.ConsumerIterator;
-import kafka.consumer.KafkaStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class KafkaAlarmStateTransitionConsumerRunnableBasic implements Runnable {
+public class KafkaAlarmStateTransitionConsumerRunnableBasic extends
+    KafkaConsumerRunnableBasic<AlarmStateTransitionedEvent> {
 
   private static final Logger logger = LoggerFactory
       .getLogger(KafkaAlarmStateTransitionConsumerRunnableBasic.class);
 
-  private final KafkaStream<byte[], byte[]> stream;
-  private final int threadNumber;
-  private final AlarmStateHistoryDisruptor disruptor;
   private final ObjectMapper objectMapper;
 
   @Inject
-  public KafkaAlarmStateTransitionConsumerRunnableBasic(AlarmStateHistoryDisruptor disruptor,
-      @Assisted KafkaStream<byte[], byte[]> stream, @Assisted int threadNumber) {
-    this.stream = stream;
-    this.threadNumber = threadNumber;
-    this.disruptor = disruptor;
+  public KafkaAlarmStateTransitionConsumerRunnableBasic(@Assisted AlarmStateTransitionPipeline pipeline,
+      @Assisted KafkaChannel kafkaChannel, @Assisted int threadNumber) {
+    super(kafkaChannel, pipeline, threadNumber);
     this.objectMapper = new ObjectMapper();
     objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     objectMapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
     objectMapper.enable(DeserializationFeature.UNWRAP_ROOT_VALUE);
   }
 
-  public void run() {
-    ConsumerIterator<byte[], byte[]> it = stream.iterator();
-    while (it.hasNext()) {
+  @Override
+  protected void publishHeartbeat() {
+    publishEvent(null);
+  }
 
-      final String s = new String(it.next().message());
+  @Override
+  protected void handleMessage(String message) {
+    try {
+      final AlarmStateTransitionedEvent event =
+          objectMapper.readValue(message, AlarmStateTransitionedEvent.class);
 
-      logger.debug("Thread " + threadNumber + ": " + s);
+      logger.debug(event.toString());
 
-      try {
-        final AlarmStateTransitionedEvent event =
-            objectMapper.readValue(s, AlarmStateTransitionedEvent.class);
-
-        logger.debug(event.toString());
-
-        disruptor.publishEvent(new EventTranslator<AlarmStateTransitionedEventHolder>() {
-          @Override
-          public void translateTo(AlarmStateTransitionedEventHolder eventHolder, long sequence) {
-            eventHolder.setEvent(event);
-          }
-        });
-      } catch (Exception e) {
-        logger.error("Failed to deserialize JSON message and place on disruptor queue: " + s, e);
-      }
+      publishEvent(event);
+    } catch (Exception e) {
+      logger.error("Failed to deserialize JSON message and send to handler: " + message, e);
     }
-    logger.debug("Shutting down Thread: " + threadNumber);
   }
 }

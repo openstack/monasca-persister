@@ -15,15 +15,10 @@
  * limitations under the License.
  */
 
-package com.hpcloud.mon.persister.disruptor.event;
+package com.hpcloud.mon.persister.pipeline;
 
-import com.lmax.disruptor.EventFactory;
+import com.hpcloud.mon.persister.pipeline.event.MetricHandler;
 
-public class AlarmStateTransitionedEventFactory implements
-    EventFactory<AlarmStateTransitionedEventHolder> {
-
-  @Override
-  public AlarmStateTransitionedEventHolder newInstance() {
-    return new AlarmStateTransitionedEventHolder();
-  }
+public interface MetricPipelineFactory {
+  MetricPipeline create(MetricHandler metricHandler);
 }

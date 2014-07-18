@@ -15,19 +15,11 @@
  * limitations under the License.
  */
 
-package com.hpcloud.mon.persister.disruptor.event;
+package com.hpcloud.mon.persister.consumer;
 
-import com.hpcloud.mon.common.model.metric.MetricEnvelope;
+import com.hpcloud.mon.persister.pipeline.AlarmStateTransitionPipeline;
 
-public class MetricHolder {
-
-  MetricEnvelope metricEnvelope;
-
-  public MetricEnvelope getMetricEnvelope() {
-    return metricEnvelope;
-  }
-
-  public void setEnvelope(MetricEnvelope metricEnvelope) {
-    this.metricEnvelope = metricEnvelope;
-  }
+public interface KafkaAlarmStateTransitionConsumerFactory {
+  KafkaAlarmStateTransitionConsumer create(KafkaChannel kafkaChannel, int threadNum,
+      final AlarmStateTransitionPipeline pipeline);
 }

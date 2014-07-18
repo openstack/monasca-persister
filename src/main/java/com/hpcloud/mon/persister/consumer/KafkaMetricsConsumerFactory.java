@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-package com.hpcloud.mon.persister.disruptor.event;
+package com.hpcloud.mon.persister.consumer;
 
-import com.google.inject.assistedinject.Assisted;
+import com.hpcloud.mon.persister.pipeline.MetricPipeline;
 
-public interface AlarmStateTransitionedEventHandlerFactory {
-  AlarmStateTransitionedEventHandler create(@Assisted("ordinal") int ordinal,
-      @Assisted("numProcessors") int numProcessors, @Assisted("batchSize") int batchSize);
+public interface KafkaMetricsConsumerFactory {
+  public KafkaMetricsConsumer create(KafkaChannel kafkaChannel, int threadNum,
+      MetricPipeline pipeline);
 }
