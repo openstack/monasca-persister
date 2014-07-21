@@ -45,6 +45,11 @@
             <version>${mon.common.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.hpcloud</groupId>
+            <artifactId>mon-influxdb</artifactId>
+            <version>${mon.common.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka_2.10</artifactId>
             <version>0.8.0</version>

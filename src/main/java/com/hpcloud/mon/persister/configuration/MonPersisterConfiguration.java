@@ -22,6 +22,7 @@ package com.hpcloud.mon.persister.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import com.hpcloud.mon.infrastructure.persistence.influxdb.InfluxDbConfiguration;
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
 
@@ -121,9 +122,9 @@ public class MonPersisterConfiguration extends Configuration {
 
   @Valid
   @JsonProperty
-  private final InfluxDBConfiguration influxDBConfiguration = new InfluxDBConfiguration();
+  private final InfluxDbConfiguration influxDbConfiguration = new InfluxDbConfiguration();
 
-  public InfluxDBConfiguration getInfluxDBConfiguration() {
-    return influxDBConfiguration;
+  public InfluxDbConfiguration getInfluxDBConfiguration() {
+    return influxDbConfiguration;
   }
 }

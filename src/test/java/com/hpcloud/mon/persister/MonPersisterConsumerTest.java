@@ -32,7 +32,7 @@ public class MonPersisterConsumerTest {
   @Mock
   private KafkaMetricsConsumer kafkaConsumer;
 
-  @InjectMocks
+  @Mock
   private MetricsConsumer monConsumer;
 
   @Before
