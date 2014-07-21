@@ -51,7 +51,7 @@ databaseConfiguration:
   databaseType: influxdb
 #  databaseType: vertica
 
-influxDBConfiguration:
+influxDbConfiguration:
   name: mon
   replicationFactor: 1
   url: http://127.0.0.1:8086
