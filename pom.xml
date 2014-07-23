@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.hpcloud</groupId>
+    <groupId>monasca-persister</groupId>
     <artifactId>mon-persister</artifactId>
     <version>1.0-SNAPSHOT</version>
 
@@ -40,13 +40,13 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.hpcloud</groupId>
-            <artifactId>mon-model</artifactId>
+            <groupId>monasca-common</groupId>
+            <artifactId>monasca-common-model</artifactId>
             <version>${mon.common.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.hpcloud</groupId>
-            <artifactId>mon-influxdb</artifactId>
+            <groupId>monasca-common</groupId>
+            <artifactId>monasca-common-influxdb</artifactId>
             <version>${mon.common.version}</version>
         </dependency>
         <dependency>
