@@ -17,14 +17,12 @@
 
 package com.hpcloud.mon.persister.repository;
 
-import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
-
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
-
+import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
 import io.dropwizard.setup.Environment;
-
+import org.apache.commons.codec.digest.DigestUtils;
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
 import org.influxdb.dto.Serie;
@@ -32,13 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class InfluxDBMetricRepository implements MetricRepository {
@@ -57,22 +49,23 @@ public class InfluxDBMetricRepository implements MetricRepository {
   private final com.codahale.metrics.Timer flushTimer;
   public final Meter measurementMeter;
 
-  private static final SimpleDateFormat measurementTimeStampSimpleDateFormat =
-      new SimpleDateFormat("yyyy-MM-dd HH:mm:ss zzz");
+  private static final SimpleDateFormat measurementTimeStampSimpleDateFormat = new
+      SimpleDateFormat("yyyy-MM-dd HH:mm:ss zzz");
+  private static final Sha1HashId BLANK_SHA_1_HASH_ID = new Sha1HashId(DigestUtils.sha(""));
 
   @Inject
-  public InfluxDBMetricRepository(MonPersisterConfiguration configuration, Environment environment) {
+  public InfluxDBMetricRepository(MonPersisterConfiguration configuration,
+                                  Environment environment) {
     this.configuration = configuration;
     this.environment = environment;
-    influxDB =
-        InfluxDBFactory.connect(configuration.getInfluxDBConfiguration().getUrl(), configuration
-            .getInfluxDBConfiguration().getUser(), configuration.getInfluxDBConfiguration()
-            .getPassword());
+    influxDB = InfluxDBFactory.connect(configuration.getInfluxDBConfiguration().getUrl(),
+        configuration.getInfluxDBConfiguration().getUser(),
+        configuration.getInfluxDBConfiguration().getPassword());
 
-    this.flushTimer =
-        this.environment.metrics().timer(this.getClass().getName() + "." + "flush-timer");
-    this.measurementMeter =
-        this.environment.metrics().meter(this.getClass().getName() + "." + "measurement-meter");
+    this.flushTimer = this.environment.metrics().timer(this.getClass().getName() + "." +
+        "flush-timer");
+    this.measurementMeter = this.environment.metrics().meter(this.getClass().getName() + "." +
+        "measurement-meter");
 
   }
 
@@ -102,7 +95,8 @@ public class InfluxDBMetricRepository implements MetricRepository {
   }
 
   @Override
-  public void addDefinitionDimensionToBatch(Sha1HashId defDimsId, Sha1HashId defId, Sha1HashId dimId) {
+  public void addDefinitionDimensionToBatch(Sha1HashId defDimsId, Sha1HashId defId,
+                                            Sha1HashId dimId) {
     DefinitionDimension dd = new DefinitionDimension(defDimsId, defId, dimId);
     definitionDimensionMap.put(defDimsId, dd);
   }
@@ -119,15 +113,16 @@ public class InfluxDBMetricRepository implements MetricRepository {
           TimeUnit.SECONDS);
       long endTime = System.currentTimeMillis();
       context.stop();
-      logger.debug("Writing measurements, definitions, and dimensions to database took "
-          + (endTime - startTime) / 1000 + " seconds");
+      logger.debug("Writing measurements, definitions, and dimensions to database took " +
+          (endTime - startTime) / 1000 + " seconds");
     } catch (Exception e) {
       logger.error("Failed to write measurements to database", e);
     }
     clearBuffers();
   }
 
-  private Serie[] getSeries(Map<Sha1HashId, Map<Set<String>, List<Point>>> defMap) throws Exception {
+  private Serie[] getSeries(Map<Sha1HashId, Map<Set<String>, List<Point>>> defMap) throws
+      Exception {
 
     logger.debug("Creating series array of size: " + definitionMap.size());
     Serie[] series = new Serie[definitionMap.size()];
@@ -266,7 +261,15 @@ public class InfluxDBMetricRepository implements MetricRepository {
         throw new Exception("Failed to find DefinitionDimension for measurement:\n" + measurement);
       }
 
-      List<Dimension> dimensionList = dimensionMap.get(definitionDimension.dimId);
+      List<Dimension> dimensionList = null;
+      // Dimensions might not exist for this measurement.  In that
+      // case, the dimId would be the sha-1 hash of "", and the definitionDimension map will not
+      // contain that key.
+      if (definitionDimension.dimId.equals(BLANK_SHA_1_HASH_ID)) {
+        dimensionList = new ArrayList<>();
+      } else {
+        dimensionList = dimensionMap.get(definitionDimension.dimId);
+      }
       if (dimensionList == null) {
         throw new Exception("Failed to find Dimensions for measurement:\n" + measurement);
       }
@@ -324,8 +327,8 @@ public class InfluxDBMetricRepository implements MetricRepository {
 
     @Override
     public String toString() {
-      return "Measurement{" + "defDimsId=" + defDimsId + ", timeStamp='" + timeStamp + '\''
-          + ", value=" + value + '}';
+      return "Measurement{" + "defDimsId=" + defDimsId + ", timeStamp='" + timeStamp + '\'' + ", " +
+          "value=" + value + '}';
     }
   }
 
@@ -344,8 +347,8 @@ public class InfluxDBMetricRepository implements MetricRepository {
 
     @Override
     public String toString() {
-      return "Definition{" + "defId=" + defId + ", name='" + name + '\'' + ", tenantId='"
-          + tenantId + '\'' + ", region='" + region + '\'' + '}';
+      return "Definition{" + "defId=" + defId + ", name='" + name + '\'' + ", " +
+          "tenantId='" + tenantId + '\'' + ", region='" + region + '\'' + '}';
     }
   }
 
@@ -362,8 +365,8 @@ public class InfluxDBMetricRepository implements MetricRepository {
 
     @Override
     public String toString() {
-      return "Dimension{" + "dimSetId=" + dimSetId + ", name='" + name + '\'' + ", value='" + value
-          + '\'' + '}';
+      return "Dimension{" + "dimSetId=" + dimSetId + ", name='" + name + '\'' + ", " +
+          "value='" + value + '\'' + '}';
     }
   }
 
@@ -380,8 +383,8 @@ public class InfluxDBMetricRepository implements MetricRepository {
 
     @Override
     public String toString() {
-      return "DefinitionDimension{" + "defDimId=" + defDimId + ", defId=" + defId + ", dimId="
-          + dimId + '}';
+      return "DefinitionDimension{" + "defDimId=" + defDimId + ", defId=" + defId + ", " +
+          "dimId=" + dimId + '}';
     }
   }
 
