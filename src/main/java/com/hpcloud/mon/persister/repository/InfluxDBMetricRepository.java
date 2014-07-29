@@ -261,7 +261,7 @@ public class InfluxDBMetricRepository implements MetricRepository {
         throw new Exception("Failed to find DefinitionDimension for measurement:\n" + measurement);
       }
 
-      List<Dimension> dimensionList = null;
+      List<Dimension> dimensionList;
       // Dimensions might not exist for this measurement.  In that
       // case, the dimId would be the sha-1 hash of "", and the definitionDimension map will not
       // contain that key.
