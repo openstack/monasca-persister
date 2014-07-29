@@ -17,11 +17,12 @@
 
 package com.hpcloud.mon.persister.repository;
 
+import com.google.inject.Inject;
+
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
-import com.google.inject.Inject;
 import com.hpcloud.mon.persister.configuration.MonPersisterConfiguration;
-import io.dropwizard.setup.Environment;
+
 import org.apache.commons.codec.digest.DigestUtils;
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
@@ -30,8 +31,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
+
+import io.dropwizard.setup.Environment;
 
 public class InfluxDBMetricRepository implements MetricRepository {
 
@@ -59,13 +69,13 @@ public class InfluxDBMetricRepository implements MetricRepository {
     this.configuration = configuration;
     this.environment = environment;
     influxDB = InfluxDBFactory.connect(configuration.getInfluxDBConfiguration().getUrl(),
-        configuration.getInfluxDBConfiguration().getUser(),
-        configuration.getInfluxDBConfiguration().getPassword());
+                                       configuration.getInfluxDBConfiguration().getUser(),
+                                       configuration.getInfluxDBConfiguration().getPassword());
 
     this.flushTimer = this.environment.metrics().timer(this.getClass().getName() + "." +
-        "flush-timer");
+                                                       "flush-timer");
     this.measurementMeter = this.environment.metrics().meter(this.getClass().getName() + "." +
-        "measurement-meter");
+                                                             "measurement-meter");
 
   }
 
@@ -110,11 +120,11 @@ public class InfluxDBMetricRepository implements MetricRepository {
       Map<Sha1HashId, Map<Set<String>, List<Point>>> defMap = getInfluxDBFriendlyMap();
       Serie[] series = getSeries(defMap);
       this.influxDB.write(this.configuration.getInfluxDBConfiguration().getName(), series,
-          TimeUnit.SECONDS);
+                          TimeUnit.SECONDS);
       long endTime = System.currentTimeMillis();
       context.stop();
       logger.debug("Writing measurements, definitions, and dimensions to database took " +
-          (endTime - startTime) / 1000 + " seconds");
+                   (endTime - startTime) / 1000 + " seconds");
     } catch (Exception e) {
       logger.error("Failed to write measurements to database", e);
     }
@@ -122,7 +132,7 @@ public class InfluxDBMetricRepository implements MetricRepository {
   }
 
   private Serie[] getSeries(Map<Sha1HashId, Map<Set<String>, List<Point>>> defMap) throws
-      Exception {
+                                                                                   Exception {
 
     logger.debug("Creating series array of size: " + definitionMap.size());
     Serie[] series = new Serie[definitionMap.size()];
@@ -246,9 +256,6 @@ public class InfluxDBMetricRepository implements MetricRepository {
   /**
    * Group all measurements with the same dimension names into a list. Generate a map of definition
    * id's to map of dimension name sets to list of points.
-   *
-   * @return
-   * @throws Exception
    */
   private Map<Sha1HashId, Map<Set<String>, List<Point>>> getInfluxDBFriendlyMap() throws Exception {
 
@@ -315,6 +322,7 @@ public class InfluxDBMetricRepository implements MetricRepository {
   }
 
   private static final class Measurement {
+
     Sha1HashId defDimsId;
     String timeStamp;
     double value;
@@ -328,11 +336,12 @@ public class InfluxDBMetricRepository implements MetricRepository {
     @Override
     public String toString() {
       return "Measurement{" + "defDimsId=" + defDimsId + ", timeStamp='" + timeStamp + '\'' + ", " +
-          "value=" + value + '}';
+             "value=" + value + '}';
     }
   }
 
   private static final class Definition {
+
     Sha1HashId defId;
     String name;
     String tenantId;
@@ -348,11 +357,12 @@ public class InfluxDBMetricRepository implements MetricRepository {
     @Override
     public String toString() {
       return "Definition{" + "defId=" + defId + ", name='" + name + '\'' + ", " +
-          "tenantId='" + tenantId + '\'' + ", region='" + region + '\'' + '}';
+             "tenantId='" + tenantId + '\'' + ", region='" + region + '\'' + '}';
     }
   }
 
   private static final class Dimension {
+
     Sha1HashId dimSetId;
     String name;
     String value;
@@ -366,11 +376,12 @@ public class InfluxDBMetricRepository implements MetricRepository {
     @Override
     public String toString() {
       return "Dimension{" + "dimSetId=" + dimSetId + ", name='" + name + '\'' + ", " +
-          "value='" + value + '\'' + '}';
+             "value='" + value + '\'' + '}';
     }
   }
 
   private static final class DefinitionDimension {
+
     Sha1HashId defDimId;
     Sha1HashId defId;
     Sha1HashId dimId;
@@ -384,11 +395,12 @@ public class InfluxDBMetricRepository implements MetricRepository {
     @Override
     public String toString() {
       return "DefinitionDimension{" + "defDimId=" + defDimId + ", defId=" + defId + ", " +
-          "dimId=" + dimId + '}';
+             "dimId=" + dimId + '}';
     }
   }
 
   private static final class Point {
+
     Measurement measurement;
     Map<String, String> dimValMap;
 
