@@ -134,9 +134,7 @@ public class InfluxDBMetricRepository implements MetricRepository {
   private Serie[] getSeries(Map<Sha1HashId, Map<Set<String>, List<Point>>> defMap) throws
                                                                                    Exception {
 
-    logger.debug("Creating series array of size: " + definitionMap.size());
-    Serie[] series = new Serie[definitionMap.size()];
-    int i = 0;
+    List<Serie> serieList = new LinkedList<>();
 
     for (Sha1HashId defId : defMap.keySet()) {
 
@@ -145,12 +143,12 @@ public class InfluxDBMetricRepository implements MetricRepository {
         throw new Exception("Failed to find Definition for defId: " + defId);
       }
 
-      Serie serie = new Serie(definition.name);
-      logger.debug("Created serie: " + serie.getName());
-
       Map<Set<String>, List<Point>> dimNameSetMap = defMap.get(defId);
 
       for (Set<String> dimNameSet : dimNameSetMap.keySet()) {
+
+        Serie serie = new Serie(definition.name);
+        logger.debug("Created serie: " + serie.getName());
 
         // Add 4 for the tenant id, region, timestamp, and value.
         String[] colNameStringArry = new String[dimNameSet.size() + 4];
@@ -211,12 +209,13 @@ public class InfluxDBMetricRepository implements MetricRepository {
           logColValues(serie);
         }
 
+        logger.debug("Adding serie: {} to serieList", serie.getName());
+        serieList.add(serie);
       }
-      logger.debug("Adding serie: " + serie.getName());
-      series[i++] = serie;
 
     }
-    return series;
+
+    return serieList.toArray(new Serie[serieList.size()]);
   }
 
   private void logColValues(Serie serie) {
