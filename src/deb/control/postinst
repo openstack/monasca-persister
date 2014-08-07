@@ -7,8 +7,8 @@ case "$1" in
     fi
 
     #Restart does not pick up upstart job config changes stop/start is needed
-    stop mon-persister
-    start mon-persister
+    stop monasca-persister
+    start monasca-persister
   ;;
 esac
 

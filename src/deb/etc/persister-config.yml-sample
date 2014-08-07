@@ -1,4 +1,4 @@
-name: mon-persister
+name: monasca-persister
 
 #Kafka settings.
 kafkaConfiguration:
@@ -42,7 +42,7 @@ verticaMetricRepositoryConfiguration:
 
 databaseConfiguration:
   driverClass: com.vertica.jdbc.Driver
-#  url: jdbc:vertica://mon-aw1rdd1-vertica0001.rndd.aw1.hpcloud.net:5433/som
+#  url: jdbc:vertica://mini-mon:5433/monasca
   url: jdbc:vertica://15.185.94.245:5433/som
   user: persister
   password: password
@@ -117,7 +117,7 @@ logging:
     # The file to which statements will be logged.
     #
     # If enabled is true, this must be specified.
-    currentLogFilename: ./logs/mon-persister.log
+    currentLogFilename: ./logs/monasca-persister.log
 
     # If true, log files are rotated and archived.
     archive: true
@@ -127,7 +127,7 @@ logging:
     # and new statements written to it.
     #
     # If archive is true, this must be specified.
-    archivedLogFilenamePattern: ./logs/mon-persister-%d.log.gz
+    archivedLogFilenamePattern: ./logs/monasca-persister-%d.log.gz
 
     # The maximum number of log files to archive.
     archivedFileCount: 5

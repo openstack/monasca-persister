@@ -1,4 +1,4 @@
-mon-persister
+monasca-persister
 =============
 
 The Monitoring Persister consumes metrics and alarm state transitions from the Message Queue and stores them in the Metrics and Alarms database.
@@ -11,7 +11,7 @@ The number of output processors/threads in the Persister can be specified to sca
 
 # Build
 
-Requires mon-common from https://github.com/hpcloud-mon/mon-common. Download and build following instructions in its README.md. Then build mon-persister by:
+Requires monasca-common from https://github.com/stackforge/monasca-common. Download and build following instructions in its README.md. Then build monasca-persister by:
 
 ```
 mvn clean package

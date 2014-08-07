@@ -1,0 +1,133 @@
+name: monasca-persister
+
+alarmHistoryConfiguration:
+  batchSize: 100
+  numThreads: 1
+  maxBatchTime: 15
+# See http://kafka.apache.org/documentation.html#api for semantics and defaults.
+  topic:  alarm-state-transitions
+  groupId: persister_alarms
+  consumerId: 1
+  clientId: 1
+
+metricConfiguration:
+  batchSize: 1000
+  numThreads: 2
+  maxBatchTime: 30
+# See http://kafka.apache.org/documentation.html#api for semantics and defaults.
+  topic:  metrics
+  groupId: persister_metrics
+  consumerId: 1
+  clientId: 1
+
+#Kafka settings.
+kafkaConfiguration:
+  #zookeeperConnect: localhost:2181
+# See http://kafka.apache.org/documentation.html#api for semantics and defaults.
+  zookeeperConnect: 192.168.10.4:2181
+  socketTimeoutMs: 30000
+  socketReceiveBufferBytes : 65536
+  fetchMessageMaxBytes: 1048576
+  queuedMaxMessageChunks: 10
+  rebalanceMaxRetries: 4
+  fetchMinBytes:  1
+  fetchWaitMaxMs:  100
+  rebalanceBackoffMs: 2000
+  refreshLeaderBackoffMs: 200
+  autoOffsetReset: largest
+  consumerTimeoutMs:  1000
+  zookeeperSessionTimeoutMs : 60000
+  zookeeperConnectionTimeoutMs : 6000
+  zookeeperSyncTimeMs: 2000
+
+verticaMetricRepositoryConfiguration:
+  maxCacheSize: 2000000
+
+databaseConfiguration:
+# vertica | influxdb
+  databaseType: influxdb
+#  databaseType: vertica
+
+influxDbConfiguration:
+  name: mon
+  replicationFactor: 1
+  url: http://192.168.10.4:8086
+  user:  root
+  password: root
+
+#dataSourceFactory:
+#  driverClass: com.vertica.jdbc.Driver
+##  url: jdbc:vertica://mini-mon:5433/monasca
+#  # my Vertica DB in the cloud
+#  #url: jdbc:vertica://15.185.94.245:5433/som
+#  url: jdbc:vertica://192.168.10.4:5433/mon
+##  user: persister
+#  #user: mon_persister
+#  user: dbadmin
+#  password: password
+#  properties:
+#    ssl: false
+#  # the maximum amount of time to wait on an empty pool before throwing an exception
+#  maxWaitForConnection: 1s
+#
+#  # the SQL query to run when validating a connection's liveness
+#  validationQuery: "/* MyService Health Check */ SELECT 1"
+#
+#  # the minimum number of connections to keep open
+#  minSize: 8
+#
+#  # the maximum number of connections to keep open
+#  maxSize: 41
+#
+#  # whether or not idle connections should be validated
+#  checkConnectionWhileIdle: false
+#
+#  # the maximum lifetime of an idle connection
+#  maxConnectionAge: 1 minute
+
+metrics:
+  frequency: 1 second
+
+# Logging settings.
+logging:
+
+  # The default level of all loggers. Can be OFF, ERROR, WARN, INFO,
+  # DEBUG, TRACE, or ALL.
+  level: info
+
+  # Logger-specific levels.
+  loggers:
+
+    # Sets the level for 'com.example.app' to DEBUG.
+    com.example.app: DEBUG
+    monasca: DEBUG
+#    monasca.persister.repository: DEBUG
+
+  appenders:
+    - type: console
+      threshold: DEBUG
+      timeZone: UTC
+      target: stdout
+
+    - type: file
+      threshold: DEBUG
+      archive: true
+      currentLogFilename: ./logs/monasca-persister.log
+      archivedLogFilenamePattern: ./logs/monasca-persister-%d.log.gz
+      archivedFileCount: 5
+
+    - type: file
+      # The file to which current statements will be logged.
+      currentLogFilename: ./logs/monasca-persister.log
+
+      # When the log file rotates, the archived log will be renamed to this and gzipped. The
+      # %d is replaced with the previous day (yyyy-MM-dd). Custom rolling windows can be created
+      # by passing a SimpleDateFormat-compatible format as an argument: "%d{yyyy-MM-dd-hh}".
+      archivedLogFilenamePattern: ./logs/monasca-persister-%d.log.gz
+
+      # The number of archived files to keep.
+      archivedFileCount: 5
+
+      # The timezone used to format dates. HINT: USE THE DEFAULT, UTC.
+      timeZone: UTC
+
