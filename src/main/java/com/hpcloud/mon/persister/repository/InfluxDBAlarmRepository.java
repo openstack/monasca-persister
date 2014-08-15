@@ -26,9 +26,8 @@ import com.google.inject.Inject;
 
 import io.dropwizard.setup.Environment;
 
-import org.influxdb.InfluxDB;
-import org.influxdb.InfluxDBFactory;
 import org.influxdb.dto.Serie;
+import org.influxdb.dto.Serie.Builder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,42 +35,28 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class InfluxDBAlarmRepository implements AlarmRepository {
+public class InfluxDBAlarmRepository extends InfluxRepository implements AlarmRepository {
 
-  private static final Logger logger = LoggerFactory.getLogger(InfluxDBAlarmRepository.class);
+  static final Logger logger = LoggerFactory.getLogger(InfluxDBAlarmRepository.class);
   private static final String ALARM_STATE_HISTORY_NAME = "alarm_state_history";
-  private static final int ALARM_STATE_HISTORY_NUM_COLUMNS = 7;
 
   private final String[] colNamesStringArry = {"tenant_id", "alarm_id", "old_state", "new_state",
       "reason", "reason_data", "time"};
 
-  private static final int ALARM_STATE_HISTORY_COLUMN_NUMBER = 7;
-
-  private final MonPersisterConfiguration configuration;
-  private final Environment environment;
-  private final InfluxDB influxDB;
+  protected final Timer flushTimer;
 
   private List<AlarmStateTransitionedEvent> alarmStateTransitionedEventList = new LinkedList<>();
 
-  private final Timer flushTimer;
   public final Meter alarmStateHistoryMeter;
 
   @Inject
   public InfluxDBAlarmRepository(MonPersisterConfiguration configuration, Environment environment) {
-    this.configuration = configuration;
-    this.environment = environment;
-    influxDB =
-        InfluxDBFactory.connect(configuration.getInfluxDBConfiguration().getUrl(), configuration
-            .getInfluxDBConfiguration().getUser(), configuration.getInfluxDBConfiguration()
-            .getPassword());
-
+    super(configuration, environment);
     this.flushTimer =
         this.environment.metrics().timer(this.getClass().getName() + "." + "flush-timer");
     this.alarmStateHistoryMeter =
         this.environment.metrics().meter(
             this.getClass().getName() + "." + "alarm_state_history-meter");
-
-
   }
 
   @Override
@@ -94,40 +79,30 @@ public class InfluxDBAlarmRepository implements AlarmRepository {
       long startTime = System.currentTimeMillis();
       Timer.Context context = flushTimer.time();
 
-      Serie serie = new Serie(ALARM_STATE_HISTORY_NAME);
-      logger.debug("Created serie: {}", serie.getName());
+      final Builder builder = new Serie.Builder(ALARM_STATE_HISTORY_NAME);
+      logger.debug("Created serie: {}", ALARM_STATE_HISTORY_NAME);
 
-      serie.setColumns(this.colNamesStringArry);
+      builder.columns(this.colNamesStringArry);
 
       if (logger.isDebugEnabled()) {
-        logColumnNames(serie);
+        logColumnNames(this.colNamesStringArry);
       }
 
-      Object[][] colValsObjectArry =
-          new Object[this.alarmStateTransitionedEventList.size()][ALARM_STATE_HISTORY_NUM_COLUMNS];
-      int i = 0;
       for (AlarmStateTransitionedEvent alarmStateTransitionedEvent : alarmStateTransitionedEventList) {
-        int j = 0;
-        colValsObjectArry[i][j++] = alarmStateTransitionedEvent.tenantId;
-        colValsObjectArry[i][j++] = alarmStateTransitionedEvent.alarmId;
-        colValsObjectArry[i][j++] = alarmStateTransitionedEvent.oldState;
-        colValsObjectArry[i][j++] = alarmStateTransitionedEvent.newState;
-        colValsObjectArry[i][j++] = alarmStateTransitionedEvent.stateChangeReason;
-        colValsObjectArry[i][j++] = "{}";
-        colValsObjectArry[i][j++] = alarmStateTransitionedEvent.timestamp;
-        i++;
+        builder.values(alarmStateTransitionedEvent.tenantId, alarmStateTransitionedEvent.alarmId,
+            alarmStateTransitionedEvent.oldState, alarmStateTransitionedEvent.newState,
+            alarmStateTransitionedEvent.stateChangeReason, "{}",
+            alarmStateTransitionedEvent.timestamp);
       }
 
-      serie.setPoints(colValsObjectArry);
+      final Serie[] series = {builder.build()};
 
       if (logger.isDebugEnabled()) {
-        logColValues(serie);
+        logColValues(series[0]);
       }
 
-      Serie[] series = {serie};
-
-      this.influxDB.write(this.configuration.getInfluxDBConfiguration().getName(), series,
-          TimeUnit.SECONDS);
+      this.influxDB.write(this.configuration.getInfluxDBConfiguration().getName(),
+          TimeUnit.SECONDS, series);
 
       context.stop();
       long endTime = System.currentTimeMillis();
@@ -138,39 +113,5 @@ public class InfluxDBAlarmRepository implements AlarmRepository {
     }
 
     this.alarmStateTransitionedEventList.clear();
-  }
-
-  private void logColValues(Serie serie) {
-    logger.debug("Added array of array of column values to serie");
-    int outerIdx = 0;
-    for (Object[] colValArry : serie.getPoints()) {
-      StringBuffer sb = new StringBuffer();
-      boolean first = true;
-      for (Object colVal : colValArry) {
-        if (first) {
-          first = false;
-        } else {
-          sb.append(",");
-        }
-        sb.append(colVal);
-      }
-      logger.debug("Array of column values[{}]: [{}]", outerIdx, sb);
-      outerIdx++;
-    }
-  }
-
-  private void logColumnNames(Serie serie) {
-    logger.debug("Added array of column names to serie");
-    StringBuffer sb = new StringBuffer();
-    boolean first = true;
-    for (String colName : serie.getColumns()) {
-      if (first) {
-        first = false;
-      } else {
-        sb.append(",");
-      }
-      sb.append(colName);
-    }
-    logger.debug("Array of column names: [{}]", sb);
   }
 }

@@ -26,9 +26,8 @@ import com.google.inject.Inject;
 import io.dropwizard.setup.Environment;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import org.influxdb.InfluxDB;
-import org.influxdb.InfluxDBFactory;
 import org.influxdb.dto.Serie;
+import org.influxdb.dto.Serie.Builder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,13 +42,9 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
-public class InfluxDBMetricRepository implements MetricRepository {
+public class InfluxDBMetricRepository extends InfluxRepository implements MetricRepository {
 
   private static final Logger logger = LoggerFactory.getLogger(InfluxDBMetricRepository.class);
-
-  private final MonPersisterConfiguration configuration;
-  private final Environment environment;
-  private final InfluxDB influxDB;
 
   private final List<Measurement> measurementList = new LinkedList<>();
   private final Map<Sha1HashId, Definition> definitionMap = new HashMap<>();
@@ -66,17 +61,11 @@ public class InfluxDBMetricRepository implements MetricRepository {
   @Inject
   public InfluxDBMetricRepository(MonPersisterConfiguration configuration,
                                   Environment environment) {
-    this.configuration = configuration;
-    this.environment = environment;
-    influxDB = InfluxDBFactory.connect(configuration.getInfluxDBConfiguration().getUrl(),
-                                       configuration.getInfluxDBConfiguration().getUser(),
-                                       configuration.getInfluxDBConfiguration().getPassword());
-
+    super(configuration, environment);
     this.flushTimer = this.environment.metrics().timer(this.getClass().getName() + "." +
                                                        "flush-timer");
     this.measurementMeter = this.environment.metrics().meter(this.getClass().getName() + "." +
                                                              "measurement-meter");
-
   }
 
   @Override
@@ -119,8 +108,8 @@ public class InfluxDBMetricRepository implements MetricRepository {
       Timer.Context context = flushTimer.time();
       Map<Sha1HashId, Map<Set<String>, List<Point>>> defMap = getInfluxDBFriendlyMap();
       Serie[] series = getSeries(defMap);
-      this.influxDB.write(this.configuration.getInfluxDBConfiguration().getName(), series,
-                          TimeUnit.SECONDS);
+      this.influxDB.write(this.configuration.getInfluxDBConfiguration().getName(),
+          TimeUnit.SECONDS, series);
       long endTime = System.currentTimeMillis();
       context.stop();
       logger.debug("Writing measurements, definitions, and dimensions to database took {} seconds",
@@ -147,8 +136,8 @@ public class InfluxDBMetricRepository implements MetricRepository {
 
       for (Set<String> dimNameSet : dimNameSetMap.keySet()) {
 
-        Serie serie = new Serie(definition.name);
-        logger.debug("Created serie: {}", serie.getName());
+        Builder builder = new Serie.Builder(definition.name);
+        logger.debug("Created serie: {}", definition.name);
 
         // Add 4 for the tenant id, region, timestamp, and value.
         String[] colNameStringArry = new String[dimNameSet.size() + 4];
@@ -166,10 +155,10 @@ public class InfluxDBMetricRepository implements MetricRepository {
         logger.debug("Adding column name[{}]: value", j);
         colNameStringArry[j++] = "value";
 
-        serie.setColumns(colNameStringArry);
+        builder.columns(colNameStringArry);
 
         if (logger.isDebugEnabled()) {
-          logColNames(serie);
+          logColumnNames(colNameStringArry);
         }
 
         List<Point> pointList = dimNameSetMap.get(dimNameSet);
@@ -178,13 +167,13 @@ public class InfluxDBMetricRepository implements MetricRepository {
         }
 
         // Add 4 for the tenant id, region, timestamp, and value.
-        Object[][] colValsObjectArry = new Object[pointList.size()][dimNameSet.size() + 4];
         int k = 0;
         for (Point point : pointList) {
+          Object[] colValsObjectArry = new Object[dimNameSet.size() + 4];
           logger.debug("Adding column value[{}][0]: {}", k, definition.tenantId);
-          colValsObjectArry[k][0] = definition.tenantId;
+          colValsObjectArry[0] = definition.tenantId;
           logger.debug("Adding column value[{}][1]: {}", k, definition.region);
-          colValsObjectArry[k][1] = definition.region;
+          colValsObjectArry[1] = definition.region;
           int l = 2;
           for (String dimName : dimNameSet) {
             String dimVal = point.dimValMap.get(dimName);
@@ -192,18 +181,20 @@ public class InfluxDBMetricRepository implements MetricRepository {
               throw new Exception("Failed to find dimension value for dimension name: " + dimName);
             }
             logger.debug("Adding column value[{}][{}]: " + dimVal, k, l);
-            colValsObjectArry[k][l++] = dimVal;
+            colValsObjectArry[l++] = dimVal;
           }
           Date d = measurementTimeStampSimpleDateFormat.parse(point.measurement.timeStamp + " UTC");
           Long time = d.getTime() / 1000;
           logger.debug("Adding column value[{}][{}]: {}", k, l, time);
-          colValsObjectArry[k][l++] = time;
+          colValsObjectArry[l++] = time;
           logger.debug("Adding column value[{}][{}]: {}", k, l, point.measurement.value);
-          colValsObjectArry[k][l++] = point.measurement.value;
+          colValsObjectArry[l++] = point.measurement.value;
           measurementMeter.mark();
           k++;
+          builder.values(colValsObjectArry);
         }
-        serie.setPoints(colValsObjectArry);
+
+        final Serie serie = builder.build();
 
         if (logger.isDebugEnabled()) {
           logColValues(serie);
@@ -216,40 +207,6 @@ public class InfluxDBMetricRepository implements MetricRepository {
     }
 
     return serieList.toArray(new Serie[serieList.size()]);
-  }
-
-  private void logColValues(Serie serie) {
-    logger.debug("Added array of array of column values to serie");
-    int outerIdx = 0;
-    for (Object[] colValArry : serie.getPoints()) {
-      StringBuffer sb = new StringBuffer();
-      boolean first = true;
-      for (Object colVal : colValArry) {
-        if (first) {
-          first = false;
-        } else {
-          sb.append(",");
-        }
-        sb.append(colVal);
-      }
-      logger.debug("Array of column values[{}]: [{}]", outerIdx, sb);
-      outerIdx++;
-    }
-  }
-
-  private void logColNames(Serie serie) {
-    logger.debug("Added array of column names to serie");
-    StringBuffer sb = new StringBuffer();
-    boolean first = true;
-    for (String colName : serie.getColumns()) {
-      if (first) {
-        first = false;
-      } else {
-        sb.append(",");
-      }
-      sb.append(colName);
-    }
-    logger.debug("Array of column names: [{}]", sb);
   }
 
   /**
