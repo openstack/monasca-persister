@@ -17,13 +17,10 @@
 
 package monasca.persister.repository;
 
-import monasca.persister.configuration.MonPersisterConfiguration;
+import com.google.inject.Inject;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
-import com.google.inject.Inject;
-
-import io.dropwizard.setup.Environment;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.influxdb.dto.Serie;
@@ -31,8 +28,9 @@ import org.influxdb.dto.Serie.Builder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -42,14 +40,17 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
+import io.dropwizard.setup.Environment;
+import monasca.persister.configuration.MonPersisterConfiguration;
+
 public class InfluxDBMetricRepository extends InfluxRepository implements MetricRepository {
 
   private static final Logger logger = LoggerFactory.getLogger(InfluxDBMetricRepository.class);
 
-  private final List<Measurement> measurementList = new LinkedList<>();
   private final Map<Sha1HashId, Definition> definitionMap = new HashMap<>();
-  private final Map<Sha1HashId, List<Dimension>> dimensionMap = new HashMap<>();
+  private final Map<Sha1HashId, Set<Dimension>> dimensionMap = new HashMap<>();
   private final Map<Sha1HashId, DefinitionDimension> definitionDimensionMap = new HashMap<>();
+  private final Map<Sha1HashId, List<Measurement>> measurementMap = new HashMap<>();
 
   private final com.codahale.metrics.Timer flushTimer;
   public final Meter measurementMeter;
@@ -57,6 +58,7 @@ public class InfluxDBMetricRepository extends InfluxRepository implements Metric
   private final SimpleDateFormat measurementTimeStampSimpleDateFormat = new
       SimpleDateFormat("yyyy-MM-dd HH:mm:ss zzz");
   private static final Sha1HashId BLANK_SHA_1_HASH_ID = new Sha1HashId(DigestUtils.sha(""));
+  private static final Set<Dimension> EMPTY_DIMENSION_TREE_SET = new TreeSet();
 
   @Inject
   public InfluxDBMetricRepository(MonPersisterConfiguration configuration,
@@ -71,8 +73,12 @@ public class InfluxDBMetricRepository extends InfluxRepository implements Metric
   @Override
   public void addMetricToBatch(Sha1HashId defDimsId, String timeStamp, double value) {
     Measurement m = new Measurement(defDimsId, timeStamp, value);
-    this.measurementList.add(m);
-
+    List<Measurement> measurementList = this.measurementMap.get(defDimsId);
+    if (measurementList == null) {
+      measurementList = new LinkedList<>();
+      this.measurementMap.put(defDimsId, measurementList);
+    }
+    measurementList.add(m);
   }
 
   @Override
@@ -83,14 +89,14 @@ public class InfluxDBMetricRepository extends InfluxRepository implements Metric
 
   @Override
   public void addDimensionToBatch(Sha1HashId dimSetId, String name, String value) {
-    List<Dimension> dimensionList = dimensionMap.get(dimSetId);
-    if (dimensionList == null) {
-      dimensionList = new LinkedList<Dimension>();
-      dimensionMap.put(dimSetId, dimensionList);
+    Set<Dimension> dimensionSet = dimensionMap.get(dimSetId);
+    if (dimensionSet == null) {
+      dimensionSet = new TreeSet<Dimension>();
+      dimensionMap.put(dimSetId, dimensionSet);
     }
 
     Dimension d = new Dimension(dimSetId, name, value);
-    dimensionList.add(d);
+    dimensionSet.add(d);
   }
 
   @Override
@@ -106,172 +112,131 @@ public class InfluxDBMetricRepository extends InfluxRepository implements Metric
     try {
       long startTime = System.currentTimeMillis();
       Timer.Context context = flushTimer.time();
-      Map<Sha1HashId, Map<Set<String>, List<Point>>> defMap = getInfluxDBFriendlyMap();
-      Serie[] series = getSeries(defMap);
+      Serie[] series = getSeries();
       this.influxDB.write(this.configuration.getInfluxDBConfiguration().getName(),
-          TimeUnit.SECONDS, series);
+                          TimeUnit.SECONDS, series);
       long endTime = System.currentTimeMillis();
       context.stop();
       logger.debug("Writing measurements, definitions, and dimensions to database took {} seconds",
-          (endTime - startTime) / 1000);
+                   (endTime - startTime) / 1000);
     } catch (Exception e) {
       logger.error("Failed to write measurements to database", e);
     }
     clearBuffers();
   }
 
-  private Serie[] getSeries(Map<Sha1HashId, Map<Set<String>, List<Point>>> defMap) throws
-                                                                                   Exception {
+  private String buildSerieName(Definition definition, Set<Dimension> dimensionList)
+      throws UnsupportedEncodingException {
+
+    logger.debug("Creating serie name");
+
+    StringBuilder serieNameBuilder = new StringBuilder();
+
+    logger.debug("Adding name to serie name: {}", definition.name);
+    serieNameBuilder.append(urlEncodeUTF8(definition.name));
+    serieNameBuilder.append("?");
+
+    logger.debug("Adding tenant_id to serie name: {}", definition.tenantId);
+    serieNameBuilder.append(urlEncodeUTF8(definition.tenantId));
+    serieNameBuilder.append("&");
+
+    logger.debug("Adding region to serie name: {}", definition.region);
+    serieNameBuilder.append(urlEncodeUTF8(definition.region));
+
+    for (Dimension dimension : dimensionList) {
+      serieNameBuilder.append("&");
+      logger.debug("Adding dimension name to serie name: {}", dimension.name);
+      serieNameBuilder.append(urlEncodeUTF8(dimension.name));
+
+      serieNameBuilder.append("=");
+
+      logger.debug("Adding dimension value to serie name: {}", dimension.value);
+      serieNameBuilder.append(urlEncodeUTF8(dimension.value));
+    }
+
+    String serieName = serieNameBuilder.toString();
+    logger.debug("Created serie name: {}", serieName);
+
+    return serieName;
+  }
+
+  private String urlEncodeUTF8(String s) throws UnsupportedEncodingException {
+
+    return URLEncoder.encode(s, "UTF-8");
+  }
+
+  private Serie[] getSeries() throws
+                              Exception {
 
     List<Serie> serieList = new LinkedList<>();
 
-    for (Sha1HashId defId : defMap.keySet()) {
+    for (Sha1HashId defdimsId : this.measurementMap.keySet()) {
 
-      Definition definition = definitionMap.get(defId);
+      DefinitionDimension definitionDimension = this.definitionDimensionMap.get(defdimsId);
+
+      Definition definition = definitionMap.get(definitionDimension.defId);
       if (definition == null) {
-        throw new Exception("Failed to find Definition for defId: " + defId);
+        throw new Exception("Failed to find Definition for defId: " + definitionDimension.defId);
       }
 
-      Map<Set<String>, List<Point>> dimNameSetMap = defMap.get(defId);
-
-      for (Set<String> dimNameSet : dimNameSetMap.keySet()) {
-
-        Builder builder = new Serie.Builder(definition.name);
-        logger.debug("Created serie: {}", definition.name);
-
-        // Add 4 for the tenant id, region, timestamp, and value.
-        String[] colNameStringArry = new String[dimNameSet.size() + 4];
-        logger.debug("Adding column name[0]: tenant_id");
-        colNameStringArry[0] = "tenant_id";
-        logger.debug("Adding column name[1]: region");
-        colNameStringArry[1] = "region";
-        int j = 2;
-        for (String dimName : dimNameSet) {
-          logger.debug("Adding column name[{}]: {}", j, dimName);
-          colNameStringArry[j++] = dimName;
-        }
-        logger.debug("Adding column name[{}]: time", j);
-        colNameStringArry[j++] = "time";
-        logger.debug("Adding column name[{}]: value", j);
-        colNameStringArry[j++] = "value";
-
-        builder.columns(colNameStringArry);
-
-        if (logger.isDebugEnabled()) {
-          logColumnNames(colNameStringArry);
-        }
-
-        List<Point> pointList = dimNameSetMap.get(dimNameSet);
-        if (pointList == null) {
-          throw new Exception("Failed to find point list for dimension set:\n" + dimNameSet);
-        }
-
-        // Add 4 for the tenant id, region, timestamp, and value.
-        int k = 0;
-        for (Point point : pointList) {
-          Object[] colValsObjectArry = new Object[dimNameSet.size() + 4];
-          logger.debug("Adding column value[{}][0]: {}", k, definition.tenantId);
-          colValsObjectArry[0] = definition.tenantId;
-          logger.debug("Adding column value[{}][1]: {}", k, definition.region);
-          colValsObjectArry[1] = definition.region;
-          int l = 2;
-          for (String dimName : dimNameSet) {
-            String dimVal = point.dimValMap.get(dimName);
-            if (dimVal == null) {
-              throw new Exception("Failed to find dimension value for dimension name: " + dimName);
-            }
-            logger.debug("Adding column value[{}][{}]: " + dimVal, k, l);
-            colValsObjectArry[l++] = dimVal;
-          }
-          Date d = measurementTimeStampSimpleDateFormat.parse(point.measurement.timeStamp + " UTC");
-          Long time = d.getTime() / 1000;
-          logger.debug("Adding column value[{}][{}]: {}", k, l, time);
-          colValsObjectArry[l++] = time;
-          logger.debug("Adding column value[{}][{}]: {}", k, l, point.measurement.value);
-          colValsObjectArry[l++] = point.measurement.value;
-          measurementMeter.mark();
-          k++;
-          builder.values(colValsObjectArry);
-        }
-
-        final Serie serie = builder.build();
-
-        if (logger.isDebugEnabled()) {
-          logColValues(serie);
-        }
-
-        logger.debug("Adding serie: {} to serieList", serie.getName());
-        serieList.add(serie);
+      Set<Dimension> dimensionSet;
+      // If there were no dimensions, then "" was used in the hash id and nothing was
+      // added for dimensions.
+      if (definitionDimension.dimId.equals(BLANK_SHA_1_HASH_ID)) {
+        dimensionSet = EMPTY_DIMENSION_TREE_SET;
+      } else {
+        dimensionSet = this.dimensionMap.get(definitionDimension.dimId);
       }
 
+      String serieName = buildSerieName(definition, dimensionSet);
+      Builder builder = new Serie.Builder(serieName);
+      logger.debug("Created serie: {}", serieName);
+
+      String[] colNameStringArry = new String[2];
+
+      colNameStringArry[0] = "time";
+      logger.debug("Added column name[{}]: time", 0);
+
+      colNameStringArry[1] = "value";
+      logger.debug("Added column name[{}]: value", 1);
+
+      builder.columns(colNameStringArry);
+
+      if (logger.isDebugEnabled()) {
+        logColumnNames(colNameStringArry);
+      }
+
+      int i = 0;
+      for (Measurement measurement : this.measurementMap.get(defdimsId)) {
+        Object[] colValsObjArry = new Object[2];
+        Date date = measurementTimeStampSimpleDateFormat.parse(measurement.timeStamp + " UTC");
+        Long time = date.getTime() / 1000;
+        colValsObjArry[0] = time;
+        logger.debug("Added column value[{}][{}]: {}", i, 0, time);
+        colValsObjArry[1] = measurement.value;
+        logger.debug("Added column value[{}][{}]: {}", i, 1, measurement.value);
+        builder.values(colValsObjArry);
+        measurementMeter.mark();
+        i++;
+      }
+
+      final Serie serie = builder.build();
+
+      if (logger.isDebugEnabled()) {
+        logColValues(serie);
+      }
+
+      serieList.add(serie);
+      logger.debug("Added serie: {} to serieList", serie.getName());
     }
 
     return serieList.toArray(new Serie[serieList.size()]);
   }
 
-  /**
-   * Group all measurements with the same dimension names into a list. Generate a map of definition
-   * id's to map of dimension name sets to list of points.
-   */
-  private Map<Sha1HashId, Map<Set<String>, List<Point>>> getInfluxDBFriendlyMap() throws Exception {
-
-    Map<Sha1HashId, Map<Set<String>, List<Point>>> defMap = new HashMap<>();
-
-    for (Measurement measurement : measurementList) {
-
-      DefinitionDimension definitionDimension = definitionDimensionMap.get(measurement.defDimsId);
-      if (definitionDimension == null) {
-        throw new Exception("Failed to find DefinitionDimension for measurement:\n" + measurement);
-      }
-
-      List<Dimension> dimensionList;
-      // Dimensions might not exist for this measurement.  In that
-      // case, the dimId would be the sha-1 hash of "", and the definitionDimension map will not
-      // contain that key.
-      if (definitionDimension.dimId.equals(BLANK_SHA_1_HASH_ID)) {
-        dimensionList = new ArrayList<>();
-      } else {
-        dimensionList = dimensionMap.get(definitionDimension.dimId);
-      }
-      if (dimensionList == null) {
-        throw new Exception("Failed to find Dimensions for measurement:\n" + measurement);
-      }
-
-      Map<Set<String>, List<Point>> dimNameSetMap = defMap.get(definitionDimension.defId);
-      if (dimNameSetMap == null) {
-        dimNameSetMap = new HashMap<Set<String>, List<Point>>();
-        defMap.put(definitionDimension.defId, dimNameSetMap);
-      }
-
-      // create set of dimension names.
-      TreeSet<String> dimNameSet = new TreeSet<>();
-      // create a map from dimension names to values for this measurement.
-      Map<String, String> dimValueMap = new HashMap<>();
-      for (Dimension dimension : dimensionList) {
-        dimNameSet.add(dimension.name);
-        dimValueMap.put(dimension.name, dimension.value);
-      }
-
-      List<Point> pointList = dimNameSetMap.get(dimNameSet);
-      if (pointList == null) {
-        pointList = new LinkedList<Point>();
-        dimNameSetMap.put(dimNameSet, pointList);
-      }
-
-      Point point = new Point();
-      point.measurement = measurement;
-      point.dimValMap = dimValueMap;
-
-      pointList.add(point);
-
-    }
-
-    return defMap;
-  }
 
   private void clearBuffers() {
 
-    this.measurementList.clear();
+    this.measurementMap.clear();
     this.definitionMap.clear();
     this.dimensionMap.clear();
     this.definitionDimensionMap.clear();
@@ -317,7 +282,7 @@ public class InfluxDBMetricRepository extends InfluxRepository implements Metric
     }
   }
 
-  private static final class Dimension {
+  private static final class Dimension implements Comparable<Dimension> {
 
     Sha1HashId dimSetId;
     String name;
@@ -333,6 +298,12 @@ public class InfluxDBMetricRepository extends InfluxRepository implements Metric
     public String toString() {
       return "Dimension{" + "dimSetId=" + dimSetId + ", name='" + name + '\'' + ", " +
              "value='" + value + '\'' + '}';
+    }
+
+    @Override
+    public int compareTo(Dimension o) {
+      int nameCmp = String.CASE_INSENSITIVE_ORDER.compare(name, o.name);
+      return (nameCmp != 0 ? nameCmp : String.CASE_INSENSITIVE_ORDER.compare(value, o.value));
     }
   }
 
@@ -352,17 +323,6 @@ public class InfluxDBMetricRepository extends InfluxRepository implements Metric
     public String toString() {
       return "DefinitionDimension{" + "defDimId=" + defDimId + ", defId=" + defId + ", " +
              "dimId=" + dimId + '}';
-    }
-  }
-
-  private static final class Point {
-
-    Measurement measurement;
-    Map<String, String> dimValMap;
-
-    @Override
-    public String toString() {
-      return "Point{" + "measurement=" + measurement + ", dimValMap=" + dimValMap + '}';
     }
   }
 }
