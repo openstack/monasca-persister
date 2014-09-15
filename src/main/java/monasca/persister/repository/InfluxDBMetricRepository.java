@@ -59,7 +59,7 @@ public final class InfluxDBMetricRepository extends InfluxRepository implements 
   private final SimpleDateFormat measurementTimeSimpleDateFormat = new
       SimpleDateFormat("yyyy-MM-dd HH:mm:ss zzz");
   private static final Sha1HashId BLANK_SHA_1_HASH_ID = new Sha1HashId(DigestUtils.sha(""));
-  private static final Set<Dim> EMPTY_DIM_TREE_SET = new TreeSet();
+  private static final Set<Dim> EMPTY_DIM_TREE_SET = new TreeSet<>();
 
   @Inject
   public InfluxDBMetricRepository(final MonPersisterConfiguration configuration,
