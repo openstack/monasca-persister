@@ -4,3 +4,4 @@ target/
 *.settings/
 debs/
 logs/
+.idea/
