@@ -265,7 +265,7 @@ class MetricPersister(threading.Thread):
             raise
 
 
-def mainService():
+def main_service():
     """Method to use with Openstack service.
     """
 
