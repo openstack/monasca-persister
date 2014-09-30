@@ -123,7 +123,7 @@ class AlarmPersister(threading.Thread):
                                              self.conf.influxdb.database_name)
 
             for message in consumer:
-                LOG.debug(message.message)
+                LOG.debug(message.message.value.decode('utf8'))
 
                 decoded = json.loads(message.message.value)
                 LOG.debug(json.dumps(decoded, sort_keys=True, indent=4))
@@ -202,7 +202,7 @@ class MetricPersister(threading.Thread):
                                              self.conf.influxdb.database_name)
 
             for message in consumer:
-                LOG.debug(message.message.value)
+                LOG.debug(message.message.value.decode('utf8'))
 
                 decoded = json.loads(message.message.value)
                 LOG.debug(json.dumps(decoded, sort_keys=True, indent=4))
@@ -224,7 +224,7 @@ class MetricPersister(threading.Thread):
                     for dimension_name in decoded['metric']['dimensions']:
                         dimensions[dimension_name] = (
                             decoded['metric']['dimensions'][dimension_name])
-                        LOG.debug('dimension %s : %s', dimension_name,
+                        LOG.debug('dimension: %s : %s', dimension_name,
                                   dimensions[dimension_name])
 
                 time_stamp = decoded['metric']['timestamp']
