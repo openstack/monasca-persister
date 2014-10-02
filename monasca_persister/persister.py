@@ -193,7 +193,7 @@ class AlarmPersister(threading.Thread):
                         [time_stamp, '{}', tenant_id.encode('utf8'),
                          alarm_id.encode('utf8'),
                          alarm_definition_id.encode('utf8'),
-                         json.dumps(metrics).encode('utf8'), old_state.encode('utf8'),
+                         json.dumps(metrics, ensure_ascii=False).encode('utf8'), old_state.encode('utf8'),
                          new_state.encode('utf8'),
                          state_change_reason.encode('utf8')]],
                             "name": 'alarm_state_history',
