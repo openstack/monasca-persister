@@ -5,3 +5,4 @@ target/
 debs/
 logs/
 .idea/
+*.pyc

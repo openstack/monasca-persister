@@ -18,6 +18,7 @@
 
 """
 import sys
+
 from persister import main_service
 
 
@@ -27,4 +28,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-
