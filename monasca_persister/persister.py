@@ -123,8 +123,8 @@ class AbstractPersister(threading.Thread):
             if self.__json_body:
                 self.__influxdb_client.write_points(self.__json_body)
                 self.__consumer.commit()
+                self.__json_body = []
             self.__last_flush = datetime.now()
-            self.__json_body = []
 
         try:
 
