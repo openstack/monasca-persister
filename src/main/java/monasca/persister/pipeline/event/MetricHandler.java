@@ -17,19 +17,12 @@
 
 package monasca.persister.pipeline.event;
 
-import static monasca.persister.repository.VerticaMetricsConstants.MAX_COLUMN_LENGTH;
-
-import com.hpcloud.mon.common.model.metric.Metric;
-import com.hpcloud.mon.common.model.metric.MetricEnvelope;
-import monasca.persister.configuration.PipelineConfiguration;
-import monasca.persister.repository.MetricRepository;
-import monasca.persister.repository.Sha1HashId;
-
-import com.codahale.metrics.Counter;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
-import io.dropwizard.setup.Environment;
+import com.codahale.metrics.Counter;
+import com.hpcloud.mon.common.model.metric.Metric;
+import com.hpcloud.mon.common.model.metric.MetricEnvelope;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
@@ -40,6 +33,13 @@ import java.util.Date;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.TreeMap;
+
+import io.dropwizard.setup.Environment;
+import monasca.persister.configuration.PipelineConfiguration;
+import monasca.persister.repository.MetricRepository;
+import monasca.persister.repository.Sha1HashId;
+
+import static monasca.persister.repository.VerticaMetricsConstants.MAX_COLUMN_LENGTH;
 
 public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
 
@@ -59,23 +59,23 @@ public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
   private final Counter definitionDimensionsCounter;
 
   @Inject
-  public MetricHandler(MetricRepository metricRepository, @Assisted PipelineConfiguration configuration,
-      Environment environment, @Assisted("ordinal") int ordinal,
-       @Assisted("batchSize") int batchSize) {
+  public MetricHandler(MetricRepository metricRepository,
+                       @Assisted PipelineConfiguration configuration, Environment environment,
+                       @Assisted("ordinal") int ordinal, @Assisted("batchSize") int batchSize) {
     super(configuration, environment, ordinal, batchSize, MetricHandler.class.getName());
     final String handlerName = String.format("%s[%d]", MetricHandler.class.getName(), ordinal);
     this.verticaMetricRepository = metricRepository;
     this.metricCounter =
         environment.metrics().counter(handlerName + "." + "metrics-added-to-batch-counter");
     this.definitionCounter =
-        environment.metrics().counter(
-            handlerName + "." + "metric-definitions-added-to-batch-counter");
+        environment.metrics()
+            .counter(handlerName + "." + "metric-definitions-added-to-batch-counter");
     this.dimensionCounter =
-        environment.metrics().counter(
-            handlerName + "." + "metric-dimensions-added-to-batch-counter");
+        environment.metrics()
+            .counter(handlerName + "." + "metric-dimensions-added-to-batch-counter");
     this.definitionDimensionsCounter =
-        environment.metrics().counter(
-            handlerName + "." + "metric-definition-dimensions-added-to-batch-counter");
+        environment.metrics()
+            .counter(handlerName + "." + "metric-definition-dimensions-added-to-batch-counter");
 
     this.ordinal = ordinal;
 
@@ -105,78 +105,70 @@ public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
     if (meta.containsKey(TENANT_ID)) {
       tenantId = (String) meta.get(TENANT_ID);
     } else {
-      logger
-          .warn("Failed to find tenantId in message envelope meta data. Metric message may be malformed. Setting tenantId to empty string.");
-      logger.warn("metric: " + metric.toString());
-      logger.warn("meta: " + meta.toString());
+      logger.warn(
+          "Failed to find tenantId in message envelope meta data. Metric message may be malformed. Setting tenantId to empty string.");
+      logger.warn("metric: {}", metric.toString());
+      logger.warn("meta: {}", meta.toString());
     }
 
     String region = "";
     if (meta.containsKey(REGION)) {
       region = (String) meta.get(REGION);
     } else {
-      logger
-          .warn("Failed to find region in message envelope meta data. Metric message may be malformed. Setting region to empty string.");
-      logger.warn("metric: " + metric.toString());
-      logger.warn("meta: " + meta.toString());
+      logger.warn(
+          "Failed to find region in message envelope meta data. Metric message may be malformed. Setting region to empty string.");
+      logger.warn("metric: {}", metric.toString());
+      logger.warn("meta: {}", meta.toString());
     }
 
     // Add the definition to the batch.
-    String definitionIdStringToHash =
-        trunc(metric.getName(), MAX_COLUMN_LENGTH) + trunc(tenantId, MAX_COLUMN_LENGTH)
-            + trunc(region, MAX_COLUMN_LENGTH);
-    byte[] definitionIdSha1Hash = DigestUtils.sha(definitionIdStringToHash);
+    StringBuilder
+        definitionIdStringToHash =
+        new StringBuilder(trunc(metric.getName(), MAX_COLUMN_LENGTH));
+    definitionIdStringToHash.append(trunc(tenantId, MAX_COLUMN_LENGTH));
+    definitionIdStringToHash.append(trunc(region, MAX_COLUMN_LENGTH));
+    byte[] definitionIdSha1Hash = DigestUtils.sha(definitionIdStringToHash.toString());
     Sha1HashId definitionSha1HashId = new Sha1HashId((definitionIdSha1Hash));
-    verticaMetricRepository.addDefinitionToBatch(definitionSha1HashId,
-        trunc(metric.getName(), MAX_COLUMN_LENGTH), trunc(tenantId, MAX_COLUMN_LENGTH),
-        trunc(region, MAX_COLUMN_LENGTH));
+    verticaMetricRepository
+        .addDefinitionToBatch(definitionSha1HashId, trunc(metric.getName(), MAX_COLUMN_LENGTH),
+                              trunc(tenantId, MAX_COLUMN_LENGTH), trunc(region, MAX_COLUMN_LENGTH));
     definitionCounter.inc();
 
     // Calculate dimensions sha1 hash id.
-    String dimensionIdStringToHash = "";
-    if (metric.getDimensions() != null) {
-      // Sort the dimensions on name and value.
-      TreeMap<String, String> dimensionTreeMap = new TreeMap<>(metric.getDimensions());
-      for (String dimensionName : dimensionTreeMap.keySet()) {
-        if (dimensionName != null && !dimensionName.isEmpty()) {
-          String dimensionValue = dimensionTreeMap.get(dimensionName);
-          if (dimensionValue != null && !dimensionValue.isEmpty()) {
-            dimensionIdStringToHash +=
-                trunc(dimensionName, MAX_COLUMN_LENGTH) + trunc(dimensionValue, MAX_COLUMN_LENGTH);
-          }
-        }
-      }
+    StringBuilder dimensionIdStringToHash = new StringBuilder();
+    Map<String, String> preppedDimMap = prepDimensions(metric.getDimensions());
+    for (Map.Entry<String, String> entry : preppedDimMap.entrySet()) {
+      dimensionIdStringToHash.append(entry.getKey());
+      dimensionIdStringToHash.append(entry.getValue());
     }
-
-    byte[] dimensionIdSha1Hash = DigestUtils.sha(dimensionIdStringToHash);
+    byte[] dimensionIdSha1Hash = DigestUtils.sha(dimensionIdStringToHash.toString());
     Sha1HashId dimensionsSha1HashId = new Sha1HashId(dimensionIdSha1Hash);
 
     // Add the dimension name/values to the batch.
-    if (metric.getDimensions() != null) {
-      TreeMap<String, String> dimensionTreeMap = new TreeMap<>(metric.getDimensions());
-      for (String dimensionName : dimensionTreeMap.keySet()) {
-        if (dimensionName != null && !dimensionName.isEmpty()) {
-          String dimensionValue = dimensionTreeMap.get(dimensionName);
-          if (dimensionValue != null && !dimensionValue.isEmpty()) {
-            verticaMetricRepository.addDimensionToBatch(dimensionsSha1HashId,
-                trunc(dimensionName, MAX_COLUMN_LENGTH), trunc(dimensionValue, MAX_COLUMN_LENGTH));
-            dimensionCounter.inc();
-          }
-        }
-      }
+    for (Map.Entry<String, String> entry : preppedDimMap.entrySet()) {
+      verticaMetricRepository
+          .addDimensionToBatch(dimensionsSha1HashId, entry.getKey(), entry.getValue());
+      dimensionCounter.inc();
     }
 
     // Add the definition dimensions to the batch.
-    String definitionDimensionsIdStringToHash =
-        definitionSha1HashId.toHexString() + dimensionsSha1HashId.toHexString();
-    byte[] definitionDimensionsIdSha1Hash = DigestUtils.sha(definitionDimensionsIdStringToHash);
+    StringBuilder
+        definitionDimensionsIdStringToHash =
+        new StringBuilder(definitionSha1HashId.toHexString());
+    definitionDimensionsIdStringToHash.append(dimensionsSha1HashId.toHexString());
+    byte[]
+        definitionDimensionsIdSha1Hash =
+        DigestUtils.sha(definitionDimensionsIdStringToHash.toString());
     Sha1HashId definitionDimensionsSha1HashId = new Sha1HashId(definitionDimensionsIdSha1Hash);
-    verticaMetricRepository.addDefinitionDimensionToBatch(definitionDimensionsSha1HashId,
-        definitionSha1HashId, dimensionsSha1HashId);
+    verticaMetricRepository
+        .addDefinitionDimensionToBatch(definitionDimensionsSha1HashId, definitionSha1HashId,
+                                       dimensionsSha1HashId);
     definitionDimensionsCounter.inc();
 
     // Add the measurements to the batch.
-    if (metric.getTimeValues() != null) {
+    if (metric.getTimeValues() != null)
+
+    {
       for (double[] timeValuePairs : metric.getTimeValues()) {
         String timeStamp = simpleDateFormat.format(new Date((long) (timeValuePairs[0] * 1000)));
         double value = timeValuePairs[1];
@@ -184,19 +176,40 @@ public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
         metricCounter.inc();
         metricCount++;
       }
-    } else {
+    } else
+
+    {
       String timeStamp = simpleDateFormat.format(new Date(metric.getTimestamp() * 1000));
       double value = metric.getValue();
       verticaMetricRepository.addMetricToBatch(definitionDimensionsSha1HashId, timeStamp, value);
       metricCounter.inc();
       metricCount++;
     }
+
     return metricCount;
   }
 
   @Override
   public void flushRepository() {
     verticaMetricRepository.flush();
+  }
+
+
+  private Map<String, String> prepDimensions(Map<String, String> dimMap) {
+
+    Map<String, String> newDimMap = new TreeMap<>();
+
+    if (dimMap != null) {
+      for (String dimName : dimMap.keySet()) {
+        if (dimName != null && !dimName.isEmpty()) {
+          String dimValue = dimMap.get(dimName);
+          if (dimValue != null && !dimValue.isEmpty()) {
+            newDimMap.put(trunc(dimName, MAX_COLUMN_LENGTH), trunc(dimValue, MAX_COLUMN_LENGTH));
+          }
+        }
+      }
+    }
+    return newDimMap;
   }
 
   private String trunc(String s, int l) {
@@ -207,8 +220,8 @@ public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
       return s;
     } else {
       String r = s.substring(0, l);
-      logger.warn(
-          "Input string exceeded max column length. Truncating input string {} to {} chars", s, l);
+      logger.warn("Input string exceeded max column length. Truncating input string {} to {} chars",
+                  s, l);
       logger.warn("Resulting string {}", r);
       return r;
     }
