@@ -100,18 +100,17 @@ class Persister(os_service.Service):
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractPersister(threading.Thread):
-
     def __init__(self, consumer, influxdb_client, max_wait_time_secs,
                  batch_size):
         super(AbstractPersister, self).__init__()
 
-        self.__consumer = consumer
-        self.__influxdb_client = influxdb_client
-        self.__max_wait_time_secs = max_wait_time_secs
-        self.__batch_size = batch_size
+        self._consumer = consumer
+        self._influxdb_client = influxdb_client
+        self._max_wait_time_secs = max_wait_time_secs
+        self._batch_size = batch_size
 
-        self.__json_body = []
-        self.__last_flush = datetime.now()
+        self._json_body = []
+        self._last_flush = datetime.now()
 
     @abc.abstractmethod
     def process_message(self, message):
@@ -120,23 +119,23 @@ class AbstractPersister(threading.Thread):
     def run(self):
 
         def flush(self):
-            if self.__json_body:
-                self.__influxdb_client.write_points(self.__json_body)
-                self.__consumer.commit()
-                self.__json_body = []
-            self.__last_flush = datetime.now()
+            if self._json_body:
+                self._influxdb_client.write_points(self._json_body)
+                self._consumer.commit()
+                self._json_body = []
+            self._last_flush = datetime.now()
 
         try:
 
-            while (True):
+            while True:
 
-                delta_time = datetime.now() - self.__last_flush
-                if (delta_time.seconds > self.__max_wait_time_secs):
+                delta_time = datetime.now() - self._last_flush
+                if delta_time.seconds > self._max_wait_time_secs:
                     flush(self)
 
-                for message in self.__consumer:
-                    self.__json_body.append(self.process_message(message))
-                    if len(self.__json_body) % self.__batch_size == 0:
+                for message in self._consumer:
+                    self._json_body.append(self.process_message(message))
+                    if len(self._json_body) % self._batch_size == 0:
                         flush(self)
 
         except Exception:
@@ -172,39 +171,41 @@ class AlarmPersister(AbstractPersister):
         decoded = json.loads(message.message.value)
         LOG.debug(json.dumps(decoded, sort_keys=True, indent=4))
 
-        actions_enabled = decoded['alarm-transitioned']['actionsEnabled']
+        alarm_transitioned = decoded['alarm-transitioned']
+
+        actions_enabled = alarm_transitioned['actionsEnabled']
         LOG.debug('actions enabled: %s', actions_enabled)
 
-        alarm_description = decoded['alarm-transitioned']['alarmDescription']
+        alarm_description = alarm_transitioned['alarmDescription']
         LOG.debug('alarm description: %s', alarm_description)
 
-        alarm_id = decoded['alarm-transitioned']['alarmId']
+        alarm_id = alarm_transitioned['alarmId']
         LOG.debug('alarm id: %s', alarm_id)
 
-        alarm_definition_id = decoded['alarm-transitioned'][
+        alarm_definition_id = alarm_transitioned[
             'alarmDefinitionId']
         LOG.debug('alarm definition id: %s', alarm_definition_id)
 
-        metrics = decoded['alarm-transitioned']['metrics']
+        metrics = alarm_transitioned['metrics']
         LOG.debug('metrics: %s', metrics)
 
-        alarm_name = decoded['alarm-transitioned']['alarmName']
+        alarm_name = alarm_transitioned['alarmName']
         LOG.debug('alarm name: %s', alarm_name)
 
-        new_state = decoded['alarm-transitioned']['newState']
+        new_state = alarm_transitioned['newState']
         LOG.debug('new state: %s', new_state)
 
-        old_state = decoded['alarm-transitioned']['oldState']
+        old_state = alarm_transitioned['oldState']
         LOG.debug('old state: %s', old_state)
 
-        state_change_reason = decoded['alarm-transitioned'][
+        state_change_reason = alarm_transitioned[
             'stateChangeReason']
         LOG.debug('state change reason: %s', state_change_reason)
 
-        tenant_id = decoded['alarm-transitioned']['tenantId']
+        tenant_id = alarm_transitioned['tenantId']
         LOG.debug('tenant id: %s', tenant_id)
 
-        time_stamp = decoded['alarm-transitioned']['timestamp']
+        time_stamp = alarm_transitioned['timestamp']
         LOG.debug('time stamp: %s', time_stamp)
 
         data = {"points": [[time_stamp, '{}', tenant_id.encode('utf8'),
@@ -252,7 +253,9 @@ class MetricPersister(AbstractPersister):
         decoded = json.loads(message.message.value)
         LOG.debug(json.dumps(decoded, sort_keys=True, indent=4))
 
-        metric_name = decoded['metric']['name']
+        metric = decoded['metric']
+
+        metric_name = metric['name']
         LOG.debug('name: %s', metric_name)
 
         creation_time = decoded['creation_time']
@@ -265,17 +268,17 @@ class MetricPersister(AbstractPersister):
         LOG.debug('tenant id: %s', tenant_id)
 
         dimensions = {}
-        if 'dimensions' in decoded['metric']:
-            for dimension_name in decoded['metric']['dimensions']:
+        if 'dimensions' in metric:
+            for dimension_name in metric['dimensions']:
                 dimensions[dimension_name] = (
-                    decoded['metric']['dimensions'][dimension_name])
+                    metric['dimensions'][dimension_name])
                 LOG.debug('dimension: %s : %s', dimension_name,
                           dimensions[dimension_name])
 
-        time_stamp = decoded['metric']['timestamp']
+        time_stamp = metric['timestamp']
         LOG.debug('timestamp %s', time_stamp)
 
-        value = decoded['metric']['value']
+        value = metric['value']
         LOG.debug('value: %s', value)
 
         url_encoded_serie_name = (
