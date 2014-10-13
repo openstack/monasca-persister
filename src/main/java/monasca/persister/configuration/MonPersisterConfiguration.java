@@ -22,8 +22,8 @@ package monasca.persister.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import com.hpcloud.configuration.DatabaseConfiguration;
-import com.hpcloud.configuration.InfluxDbConfiguration;
+import monasca.common.configuration.DatabaseConfiguration;
+import monasca.common.configuration.InfluxDbConfiguration;
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
 

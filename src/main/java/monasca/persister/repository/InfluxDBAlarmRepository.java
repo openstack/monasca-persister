@@ -33,7 +33,7 @@ import com.codahale.metrics.Timer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.google.inject.Inject;
-import com.hpcloud.mon.common.event.AlarmStateTransitionedEvent;
+import monasca.common.model.event.AlarmStateTransitionedEvent;
 
 public class InfluxDBAlarmRepository extends InfluxRepository implements AlarmRepository {
   private static final Logger logger = LoggerFactory.getLogger(InfluxDBAlarmRepository.class);

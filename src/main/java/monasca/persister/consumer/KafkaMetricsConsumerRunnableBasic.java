@@ -17,7 +17,7 @@
 
 package monasca.persister.consumer;
 
-import com.hpcloud.mon.common.model.metric.MetricEnvelope;
+import monasca.common.model.metric.MetricEnvelope;
 import monasca.persister.pipeline.MetricPipeline;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;

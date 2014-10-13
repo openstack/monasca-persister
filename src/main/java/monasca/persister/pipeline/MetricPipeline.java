@@ -17,7 +17,7 @@
 
 package monasca.persister.pipeline;
 
-import com.hpcloud.mon.common.model.metric.MetricEnvelope;
+import monasca.common.model.metric.MetricEnvelope;
 import monasca.persister.pipeline.event.MetricHandler;
 
 import com.google.inject.Inject;

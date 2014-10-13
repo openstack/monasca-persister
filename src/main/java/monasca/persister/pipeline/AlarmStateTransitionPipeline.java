@@ -17,7 +17,7 @@
 
 package monasca.persister.pipeline;
 
-import com.hpcloud.mon.common.event.AlarmStateTransitionedEvent;
+import monasca.common.model.event.AlarmStateTransitionedEvent;
 import monasca.persister.pipeline.event.AlarmStateTransitionedEventHandler;
 
 import com.google.inject.Inject;

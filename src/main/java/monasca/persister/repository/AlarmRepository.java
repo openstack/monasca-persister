@@ -17,7 +17,7 @@
 
 package monasca.persister.repository;
 
-import com.hpcloud.mon.common.event.AlarmStateTransitionedEvent;
+import monasca.common.model.event.AlarmStateTransitionedEvent;
 
 public interface AlarmRepository {
 

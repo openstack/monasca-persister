@@ -21,8 +21,8 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
 import com.codahale.metrics.Counter;
-import com.hpcloud.mon.common.model.metric.Metric;
-import com.hpcloud.mon.common.model.metric.MetricEnvelope;
+import monasca.common.model.metric.Metric;
+import monasca.common.model.metric.MetricEnvelope;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
