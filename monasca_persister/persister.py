@@ -83,8 +83,9 @@ def main():
 
         alarm_persister = AlarmPersister(cfg.CONF)
         alarm_persister.start()
-    except Exception:
+    except Exception as ex:
         LOG.exception('Persister encountered fatal error. Shutting down.')
+        sys.exit(ex)
 
 
 class Persister(os_service.Service):
