@@ -83,20 +83,42 @@ def main():
 
         alarm_persister = AlarmPersister(cfg.CONF)
         alarm_persister.start()
+
     except Exception as ex:
         LOG.exception('Persister encountered fatal error. Shutting down.')
         sys.exit(ex)
+    except:
+        LOG.exception('Persister encountered unexpected fatal error. Shutting down.')
+        LOG.error("Unexpected error type:", sys.exc_info()[0])
+        LOG.error("Unexpected error value:", sys.exc_info()[1])
+        LOG.error("Unexpected error traceback:", sys.exc_info()[2])
+        sys.exit(1)
 
 
 class Persister(os_service.Service):
     """Class used with Openstack service.
     """
 
-    def __init__(self, threads=1):
-        super(Persister, self).__init__(threads)
+    try:
+        def __init__(self, threads=1):
+            super(Persister, self).__init__(threads)
 
-    def start(self):
-        main()
+        def start(self):
+            main()
+
+        LOG.info("**********************************************************")
+        LOG.info("Persister started successfully")
+        LOG.info("**********************************************************")
+
+    except Exception as ex:
+        LOG.exception('Persister encountered fatal error. Shutting down.')
+        sys.exit(ex)
+    except:
+        LOG.exception('Persister encountered unexpected fatal error. Shutting down.')
+        LOG.error("Unexpected error type:", sys.exc_info()[0])
+        LOG.error("Unexpected error value:", sys.exc_info()[1])
+        LOG.error("Unexpected error traceback:", sys.exc_info()[2])
+        sys.exit(1)
 
 
 @six.add_metaclass(abc.ABCMeta)
