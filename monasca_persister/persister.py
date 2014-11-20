@@ -45,13 +45,15 @@ import service
 
 LOG = log.getLogger(__name__)
 
-kafka_opts = [cfg.StrOpt('uri'), cfg.StrOpt('alarm_history_group_id'),
+kafka_opts = [cfg.StrOpt('uri'),
+              cfg.StrOpt('alarm_history_group_id'),
               cfg.StrOpt('alarm_history_topic'),
               cfg.StrOpt('alarm_history_consumer_id'),
               cfg.StrOpt('alarm_history_client_id'),
               cfg.IntOpt('alarm_batch_size'),
               cfg.IntOpt('alarm_max_wait_time_seconds'),
-              cfg.StrOpt('metrics_group_id'), cfg.StrOpt('metrics_topic'),
+              cfg.StrOpt('metrics_group_id'),
+              cfg.StrOpt('metrics_topic'),
               cfg.StrOpt('metrics_consumer_id'),
               cfg.StrOpt('metrics_client_id'),
               cfg.IntOpt('metrics_batch_size'),
@@ -62,8 +64,10 @@ kafka_group = cfg.OptGroup(name='kafka', title='kafka')
 cfg.CONF.register_group(kafka_group)
 cfg.CONF.register_opts(kafka_opts, kafka_group)
 
-influxdb_opts = [cfg.StrOpt('database_name'), cfg.StrOpt('ip_address'),
-                 cfg.StrOpt('port'), cfg.StrOpt('user'),
+influxdb_opts = [cfg.StrOpt('database_name'),
+                 cfg.StrOpt('ip_address'),
+                 cfg.StrOpt('port'),
+                 cfg.StrOpt('user'),
                  cfg.StrOpt('password')]
 
 influxdb_group = cfg.OptGroup(name='influxdb', title='influxdb')
@@ -74,7 +78,7 @@ cfg.CONF(sys.argv[1:])
 
 log_levels = (cfg.CONF.default_log_levels)
 cfg.set_defaults(log.log_opts, default_log_levels=log_levels)
-log.setup("monasca-perister")
+log.setup("monasca-persister")
 
 
 def main():
@@ -84,6 +88,10 @@ def main():
 
         metric_persister.start()
         alarm_persister.start()
+
+        LOG.info("**********************************************************")
+        LOG.info("Persister started successfully")
+        LOG.info("**********************************************************")
 
 
 class Persister(os_service.Service):
@@ -99,11 +107,7 @@ class Persister(os_service.Service):
 
             main()
 
-            LOG.info("**********************************************************")
-            LOG.info("Persister started successfully")
-            LOG.info("**********************************************************")
-
-        except Exception:
+        except:
             LOG.exception('Persister encountered fatal error. Shutting down.')
             os._exit(1)
 
@@ -151,7 +155,7 @@ class AbstractPersister(threading.Thread):
                     if len(self._json_body) % self._batch_size == 0:
                         flush(self)
 
-        except Exception:
+        except:
             LOG.exception(
                 'Persister encountered fatal exception processing messages. Shutting down all threads and exiting')
             os._exit(1)
