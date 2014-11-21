@@ -128,7 +128,9 @@ class Persister(os_service.Service):
 @six.add_metaclass(abc.ABCMeta)
 class AbstractPersister(threading.Thread):
 
-    def __init__(self, consumer, influxdb_client, max_wait_time_secs,
+    def __init__(self, consumer,
+                 influxdb_client,
+                 max_wait_time_secs,
                  batch_size):
 
         super(AbstractPersister, self).__init__()
@@ -145,6 +147,10 @@ class AbstractPersister(threading.Thread):
     def process_message(self, message):
         pass
 
+    @abc.abstractmethod
+    def get_topic_name(self):
+        pass
+
     def run(self):
 
         def flush(self):
@@ -152,6 +158,7 @@ class AbstractPersister(threading.Thread):
             if self._json_body:
                 self._influxdb_client.write_points(self._json_body)
                 self._consumer.commit()
+                LOG.info("sent {} messages to '{}' topic".format(len(self._json_body), self.get_topic_name()))
                 self._json_body = []
             self._last_flush = datetime.now()
 
@@ -165,7 +172,7 @@ class AbstractPersister(threading.Thread):
 
                 for message in self._consumer:
                     self._json_body.append(self.process_message(message))
-                    if len(self._json_body) % self._batch_size == 0:
+                    if len(self._json_body) >= self._batch_size:
                         flush(self)
 
         except:
@@ -179,6 +186,8 @@ class AlarmPersister(AbstractPersister):
     """
 
     def __init__(self, conf):
+
+        self._conf = conf
 
         kafka = KafkaClient(conf.kafka.uri)
         consumer = SimpleConsumer(kafka, conf.kafka.alarm_history_group_id,
@@ -196,6 +205,9 @@ class AlarmPersister(AbstractPersister):
 
         super(AlarmPersister, self).__init__(consumer, influxdb_client,
                                              max_wait_time_secs, batch_size)
+
+    def get_topic_name(self):
+        return self._conf.kafka.alarm_history_topic
 
     def process_message(self, message):
 
@@ -241,19 +253,28 @@ class AlarmPersister(AbstractPersister):
         time_stamp = alarm_transitioned['timestamp']
         LOG.debug('time stamp: %s', time_stamp)
 
-        data = {"points": [[time_stamp, '{}', tenant_id.encode('utf8'),
+        data = {"points": [[time_stamp,
+                            '{}',
+                            tenant_id.encode('utf8'),
                             alarm_id.encode('utf8'),
                             alarm_definition_id.encode('utf8'),
-                            json.dumps(metrics, ensure_ascii=False).encode(
-                                'utf8'), old_state.encode('utf8'),
+                            json.dumps(metrics, ensure_ascii=False).encode('utf8'),
+                            old_state.encode('utf8'),
                             new_state.encode('utf8'),
                             state_change_reason.encode('utf8')]],
                 "name": 'alarm_state_history',
-                "columns": ["time", "reason_data", "tenant_id", "alarm_id",
-                            "alarm_definition_id", "metrics", "old_state",
-                            "new_state", "reason"]}
+                "columns": ["time",
+                            "reason_data",
+                            "tenant_id",
+                            "alarm_id",
+                            "alarm_definition_id",
+                            "metrics",
+                            "old_state",
+                            "new_state",
+                            "reason"]}
 
         LOG.debug(data)
+
         return data
 
 
@@ -262,6 +283,8 @@ class MetricPersister(AbstractPersister):
     """
 
     def __init__(self, conf):
+
+        self._conf = conf
 
         kafka = KafkaClient(conf.kafka.uri)
         consumer = SimpleConsumer(kafka, conf.kafka.metrics_group_id,
@@ -278,6 +301,9 @@ class MetricPersister(AbstractPersister):
         batch_size = conf.kafka.metrics_batch_size
         super(MetricPersister, self).__init__(consumer, influxdb_client,
                                               max_wait_time_secs, batch_size)
+
+    def get_topic_name(self):
+        return self._conf.kafka.metrics_topic
 
     def process_message(self, message):
 
@@ -328,8 +354,11 @@ class MetricPersister(AbstractPersister):
 
         LOG.debug("url_encoded_serie_name: %s", url_encoded_serie_name)
 
-        data = {"points": [[value, time_stamp]],
-                "name": url_encoded_serie_name, "columns": ["value", "time"]}
+        data = {"points": [[value,
+                            time_stamp]],
+                "name": url_encoded_serie_name,
+                "columns": ["value",
+                            "time"]}
 
         LOG.debug(data)
 
