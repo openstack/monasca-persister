@@ -185,7 +185,7 @@ class AbstractPersister(threading.Thread):
         if self._json_body:
             self._influxdb_client.write_points(self._json_body)
             self._consumer.commit()
-            LOG.info("processed {} messages from '{}' topic".format(
+            LOG.info("processed {} messages from topic '{}'".format(
                 len(self._json_body), self._kafka_topic))
             self._json_body = []
         self._last_flush = datetime.now()
