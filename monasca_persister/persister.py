@@ -14,14 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-""" Persister
-    The Persister reads metrics and alarms from Kafka and then stores them
-    in InfluxDB.
+"""Persister Module
 
-    Start the perister as stand-alone process by running 'persister.py
-    --config-file <config file>'
+   The Persister reads metrics and alarms from Kafka and then stores them
+   in InfluxDB.
 
-    Also able to use Openstack service to start the persister.
+   Start the perister as stand-alone process by running 'persister.py
+   --config-file <config file>'
+
+   Also able to use Openstack service to start the persister.
+
 """
 
 import abc
@@ -45,24 +47,30 @@ import service
 
 LOG = log.getLogger(__name__)
 
-kafka_opts = [cfg.StrOpt('uri'),
-              cfg.StrOpt('alarm_history_group_id'),
-              cfg.StrOpt('alarm_history_topic'),
-              cfg.StrOpt('alarm_history_consumer_id'),
-              cfg.StrOpt('alarm_history_client_id'),
-              cfg.IntOpt('alarm_batch_size'),
-              cfg.IntOpt('alarm_max_wait_time_seconds'),
-              cfg.StrOpt('metrics_group_id'),
-              cfg.StrOpt('metrics_topic'),
-              cfg.StrOpt('metrics_consumer_id'),
-              cfg.StrOpt('metrics_client_id'),
-              cfg.IntOpt('metrics_batch_size'),
-              cfg.IntOpt('metrics_max_wait_time_seconds')]
+kafka_metrics_opts = [cfg.StrOpt('uri'),
+                      cfg.StrOpt('group_id'),
+                      cfg.StrOpt('topic'),
+                      cfg.StrOpt('consumer_id'),
+                      cfg.StrOpt('client_id'),
+                      cfg.IntOpt('batch_size'),
+                      cfg.IntOpt('max_wait_time_seconds')]
 
-kafka_group = cfg.OptGroup(name='kafka', title='kafka')
+kafka_alarm_history_opts = [cfg.StrOpt('uri'),
+                            cfg.StrOpt('group_id'),
+                            cfg.StrOpt('topic'),
+                            cfg.StrOpt('consumer_id'),
+                            cfg.StrOpt('client_id'),
+                            cfg.IntOpt('batch_size'),
+                            cfg.IntOpt('max_wait_time_seconds')]
 
-cfg.CONF.register_group(kafka_group)
-cfg.CONF.register_opts(kafka_opts, kafka_group)
+kafka_metrics_group = cfg.OptGroup(name='kafka_metrics', title='kafka_metrics')
+kafka_alarm_history_group = cfg.OptGroup(name='kafka_alarm_history',
+                                         title='kafka_alarm_history')
+
+cfg.CONF.register_group(kafka_metrics_group)
+cfg.CONF.register_group(kafka_alarm_history_group)
+cfg.CONF.register_opts(kafka_metrics_opts, kafka_metrics_group)
+cfg.CONF.register_opts(kafka_alarm_history_opts, kafka_alarm_history_group)
 
 influxdb_opts = [cfg.StrOpt('database_name'),
                  cfg.StrOpt('ip_address'),
@@ -83,28 +91,32 @@ log.setup("monasca-persister")
 
 def main():
 
-        metric_persister = MetricPersister(cfg.CONF)
-        alarm_persister = AlarmPersister(cfg.CONF)
+        metric_persister = MetricPersister(cfg.CONF.kafka_metrics,
+                                           cfg.CONF.influxdb)
+        alarm_persister = AlarmPersister(cfg.CONF.kafka_alarm_history,
+                                         cfg.CONF.influxdb)
 
         metric_persister.start()
         alarm_persister.start()
 
-        LOG.info('   _____                                                           ')
-        LOG.info('  /     \   ____   ____ _____    ______ ____ _____                 ')
-        LOG.info(' /  \ /  \ /  _ \ /    \\__  \  /  ___// ___\\__  \\               ')
-        LOG.info('/    Y    (  <_> )   |  \/ __ \_\___ \\  \___ / __ \_              ')
-        LOG.info('\____|__  /\____/|___|  (____  /____  >\___  >____  /              ')
-        LOG.info('        \/            \/     \/     \/     \/     \/               ')
-        LOG.info('__________                    .__          __                      ')
-        LOG.info('\______   \ ___________  _____|__| _______/  |_  ___________       ')
-        LOG.info(' |     ___// __ \_  __ \/  ___/  |/  ___/\   __\/ __ \_  __ \\     ')
-        LOG.info(' |    |   \  ___/|  | \/\___ \|  |\___ \  |  | \  ___/|  | \/      ')
-        LOG.info(' |____|    \___  >__|  /____  >__/____  > |__|  \___  >__|         ')
-        LOG.info('               \/           \/        \/            \/             ')
-        LOG.info('                                                                   ')
-        LOG.info('*******************************************************************')
-        LOG.info('Monasca Persister started successfully                             ')
-        LOG.info('*******************************************************************')
+        LOG.info('''
+
+               _____
+              /     \   ____   ____ _____    ______ ____ _____
+             /  \ /  \ /  _ \ /    \\\__  \  /  ___// ___\\\__  \\
+            /    Y    (  <_> )   |  \/ __ \_\___ \\  \___ / __  \\_
+            \____|__  /\____/|___|  (____  /____  >\___  >____  /
+                    \/            \/     \/     \/     \/     \/
+            __________                    .__          __
+            \______   \ ___________  _____|__| _______/  |_  ___________
+             |     ___// __ \_  __ \/  ___/  |/  ___/\   __\/ __ \_  __ \\
+             |    |   \  ___/|  | \/\___ \|  |\___ \  |  | \  ___/|  | \/
+             |____|    \___  >__|  /____  >__/____  > |__|  \___  >__|
+                           \/           \/        \/            \/
+
+        ''')
+
+        LOG.info('Monasca Persister started successfully!')
 
 
 class Persister(os_service.Service):
@@ -127,18 +139,39 @@ class Persister(os_service.Service):
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractPersister(threading.Thread):
-
-    def __init__(self, consumer,
-                 influxdb_client,
-                 max_wait_time_secs,
-                 batch_size):
+    def __init__(self, kafka_conf, influxdb_conf):
 
         super(AbstractPersister, self).__init__()
 
-        self._consumer = consumer
-        self._influxdb_client = influxdb_client
-        self._max_wait_time_secs = max_wait_time_secs
-        self._batch_size = batch_size
+        kafka = KafkaClient(kafka_conf.uri)
+        self._consumer = SimpleConsumer(kafka,
+                                        kafka_conf.group_id,
+                                        kafka_conf.topic,
+                                        # Set to true even though we actually do
+                                        # the commits manually. Needed to
+                                        # initialize
+                                        # offsets correctly.
+                                        auto_commit=True,
+                                        # Make these values None so that the
+                                        # manual commit will do the actual
+                                        # commit.
+                                        # Needed so that offsets are initialized
+                                        # correctly. If not done, then restarts
+                                        # will reread messages from beginning of
+                                        # the queue.
+                                        auto_commit_every_n=None,
+                                        auto_commit_every_t=None,
+                                        iter_timeout=1)
+
+        self._influxdb_client = InfluxDBClient(influxdb_conf.ip_address,
+                                               influxdb_conf.port,
+                                               influxdb_conf.user,
+                                               influxdb_conf.password,
+                                               influxdb_conf.database_name)
+
+        self._max_wait_time_secs = kafka_conf.max_wait_time_seconds
+        self._batch_size = kafka_conf.batch_size
+        self._kafka_topic = kafka_conf.topic
 
         self._json_body = []
         self._last_flush = datetime.now()
@@ -147,20 +180,17 @@ class AbstractPersister(threading.Thread):
     def process_message(self, message):
         pass
 
-    @abc.abstractmethod
-    def get_topic_name(self):
-        pass
+    def _flush(self):
+
+        if self._json_body:
+            self._influxdb_client.write_points(self._json_body)
+            self._consumer.commit()
+            LOG.info("processed {} messages from '{}' topic".format(
+                len(self._json_body), self._kafka_topic))
+            self._json_body = []
+        self._last_flush = datetime.now()
 
     def run(self):
-
-        def flush(self):
-
-            if self._json_body:
-                self._influxdb_client.write_points(self._json_body)
-                self._consumer.commit()
-                LOG.info("sent {} messages to '{}' topic".format(len(self._json_body), self.get_topic_name()))
-                self._json_body = []
-            self._last_flush = datetime.now()
 
         try:
 
@@ -168,16 +198,21 @@ class AbstractPersister(threading.Thread):
 
                 delta_time = datetime.now() - self._last_flush
                 if delta_time.seconds > self._max_wait_time_secs:
-                    flush(self)
+                    self._flush()
 
                 for message in self._consumer:
-                    self._json_body.append(self.process_message(message))
+                    try:
+                        self._json_body.append(self.process_message(message))
+                    except Exception:
+                        LOG.exception('Error processing message. Message is '
+                                      'being dropped. {}'.format(message))
                     if len(self._json_body) >= self._batch_size:
-                        flush(self)
+                        self._flush()
 
         except:
             LOG.exception(
-                'Persister encountered fatal exception processing messages. Shutting down all threads and exiting')
+                'Persister encountered fatal exception processing messages. '
+                'Shutting down all threads and exiting')
             os._exit(1)
 
 
@@ -185,29 +220,9 @@ class AlarmPersister(AbstractPersister):
     """Class for persisting alarms.
     """
 
-    def __init__(self, conf):
+    def __init__(self, kafka_conf, influxdb_conf):
 
-        self._conf = conf
-
-        kafka = KafkaClient(conf.kafka.uri)
-        consumer = SimpleConsumer(kafka, conf.kafka.alarm_history_group_id,
-                                  conf.kafka.alarm_history_topic,
-                                  auto_commit=False, iter_timeout=1)
-
-        influxdb_client = InfluxDBClient(conf.influxdb.ip_address,
-                                         conf.influxdb.port,
-                                         conf.influxdb.user,
-                                         conf.influxdb.password,
-                                         conf.influxdb.database_name)
-
-        max_wait_time_secs = conf.kafka.alarm_max_wait_time_seconds
-        batch_size = conf.kafka.alarm_batch_size
-
-        super(AlarmPersister, self).__init__(consumer, influxdb_client,
-                                             max_wait_time_secs, batch_size)
-
-    def get_topic_name(self):
-        return self._conf.kafka.alarm_history_topic
+        super(AlarmPersister, self).__init__(kafka_conf, influxdb_conf)
 
     def process_message(self, message):
 
@@ -258,7 +273,8 @@ class AlarmPersister(AbstractPersister):
                             tenant_id.encode('utf8'),
                             alarm_id.encode('utf8'),
                             alarm_definition_id.encode('utf8'),
-                            json.dumps(metrics, ensure_ascii=False).encode('utf8'),
+                            json.dumps(metrics, ensure_ascii=False).encode(
+                                'utf8'),
                             old_state.encode('utf8'),
                             new_state.encode('utf8'),
                             state_change_reason.encode('utf8')]],
@@ -282,28 +298,9 @@ class MetricPersister(AbstractPersister):
     """Class for persisting metrics.
     """
 
-    def __init__(self, conf):
+    def __init__(self, kafka_conf, influxdb_conf):
 
-        self._conf = conf
-
-        kafka = KafkaClient(conf.kafka.uri)
-        consumer = SimpleConsumer(kafka, conf.kafka.metrics_group_id,
-                                  conf.kafka.metrics_topic, auto_commit=False,
-                                  iter_timeout=1)
-
-        influxdb_client = InfluxDBClient(conf.influxdb.ip_address,
-                                         conf.influxdb.port,
-                                         conf.influxdb.user,
-                                         conf.influxdb.password,
-                                         conf.influxdb.database_name)
-
-        max_wait_time_secs = conf.kafka.metrics_max_wait_time_seconds
-        batch_size = conf.kafka.metrics_batch_size
-        super(MetricPersister, self).__init__(consumer, influxdb_client,
-                                              max_wait_time_secs, batch_size)
-
-    def get_topic_name(self):
-        return self._conf.kafka.metrics_topic
+        super(MetricPersister, self).__init__(kafka_conf, influxdb_conf)
 
     def process_message(self, message):
 
