@@ -127,7 +127,7 @@ def shutdown_all_threads_and_die():
     Hit it with a hammer to kill all threads and die. May cause duplicate
     messages in kafka queue to be reprocessed when the persister starts again.
     Happens if the persister dies just after sending metrics and alarms to the
-    DB but does notreach the commit.
+    DB but does not reach the commit.
     """
 
     os._exit(1)
