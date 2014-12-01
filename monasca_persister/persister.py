@@ -47,21 +47,19 @@ import service
 
 LOG = log.getLogger(__name__)
 
-kafka_metrics_opts = [cfg.StrOpt('uri'),
-                      cfg.StrOpt('group_id'),
-                      cfg.StrOpt('topic'),
-                      cfg.StrOpt('consumer_id'),
-                      cfg.StrOpt('client_id'),
-                      cfg.IntOpt('batch_size'),
-                      cfg.IntOpt('max_wait_time_seconds')]
+kafka_common_opts = [cfg.StrOpt('uri'),
+                     cfg.StrOpt('group_id'),
+                     cfg.StrOpt('topic'),
+                     cfg.StrOpt('consumer_id'),
+                     cfg.StrOpt('client_id'),
+                     cfg.IntOpt('database_batch_size'),
+                     cfg.IntOpt('max_wait_time_seconds'),
+                     cfg.IntOpt('fetch_size_bytes'),
+                     cfg.IntOpt('buffer_size'),
+                     cfg.IntOpt('max_buffer_size')]
 
-kafka_alarm_history_opts = [cfg.StrOpt('uri'),
-                            cfg.StrOpt('group_id'),
-                            cfg.StrOpt('topic'),
-                            cfg.StrOpt('consumer_id'),
-                            cfg.StrOpt('client_id'),
-                            cfg.IntOpt('batch_size'),
-                            cfg.IntOpt('max_wait_time_seconds')]
+kafka_metrics_opts = kafka_common_opts
+kafka_alarm_history_opts = kafka_common_opts
 
 kafka_metrics_group = cfg.OptGroup(name='kafka_metrics', title='kafka_metrics')
 kafka_alarm_history_group = cfg.OptGroup(name='kafka_alarm_history',
@@ -90,16 +88,20 @@ log.setup("monasca-persister")
 
 
 def main():
+    """Start persister.
 
-        metric_persister = MetricPersister(cfg.CONF.kafka_metrics,
-                                           cfg.CONF.influxdb)
-        alarm_persister = AlarmPersister(cfg.CONF.kafka_alarm_history,
-                                         cfg.CONF.influxdb)
+    Start metric persister and alarm persister in separate threads.
+    """
 
-        metric_persister.start()
-        alarm_persister.start()
+    metric_persister = MetricPersister(cfg.CONF.kafka_metrics,
+                                       cfg.CONF.influxdb)
+    alarm_persister = AlarmPersister(cfg.CONF.kafka_alarm_history,
+                                     cfg.CONF.influxdb)
 
-        LOG.info('''
+    metric_persister.start()
+    alarm_persister.start()
+
+    LOG.info('''
 
                _____
               /     \   ____   ____ _____    ______ ____ _____
@@ -116,7 +118,19 @@ def main():
 
         ''')
 
-        LOG.info('Monasca Persister started successfully!')
+    LOG.info('Monasca Persister has started successfully!')
+
+
+def shutdown_all_threads_and_die():
+    """Shut down all threads and exit process.
+
+    Hit it with a hammer to kill all threads and die. May cause duplicate
+    messages in kafka queue to be reprocessed when the persister starts again.
+    Happens if the persister dies just after sending metrics and alarms to the
+    DB but does notreach the commit.
+    """
+
+    os._exit(1)
 
 
 class Persister(os_service.Service):
@@ -133,8 +147,9 @@ class Persister(os_service.Service):
             main()
 
         except:
-            LOG.exception('Persister encountered fatal error. Shutting down.')
-            os._exit(1)
+            LOG.exception('Persister encountered fatal error. '
+                          'Shutting down all threads and exiting.')
+            shutdown_all_threads_and_die()
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -144,24 +159,28 @@ class AbstractPersister(threading.Thread):
         super(AbstractPersister, self).__init__()
 
         kafka = KafkaClient(kafka_conf.uri)
-        self._consumer = SimpleConsumer(kafka,
-                                        kafka_conf.group_id,
-                                        kafka_conf.topic,
-                                        # Set to true even though we actually do
-                                        # the commits manually. Needed to
-                                        # initialize
-                                        # offsets correctly.
-                                        auto_commit=True,
-                                        # Make these values None so that the
-                                        # manual commit will do the actual
-                                        # commit.
-                                        # Needed so that offsets are initialized
-                                        # correctly. If not done, then restarts
-                                        # will reread messages from beginning of
-                                        # the queue.
-                                        auto_commit_every_n=None,
-                                        auto_commit_every_t=None,
-                                        iter_timeout=1)
+        self._consumer = (
+            SimpleConsumer(kafka,
+                           kafka_conf.group_id,
+                           kafka_conf.topic,
+                           # Set to true even though we actually do
+                           # the commits manually. Needed to
+                           # initialize
+                           # offsets correctly.
+                           auto_commit=True,
+                           # Make these values None so that the
+                           # manual commit will do the actual
+                           # commit.
+                           # Needed so that offsets are initialized
+                           # correctly. If not done, then restarts
+                           # will reread messages from beginning of
+                           # the queue.
+                           auto_commit_every_n=None,
+                           auto_commit_every_t=None,
+                           fetch_size_bytes=kafka_conf.fetch_size_bytes,
+                           buffer_size=kafka_conf.buffer_size,
+                           max_buffer_size=kafka_conf.max_buffer_size,
+                           iter_timeout=1))
 
         self._influxdb_client = InfluxDBClient(influxdb_conf.ip_address,
                                                influxdb_conf.port,
@@ -170,7 +189,7 @@ class AbstractPersister(threading.Thread):
                                                influxdb_conf.database_name)
 
         self._max_wait_time_secs = kafka_conf.max_wait_time_seconds
-        self._batch_size = kafka_conf.batch_size
+        self._database_batch_size = kafka_conf.database_batch_size
         self._kafka_topic = kafka_conf.topic
 
         self._json_body = []
@@ -206,14 +225,14 @@ class AbstractPersister(threading.Thread):
                     except Exception:
                         LOG.exception('Error processing message. Message is '
                                       'being dropped. {}'.format(message))
-                    if len(self._json_body) >= self._batch_size:
+                    if len(self._json_body) >= self._database_batch_size:
                         self._flush()
 
         except:
             LOG.exception(
                 'Persister encountered fatal exception processing messages. '
                 'Shutting down all threads and exiting')
-            os._exit(1)
+            shutdown_all_threads_and_die()
 
 
 class AlarmPersister(AbstractPersister):
