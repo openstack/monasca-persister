@@ -226,7 +226,7 @@ class AbstractPersister(threading.Thread):
         if self._json_body:
             self._influxdb_client.write_points(self._json_body)
             self._consumer.commit(partitions=partitions)
-            LOG.info("processed {} messages from topic '{}'".format(
+            LOG.info("Processed {} messages from topic '{}'".format(
                 len(self._json_body), self._kafka_topic))
             self._json_body = []
         self._last_flush = datetime.now()
@@ -341,6 +341,8 @@ class AbstractPersister(threading.Thread):
                     self._process_messages(partitions)
 
                 elif set_partitioner.allocating:
+
+                    LOG.info("Waiting to acquire locks on partition set")
 
                     set_partitioner.wait_for_acquire()
 
