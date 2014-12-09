@@ -135,16 +135,16 @@ public final class InfluxDBMetricRepository extends InfluxRepository implements 
 
     final StringBuilder serieNameBuilder = new StringBuilder();
 
-    logger.debug("Adding name to serie name: {}", def.name);
-    serieNameBuilder.append(urlEncodeUTF8(def.name));
-    serieNameBuilder.append("?");
-
     logger.debug("Adding tenant_id to serie name: {}", def.tenantId);
     serieNameBuilder.append(urlEncodeUTF8(def.tenantId));
-    serieNameBuilder.append("&");
+    serieNameBuilder.append("?");
 
     logger.debug("Adding region to serie name: {}", def.region);
     serieNameBuilder.append(urlEncodeUTF8(def.region));
+    serieNameBuilder.append("&");
+
+    logger.debug("Adding name to serie name: {}", def.name);
+    serieNameBuilder.append(urlEncodeUTF8(def.name));
 
     for (final Dim dim : dimList) {
       serieNameBuilder.append("&");
