@@ -480,10 +480,11 @@ class MetricPersister(AbstractPersister):
         LOG.debug('value: %s', value)
 
         url_encoded_serie_name = (
-            urllib.quote(metric_name.encode('utf8'),
-                         safe='') + '?' + urllib.quote(
-                tenant_id.encode('utf8'), safe='') + '&' + urllib.quote(
-                region.encode('utf8'), safe=''))
+            urllib.quote(tenant_id.encode('utf8'), safe='') +
+            '?' +
+            urllib.quote(region.encode('utf8'), safe='') +
+            '&' +
+            urllib.quote(metric_name.encode('utf8'), safe=''))
 
         for dimension_name in dimensions:
             url_encoded_serie_name += (
