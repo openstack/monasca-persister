@@ -17,7 +17,7 @@
   </fileSets>
   <files>
     <file>
-      <source>${project.build.directory}/${artifactNamedVersion}.jar</source>
+      <source>${project.build.directory}/${shadedJarName}.jar</source>
       <outputDirectory>/</outputDirectory>
       <destName>monasca-persister.jar</destName>
     </file>

@@ -4,16 +4,20 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>monasca-persister</groupId>
+    <groupId>monasca</groupId>
     <artifactId>monasca-persister</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
+    <url>http://github.com/stackforge/monasca-persister</url>
+    <packaging>jar</packaging>
 
     <properties>
+        <mon.common.version>1.0.0-SNAPSHOT</mon.common.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <artifactNamedVersion>${project.name}-${project.version}-${timestamp}-${buildNumber}
+        <artifactNamedVersion>${project.artifactId}-${project.version}-${timestamp}-${buildNumber}
         </artifactNamedVersion>
-        <mon.common.version>1.0.0-SNAPSHOT</mon.common.version>
+        <shadedJarName>${project.artifactId}-${project.version}-shaded
+        </shadedJarName>
     </properties>
 
     <!--Needed for buildnumber-maven-plugin-->
@@ -120,7 +124,8 @@
                     <createDependencyReducedPom>true</createDependencyReducedPom>
                     <filters>
                         <filter>
-                            <artifact>*:*</artifact>
+                            <!-- *:* can't be used for artifact because we are using an older shade plugin -->
+                            <artifact>org.eclipse.jetty.orbit:javax.servlet</artifact>
                             <excludes>
                                 <exclude>META-INF/*.SF</exclude>
                                 <exclude>META-INF/*.DSA</exclude>
@@ -145,6 +150,7 @@
                                     </mainClass>
                                 </transformer>
                             </transformers>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
                         </configuration>
                     </execution>
                 </executions>
@@ -223,7 +229,7 @@
                             <dataSet>
                                 <data>
                                     <type>file</type>
-                                    <src>${project.build.directory}/${artifactNamedVersion}.jar
+                                    <src>${project.build.directory}/${shadedJarName}.jar
                                     </src>
                                     <dst>/opt/monasca/monasca-persister.jar</dst>
                                 </data>
