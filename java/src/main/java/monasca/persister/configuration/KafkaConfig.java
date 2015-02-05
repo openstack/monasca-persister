@@ -22,7 +22,7 @@ package monasca.persister.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class KafkaConfiguration {
+public class KafkaConfig {
 
   @JsonProperty
   String topic;

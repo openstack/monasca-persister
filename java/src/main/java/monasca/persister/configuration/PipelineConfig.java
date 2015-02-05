@@ -19,7 +19,7 @@ package monasca.persister.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class PipelineConfiguration {
+public class PipelineConfig {
 
   @JsonProperty
   String topic;

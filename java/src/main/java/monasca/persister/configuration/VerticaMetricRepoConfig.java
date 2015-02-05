@@ -22,7 +22,7 @@ package monasca.persister.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class VerticaMetricRepositoryConfiguration {
+public class VerticaMetricRepoConfig {
 
   @JsonProperty
   Integer maxCacheSize;

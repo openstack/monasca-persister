@@ -17,7 +17,7 @@
 
 package monasca.persister.pipeline.event;
 
-import monasca.persister.configuration.PipelineConfiguration;
+import monasca.persister.configuration.PipelineConfig;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
@@ -45,7 +45,7 @@ public abstract class FlushableHandler<T> {
   private final Meter commitMeter;
   private final Timer commitTimer;
 
-  protected FlushableHandler(PipelineConfiguration configuration, Environment environment,
+  protected FlushableHandler(PipelineConfig configuration, Environment environment,
       int ordinal, int batchSize, String baseName) {
 
     this.handlerName = String.format("%s[%d]", baseName, ordinal);

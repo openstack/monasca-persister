@@ -30,7 +30,7 @@ import io.dropwizard.db.DataSourceFactory;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
-public class MonPersisterConfiguration extends Configuration {
+public class PersisterConfig extends Configuration {
 
   @JsonProperty
   private String name;
@@ -42,29 +42,29 @@ public class MonPersisterConfiguration extends Configuration {
   @JsonProperty
   @NotNull
   @Valid
-  private final PipelineConfiguration alarmHistoryConfiguration =
-      new PipelineConfiguration();
+  private final PipelineConfig alarmHistoryConfiguration =
+      new PipelineConfig();
 
-  public PipelineConfiguration getAlarmHistoryConfiguration() {
+  public PipelineConfig getAlarmHistoryConfiguration() {
     return alarmHistoryConfiguration;
   }
 
   @JsonProperty
   @NotNull
   @Valid
-  private final PipelineConfiguration metricConfiguration = new PipelineConfiguration();
+  private final PipelineConfig metricConfiguration = new PipelineConfig();
 
-  public PipelineConfiguration getMetricConfiguration() {
+  public PipelineConfig getMetricConfiguration() {
     return metricConfiguration;
   }
 
   @Valid
   @NotNull
   @JsonProperty
-  private final KafkaConfiguration kafkaConfiguration = new KafkaConfiguration();
+  private final KafkaConfig kafkaConfig = new KafkaConfig();
 
-  public KafkaConfiguration getKafkaConfiguration() {
-    return kafkaConfiguration;
+  public KafkaConfig getKafkaConfig() {
+    return kafkaConfig;
   }
 
   @JsonProperty
@@ -77,11 +77,11 @@ public class MonPersisterConfiguration extends Configuration {
   @Valid
   @NotNull
   @JsonProperty
-  private final VerticaMetricRepositoryConfiguration verticaMetricRepositoryConfiguration =
-      new VerticaMetricRepositoryConfiguration();
+  private final VerticaMetricRepoConfig verticaMetricRepoConfig =
+      new VerticaMetricRepoConfig();
 
-  public VerticaMetricRepositoryConfiguration getVerticaMetricRepositoryConfiguration() {
-    return verticaMetricRepositoryConfiguration;
+  public VerticaMetricRepoConfig getVerticaMetricRepoConfig() {
+    return verticaMetricRepoConfig;
   }
 
   @Valid

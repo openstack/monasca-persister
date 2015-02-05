@@ -18,7 +18,7 @@
 package monasca.persister.repository;
 
 import monasca.common.model.event.AlarmStateTransitionedEvent;
-import monasca.persister.configuration.MonPersisterConfiguration;
+import monasca.persister.configuration.PersisterConfig;
 
 import com.codahale.metrics.Timer;
 
@@ -37,9 +37,9 @@ import java.util.TimeZone;
 
 import javax.inject.Inject;
 
-public class VerticaAlarmRepository extends VerticaRepository implements AlarmRepository {
+public class VerticaAlarmRepo extends VerticaRepo implements AlarmRepo {
 
-  private static final Logger logger = LoggerFactory.getLogger(VerticaAlarmRepository.class);
+  private static final Logger logger = LoggerFactory.getLogger(VerticaAlarmRepo.class);
   private final Environment environment;
 
   private static final String SQL_INSERT_INTO_ALARM_HISTORY =
@@ -49,8 +49,7 @@ public class VerticaAlarmRepository extends VerticaRepository implements AlarmRe
   private final SimpleDateFormat simpleDateFormat;
 
   @Inject
-  public VerticaAlarmRepository(DBI dbi, MonPersisterConfiguration configuration,
-      Environment environment) throws NoSuchAlgorithmException, SQLException {
+  public VerticaAlarmRepo(DBI dbi, PersisterConfig configuration, Environment environment) throws NoSuchAlgorithmException, SQLException {
     super(dbi);
     logger.debug("Instantiating: " + this);
 

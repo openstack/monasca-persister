@@ -21,7 +21,7 @@ metricConfiguration:
   clientId: 1
 
 #Kafka settings.
-kafkaConfiguration:
+kafkaConfig:
   #zookeeperConnect: localhost:2181
 # See http://kafka.apache.org/documentation.html#api for semantics and defaults.
   zookeeperConnect: 192.168.10.4:2181
@@ -40,15 +40,21 @@ kafkaConfiguration:
   zookeeperConnectionTimeoutMs : 6000
   zookeeperSyncTimeMs: 2000
 
-verticaMetricRepositoryConfiguration:
+verticaMetricRepoConfig:
   maxCacheSize: 2000000
 
 databaseConfiguration:
-# vertica | influxdb
+# databaseType can be (vertica | influxdb)
   databaseType: influxdb
 #  databaseType: vertica
 
 influxDbConfiguration:
+  # Version and retention policy must be set for V9. If no
+  # version set then defaults to V8.
+  # version can be (V8 | V9)
+  #version: V9
+  # Retention policy may be left blank to indicate default policy.
+  #retentionPolicy:
   name: mon
   replicationFactor: 1
   url: http://192.168.10.4:8086

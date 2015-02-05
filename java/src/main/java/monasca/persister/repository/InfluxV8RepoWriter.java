@@ -17,9 +17,7 @@
 
 package monasca.persister.repository;
 
-import monasca.persister.configuration.MonPersisterConfiguration;
-
-import io.dropwizard.setup.Environment;
+import com.google.inject.Inject;
 
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
@@ -29,24 +27,41 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
-public abstract class InfluxRepository {
-  static final Logger logger = LoggerFactory.getLogger(InfluxRepository.class);
+import io.dropwizard.setup.Environment;
+import monasca.persister.configuration.PersisterConfig;
 
-  protected final MonPersisterConfiguration configuration;
-  protected final Environment environment;
-  protected final InfluxDB influxDB;
+public class InfluxV8RepoWriter {
 
-  public InfluxRepository(MonPersisterConfiguration configuration, Environment environment) {
-    this.configuration = configuration;
-    this.environment = environment;
-    influxDB =
-        InfluxDBFactory.connect(configuration.getInfluxDBConfiguration().getUrl(), configuration
-            .getInfluxDBConfiguration().getUser(), configuration.getInfluxDBConfiguration()
-            .getPassword());
+  static final Logger logger = LoggerFactory.getLogger(InfluxV8RepoWriter.class);
+
+  private final PersisterConfig config;
+  private final Environment env;
+  private final InfluxDB influxDB;
+
+  private final String databaseName;
+
+  @Inject
+  public InfluxV8RepoWriter(final PersisterConfig config, final Environment env) {
+
+    this.config = config;
+    this.env = env;
+    this.influxDB =
+        InfluxDBFactory.connect(config.getInfluxDBConfiguration().getUrl(),
+                                config.getInfluxDBConfiguration().getUser(),
+                                config.getInfluxDBConfiguration().getPassword());
+
+    this.databaseName = this.config.getInfluxDBConfiguration().getName();
+
   }
 
-  protected void logColValues(Serie serie) {
+  protected void write(final TimeUnit precision, final Serie[] series) {
+
+    this.influxDB.write(this.databaseName, precision, series);
+  }
+
+  protected void logColValues(final Serie serie) {
     logger.debug("Added array of array of column values to serie");
     final String[] colNames = serie.getColumns();
     List<Map<String, Object>> rows = serie.getRows();
@@ -67,7 +82,7 @@ public abstract class InfluxRepository {
     }
   }
 
-  protected void logColumnNames(String[] colNames) {
+  protected void logColumnNames(final String[] colNames) {
     logger.debug("Added array of column names to serie");
     StringBuffer sb = new StringBuffer();
     boolean first = true;

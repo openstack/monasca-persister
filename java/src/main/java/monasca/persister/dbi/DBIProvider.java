@@ -17,7 +17,7 @@
 
 package monasca.persister.dbi;
 
-import monasca.persister.configuration.MonPersisterConfiguration;
+import monasca.persister.configuration.PersisterConfig;
 
 import com.google.inject.ProvisionException;
 
@@ -32,10 +32,10 @@ import javax.inject.Provider;
 public class DBIProvider implements Provider<DBI> {
 
   private final Environment environment;
-  private final MonPersisterConfiguration configuration;
+  private final PersisterConfig configuration;
 
   @Inject
-  public DBIProvider(Environment environment, MonPersisterConfiguration configuration) {
+  public DBIProvider(Environment environment, PersisterConfig configuration) {
     this.environment = environment;
     this.configuration = configuration;
   }

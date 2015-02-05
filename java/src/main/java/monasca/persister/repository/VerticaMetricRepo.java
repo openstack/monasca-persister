@@ -17,7 +17,7 @@
 
 package monasca.persister.repository;
 
-import monasca.persister.configuration.MonPersisterConfiguration;
+import monasca.persister.configuration.PersisterConfig;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
@@ -38,9 +38,9 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
-public class VerticaMetricRepository extends VerticaRepository implements MetricRepository {
+public class VerticaMetricRepo extends VerticaRepo implements MetricRepo {
 
-  private static final Logger logger = LoggerFactory.getLogger(VerticaMetricRepository.class);
+  private static final Logger logger = LoggerFactory.getLogger(VerticaMetricRepo.class);
 
   private final Environment environment;
 
@@ -92,8 +92,8 @@ public class VerticaMetricRepository extends VerticaRepository implements Metric
   public final Meter definitionDimensionCacheHitMeter;
 
   @Inject
-  public VerticaMetricRepository(DBI dbi, MonPersisterConfiguration configuration,
-      Environment environment) throws NoSuchAlgorithmException, SQLException {
+  public VerticaMetricRepo(DBI dbi, PersisterConfig configuration,
+                           Environment environment) throws NoSuchAlgorithmException, SQLException {
     super(dbi);
     logger.debug("Instantiating: " + this.getClass().getName());
 
@@ -123,15 +123,15 @@ public class VerticaMetricRepository extends VerticaRepository implements Metric
 
     definitionsIdCache =
         CacheBuilder.newBuilder()
-            .maximumSize(configuration.getVerticaMetricRepositoryConfiguration().getMaxCacheSize())
+            .maximumSize(configuration.getVerticaMetricRepoConfig().getMaxCacheSize())
             .build();
     dimensionsIdCache =
         CacheBuilder.newBuilder()
-            .maximumSize(configuration.getVerticaMetricRepositoryConfiguration().getMaxCacheSize())
+            .maximumSize(configuration.getVerticaMetricRepoConfig().getMaxCacheSize())
             .build();
     definitionDimensionsIdCache =
         CacheBuilder.newBuilder()
-            .maximumSize(configuration.getVerticaMetricRepositoryConfiguration().getMaxCacheSize())
+            .maximumSize(configuration.getVerticaMetricRepoConfig().getMaxCacheSize())
             .build();
 
     logger.info("preparing database and building sql statements...");

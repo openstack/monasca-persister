@@ -17,9 +17,9 @@
 
 package monasca.persister.consumer;
 
-import monasca.persister.configuration.KafkaConfiguration;
-import monasca.persister.configuration.MonPersisterConfiguration;
-import monasca.persister.configuration.PipelineConfiguration;
+import monasca.persister.configuration.KafkaConfig;
+import monasca.persister.configuration.PersisterConfig;
+import monasca.persister.configuration.PipelineConfig;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
@@ -46,12 +46,12 @@ public class KafkaChannel {
   private final int threadNum;
 
   @Inject
-  public KafkaChannel(@Assisted MonPersisterConfiguration configuration,
-      @Assisted PipelineConfiguration pipelineConfiguration, @Assisted int threadNum) {
-    this.topic = pipelineConfiguration.getTopic();
+  public KafkaChannel(@Assisted PersisterConfig configuration,
+      @Assisted PipelineConfig pipelineConfig, @Assisted int threadNum) {
+    this.topic = pipelineConfig.getTopic();
     this.threadNum = threadNum;
     Properties kafkaProperties =
-        createKafkaProperties(configuration.getKafkaConfiguration(), pipelineConfiguration);
+        createKafkaProperties(configuration.getKafkaConfig(), pipelineConfig);
     consumerConnector = Consumer.createJavaConsumerConnector(createConsumerConfig(kafkaProperties));
   }
 
@@ -80,38 +80,38 @@ public class KafkaChannel {
     return new ConsumerConfig(kafkaProperties);
   }
 
-  private Properties createKafkaProperties(KafkaConfiguration kafkaConfiguration,
-      final PipelineConfiguration pipelineConfiguration) {
+  private Properties createKafkaProperties(KafkaConfig kafkaConfig,
+      final PipelineConfig pipelineConfig) {
     Properties properties = new Properties();
 
-    properties.put("group.id", pipelineConfiguration.getGroupId());
-    properties.put("zookeeper.connect", kafkaConfiguration.getZookeeperConnect());
+    properties.put("group.id", pipelineConfig.getGroupId());
+    properties.put("zookeeper.connect", kafkaConfig.getZookeeperConnect());
     properties.put("consumer.id",
-        String.format("%s_%d", pipelineConfiguration.getConsumerId(), this.threadNum));
-    properties.put("socket.timeout.ms", kafkaConfiguration.getSocketTimeoutMs().toString());
-    properties.put("socket.receive.buffer.bytes", kafkaConfiguration.getSocketReceiveBufferBytes()
+        String.format("%s_%d", pipelineConfig.getConsumerId(), this.threadNum));
+    properties.put("socket.timeout.ms", kafkaConfig.getSocketTimeoutMs().toString());
+    properties.put("socket.receive.buffer.bytes", kafkaConfig.getSocketReceiveBufferBytes()
         .toString());
-    properties.put("fetch.message.max.bytes", kafkaConfiguration.getFetchMessageMaxBytes()
+    properties.put("fetch.message.max.bytes", kafkaConfig.getFetchMessageMaxBytes()
         .toString());
     // Set auto commit to false because the persister is going to explicitly commit
     properties.put("auto.commit.enable", "false");
-    properties.put("queued.max.message.chunks", kafkaConfiguration.getQueuedMaxMessageChunks()
+    properties.put("queued.max.message.chunks", kafkaConfig.getQueuedMaxMessageChunks()
         .toString());
-    properties.put("rebalance.max.retries", kafkaConfiguration.getRebalanceMaxRetries().toString());
-    properties.put("fetch.min.bytes", kafkaConfiguration.getFetchMinBytes().toString());
-    properties.put("fetch.wait.max.ms", kafkaConfiguration.getFetchWaitMaxMs().toString());
-    properties.put("rebalance.backoff.ms", kafkaConfiguration.getRebalanceBackoffMs().toString());
-    properties.put("refresh.leader.backoff.ms", kafkaConfiguration.getRefreshLeaderBackoffMs()
+    properties.put("rebalance.max.retries", kafkaConfig.getRebalanceMaxRetries().toString());
+    properties.put("fetch.min.bytes", kafkaConfig.getFetchMinBytes().toString());
+    properties.put("fetch.wait.max.ms", kafkaConfig.getFetchWaitMaxMs().toString());
+    properties.put("rebalance.backoff.ms", kafkaConfig.getRebalanceBackoffMs().toString());
+    properties.put("refresh.leader.backoff.ms", kafkaConfig.getRefreshLeaderBackoffMs()
         .toString());
-    properties.put("auto.offset.reset", kafkaConfiguration.getAutoOffsetReset());
-    properties.put("consumer.timeout.ms", kafkaConfiguration.getConsumerTimeoutMs().toString());
-    properties.put("client.id", String.format("%s_%d", pipelineConfiguration.getClientId(), threadNum));
-    properties.put("zookeeper.session.timeout.ms", kafkaConfiguration
+    properties.put("auto.offset.reset", kafkaConfig.getAutoOffsetReset());
+    properties.put("consumer.timeout.ms", kafkaConfig.getConsumerTimeoutMs().toString());
+    properties.put("client.id", String.format("%s_%d", pipelineConfig.getClientId(), threadNum));
+    properties.put("zookeeper.session.timeout.ms", kafkaConfig
         .getZookeeperSessionTimeoutMs().toString());
-    properties.put("zookeeper.connection.timeout.ms", kafkaConfiguration
+    properties.put("zookeeper.connection.timeout.ms", kafkaConfig
         .getZookeeperConnectionTimeoutMs().toString());
     properties
-        .put("zookeeper.sync.time.ms", kafkaConfiguration.getZookeeperSyncTimeMs().toString());
+        .put("zookeeper.sync.time.ms", kafkaConfig.getZookeeperSyncTimeMs().toString());
 
     for (String key : properties.stringPropertyNames()) {
       logger.info(KAFKA_CONFIGURATION + " " + key + " = " + properties.getProperty(key));

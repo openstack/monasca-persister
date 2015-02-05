@@ -18,8 +18,8 @@
 package monasca.persister.pipeline.event;
 
 import monasca.common.model.event.AlarmStateTransitionedEvent;
-import monasca.persister.configuration.PipelineConfiguration;
-import monasca.persister.repository.AlarmRepository;
+import monasca.persister.configuration.PipelineConfig;
+import monasca.persister.repository.AlarmRepo;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
@@ -35,12 +35,12 @@ public class AlarmStateTransitionedEventHandler extends
   private static final Logger logger = LoggerFactory
       .getLogger(AlarmStateTransitionedEventHandler.class);
 
-  private final AlarmRepository repository;
+  private final AlarmRepo repository;
   private final int ordinal;
 
   @Inject
-  public AlarmStateTransitionedEventHandler(AlarmRepository repository,
-      @Assisted PipelineConfiguration configuration, Environment environment,
+  public AlarmStateTransitionedEventHandler(AlarmRepo repository,
+      @Assisted PipelineConfig configuration, Environment environment,
       @Assisted("ordinal") int ordinal,
       @Assisted("batchSize") int batchSize) {
     super(configuration, environment, ordinal, batchSize,
