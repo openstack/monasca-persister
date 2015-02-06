@@ -90,18 +90,17 @@ influxdb_group = cfg.OptGroup(name='influxdb', title='influxdb')
 cfg.CONF.register_group(influxdb_group)
 cfg.CONF.register_opts(influxdb_opts, influxdb_group)
 
-cfg.CONF(sys.argv[1:])
-
-log_levels = (cfg.CONF.default_log_levels)
-cfg.set_defaults(log.log_opts, default_log_levels=log_levels)
-log.setup("monasca-persister")
-
 
 def main():
     """Start persister.
 
     Start metric persister and alarm persister in separate threads.
     """
+
+    cfg.CONF(args=[], project='monasca', prog='persister')
+    log_levels = (cfg.CONF.default_log_levels)
+    cfg.set_defaults(log.log_opts, default_log_levels=log_levels)
+    log.setup("monasca-persister")
 
     metric_persister = MetricPersister(cfg.CONF.kafka_metrics,
                                        cfg.CONF.influxdb,
