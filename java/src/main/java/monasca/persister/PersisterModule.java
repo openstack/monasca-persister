@@ -17,7 +17,14 @@
 
 package monasca.persister;
 
-import monasca.persister.configuration.MonPersisterConfiguration;
+import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
+
+import org.skife.jdbi.v2.DBI;
+
+import io.dropwizard.setup.Environment;
+import monasca.persister.configuration.PersisterConfig;
 import monasca.persister.consumer.AlarmStateTransitionConsumer;
 import monasca.persister.consumer.AlarmStateTransitionConsumerFactory;
 import monasca.persister.consumer.KafkaAlarmStateTransitionConsumer;
@@ -41,36 +48,37 @@ import monasca.persister.pipeline.event.AlarmStateTransitionedEventHandler;
 import monasca.persister.pipeline.event.AlarmStateTransitionedEventHandlerFactory;
 import monasca.persister.pipeline.event.MetricHandler;
 import monasca.persister.pipeline.event.MetricHandlerFactory;
-import monasca.persister.repository.AlarmRepository;
-import monasca.persister.repository.InfluxDBAlarmRepository;
-import monasca.persister.repository.InfluxDBMetricRepository;
-import monasca.persister.repository.MetricRepository;
-import monasca.persister.repository.VerticaAlarmRepository;
-import monasca.persister.repository.VerticaMetricRepository;
+import monasca.persister.repository.AlarmRepo;
+import monasca.persister.repository.InfluxV8AlarmRepo;
+import monasca.persister.repository.InfluxV8MetricRepo;
+import monasca.persister.repository.InfluxV8RepoWriter;
+import monasca.persister.repository.InfluxV9AlarmRepo;
+import monasca.persister.repository.InfluxV9MetricRepo;
+import monasca.persister.repository.InfluxV9RepoWriter;
+import monasca.persister.repository.MetricRepo;
+import monasca.persister.repository.VerticaAlarmRepo;
+import monasca.persister.repository.VerticaMetricRepo;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import com.google.inject.assistedinject.FactoryModuleBuilder;
+public class PersisterModule extends AbstractModule {
 
-import io.dropwizard.setup.Environment;
+  private static final String VERTICA = "vertica";
+  private static final String INFLUXDB = "influxdb";
+  private static final String INFLUXDB_V8 = "v8";
+  private static final String INFLUXDB_V9 = "v9";
 
-import org.skife.jdbi.v2.DBI;
+  private final PersisterConfig config;
+  private final Environment env;
 
-public class MonPersisterModule extends AbstractModule {
-
-  private final MonPersisterConfiguration configuration;
-  private final Environment environment;
-
-  public MonPersisterModule(MonPersisterConfiguration configuration, Environment environment) {
-    this.configuration = configuration;
-    this.environment = environment;
+  public PersisterModule(PersisterConfig config, Environment env) {
+    this.config = config;
+    this.env = env;
   }
 
   @Override
   protected void configure() {
 
-    bind(MonPersisterConfiguration.class).toInstance(configuration);
-    bind(Environment.class).toInstance(environment);
+    bind(PersisterConfig.class).toInstance(config);
+    bind(Environment.class).toInstance(env);
 
     install(new FactoryModuleBuilder().implement(MetricHandler.class, MetricHandler.class).build(
         MetricHandlerFactory.class));
@@ -121,19 +129,46 @@ public class MonPersisterModule extends AbstractModule {
     install(new FactoryModuleBuilder().implement(KafkaChannel.class, KafkaChannel.class).build(
         KafkaChannelFactory.class));
 
-    if (configuration.getDatabaseConfiguration().getDatabaseType().equals("vertica")) {
+    if (config.getDatabaseConfiguration().getDatabaseType().equalsIgnoreCase(VERTICA)) {
+
       bind(DBI.class).toProvider(DBIProvider.class).in(Scopes.SINGLETON);
-      bind(MetricRepository.class).to(VerticaMetricRepository.class);
-      bind(AlarmRepository.class).to(VerticaAlarmRepository.class);
-    } else if (configuration.getDatabaseConfiguration().getDatabaseType().equals("influxdb")) {
-      bind(MetricRepository.class).to(InfluxDBMetricRepository.class);
-      bind(AlarmRepository.class).to(InfluxDBAlarmRepository.class);
+      bind(MetricRepo.class).to(VerticaMetricRepo.class);
+      bind(AlarmRepo.class).to(VerticaAlarmRepo.class);
+
+    } else if (config.getDatabaseConfiguration().getDatabaseType().equalsIgnoreCase(INFLUXDB)) {
+
+      // Check for null to not break existing configs. If no version, default to V8.
+      if (config.getInfluxDBConfiguration().getVersion() == null ||
+          config.getInfluxDBConfiguration().getVersion().equalsIgnoreCase(INFLUXDB_V8)) {
+
+        bind (InfluxV8RepoWriter.class);
+        bind(MetricRepo.class).to(InfluxV8MetricRepo.class);
+        bind(AlarmRepo.class).to(InfluxV8AlarmRepo.class);
+
+      } else if (config.getInfluxDBConfiguration().getVersion().equalsIgnoreCase(INFLUXDB_V9)) {
+
+        bind(InfluxV9RepoWriter.class);
+        bind(MetricRepo.class).to(InfluxV9MetricRepo.class);
+        bind(AlarmRepo.class).to(InfluxV9AlarmRepo.class);
+
+      } else {
+
+        System.err.println(
+            "Found unknown Influxdb version: " + config.getInfluxDBConfiguration().getVersion());
+        System.err.println("Supported Influxdb versions are 'v8' and 'v9'");
+        System.err.println("Check your config file");
+        System.exit(1);
+
+      }
+
     } else {
-      System.out.println("Unknown database type encountered: "
-          + configuration.getDatabaseConfiguration().getDatabaseType());
-      System.out.println("Supported databases are 'vertica' and 'influxdb'");
-      System.out.println("Check your config file.");
+
+      System.err.println(
+          "Found unknown database type: " + config.getDatabaseConfiguration().getDatabaseType());
+      System.err.println("Supported databases are 'vertica' and 'influxdb'");
+      System.err.println("Check your config file.");
       System.exit(1);
+
     }
   }
 }

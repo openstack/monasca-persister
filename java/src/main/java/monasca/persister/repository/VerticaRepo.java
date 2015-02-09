@@ -17,14 +17,23 @@
 
 package monasca.persister.repository;
 
-public interface MetricRepository {
-  void addMetricToBatch(Sha1HashId defDimsId, String timeStamp, double value);
+import org.skife.jdbi.v2.DBI;
+import org.skife.jdbi.v2.Handle;
 
-  void addDefinitionToBatch(Sha1HashId defId, String name, String tenantId, String region);
+public class VerticaRepo {
+  protected DBI dbi;
+  protected Handle handle;
 
-  void addDimensionToBatch(Sha1HashId dimSetId, String name, String value);
+  public VerticaRepo(DBI dbi) {
+    this.dbi = dbi;
+    this.handle = dbi.open();
+    this.handle.execute("SET TIME ZONE TO 'UTC'");
+  }
 
-  void addDefinitionDimensionToBatch(Sha1HashId defDimsId, Sha1HashId defId, Sha1HashId dimId);
+  public VerticaRepo() {}
 
-  void flush();
+  public void setDBI(DBI dbi) throws Exception {
+    this.dbi = dbi;
+    this.handle = dbi.open();
+  }
 }

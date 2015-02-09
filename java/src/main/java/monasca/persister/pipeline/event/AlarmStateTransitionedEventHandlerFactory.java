@@ -17,11 +17,11 @@
 
 package monasca.persister.pipeline.event;
 
-import monasca.persister.configuration.PipelineConfiguration;
+import monasca.persister.configuration.PipelineConfig;
 
 import com.google.inject.assistedinject.Assisted;
 
 public interface AlarmStateTransitionedEventHandlerFactory {
-  AlarmStateTransitionedEventHandler create(PipelineConfiguration configuration,
+  AlarmStateTransitionedEventHandler create(PipelineConfig configuration,
       @Assisted("ordinal") int ordinal, @Assisted("batchSize") int batchSize);
 }

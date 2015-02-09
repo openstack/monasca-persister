@@ -19,9 +19,9 @@ package monasca.persister.repository;
 
 import monasca.common.model.event.AlarmStateTransitionedEvent;
 
-public interface AlarmRepository {
+public interface AlarmRepo {
 
-  public void addToBatch(AlarmStateTransitionedEvent message);
+  public void addToBatch(final AlarmStateTransitionedEvent message);
 
   public void flush();
 }

@@ -17,10 +17,10 @@
 
 package monasca.persister.consumer;
 
-import monasca.persister.configuration.MonPersisterConfiguration;
-import monasca.persister.configuration.PipelineConfiguration;
+import monasca.persister.configuration.PersisterConfig;
+import monasca.persister.configuration.PipelineConfig;
 
 public interface KafkaChannelFactory {
-  KafkaChannel create(MonPersisterConfiguration configuration,
-      PipelineConfiguration pipelineConfiguration, int threadNum);
+  KafkaChannel create(PersisterConfig configuration,
+      PipelineConfig pipelineConfig, int threadNum);
 }

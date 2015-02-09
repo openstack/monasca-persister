@@ -17,11 +17,11 @@
 
 package monasca.persister.pipeline.event;
 
-import monasca.persister.configuration.PipelineConfiguration;
+import monasca.persister.configuration.PipelineConfig;
 
 import com.google.inject.assistedinject.Assisted;
 
 public interface MetricHandlerFactory {
-  MetricHandler create(PipelineConfiguration pipelineConfiguration,
+  MetricHandler create(PipelineConfig pipelineConfig,
       @Assisted("ordinal") int ordinal, @Assisted("batchSize") int batchSize);
 }

@@ -17,7 +17,7 @@
 
 package monasca.persister;
 
-import monasca.persister.configuration.MonPersisterConfiguration;
+import monasca.persister.configuration.PersisterConfig;
 import monasca.persister.consumer.AlarmStateTransitionConsumer;
 import monasca.persister.consumer.AlarmStateTransitionConsumerFactory;
 import monasca.persister.consumer.KafkaAlarmStateTransitionConsumer;
@@ -47,15 +47,15 @@ import io.dropwizard.setup.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MonPersisterApplication extends Application<MonPersisterConfiguration> {
-  private static final Logger logger = LoggerFactory.getLogger(MonPersisterApplication.class);
+public class PersisterApplication extends Application<PersisterConfig> {
+  private static final Logger logger = LoggerFactory.getLogger(PersisterApplication.class);
 
   public static void main(String[] args) throws Exception {
-    new MonPersisterApplication().run(args);
+    new PersisterApplication().run(args);
   }
 
   @Override
-  public void initialize(Bootstrap<MonPersisterConfiguration> bootstrap) {
+  public void initialize(Bootstrap<PersisterConfig> bootstrap) {
   }
 
   @Override
@@ -64,10 +64,10 @@ public class MonPersisterApplication extends Application<MonPersisterConfigurati
   }
 
   @Override
-  public void run(MonPersisterConfiguration configuration, Environment environment)
+  public void run(PersisterConfig configuration, Environment environment)
       throws Exception {
 
-    Injector injector = Guice.createInjector(new MonPersisterModule(configuration, environment));
+    Injector injector = Guice.createInjector(new PersisterModule(configuration, environment));
 
     // Sample resource.
     environment.jersey().register(new Resource());
@@ -109,7 +109,7 @@ public class MonPersisterApplication extends Application<MonPersisterConfigurati
     }
   }
 
-  private MetricPipeline getMetricPipeline(MonPersisterConfiguration configuration, int threadNum,
+  private MetricPipeline getMetricPipeline(PersisterConfig configuration, int threadNum,
       Injector injector) {
 
     logger.debug("Creating metric pipeline...");
@@ -130,7 +130,7 @@ public class MonPersisterApplication extends Application<MonPersisterConfigurati
   }
 
   public AlarmStateTransitionPipeline getAlarmStateHistoryPipeline(
-      MonPersisterConfiguration configuration, int threadNum, Injector injector) {
+      PersisterConfig configuration, int threadNum, Injector injector) {
 
     logger.debug("Creating alarm state history pipeline...");
 
