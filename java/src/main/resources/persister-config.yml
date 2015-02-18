@@ -52,12 +52,15 @@ influxDbConfiguration:
   # Version and retention policy must be set for V9. If no
   # version set then defaults to V8.
   # version can be (V8 | V9)
-  #version: V9
+  version: V8
   # Retention policy may be left blank to indicate default policy.
-  #retentionPolicy:
+  retentionPolicy:
+  # Used only if version is V9.
+  maxHttpConnections: 100
   name: mon
   replicationFactor: 1
   url: http://192.168.10.4:8086
+#  url: http://10.10.10.2:8086
   user:  root
   password: root
 

@@ -23,6 +23,8 @@ import com.google.inject.assistedinject.FactoryModuleBuilder;
 
 import org.skife.jdbi.v2.DBI;
 
+import javax.inject.Singleton;
+
 import io.dropwizard.setup.Environment;
 import monasca.persister.configuration.PersisterConfig;
 import monasca.persister.consumer.AlarmStateTransitionConsumer;
@@ -147,7 +149,7 @@ public class PersisterModule extends AbstractModule {
 
       } else if (config.getInfluxDBConfiguration().getVersion().equalsIgnoreCase(INFLUXDB_V9)) {
 
-        bind(InfluxV9RepoWriter.class);
+        bind(InfluxV9RepoWriter.class).in(Singleton.class);
         bind(MetricRepo.class).to(InfluxV9MetricRepo.class);
         bind(AlarmRepo.class).to(InfluxV9AlarmRepo.class);
 

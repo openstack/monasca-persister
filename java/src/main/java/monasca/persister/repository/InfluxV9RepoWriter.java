@@ -28,7 +28,8 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +53,7 @@ public class InfluxV9RepoWriter {
   private final String influxPass;
   private final String influxRetentionPolicy;
 
-  private final CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+  private final CloseableHttpClient httpClient;
 
   private final String baseAuthHeader;
 
@@ -72,6 +73,11 @@ public class InfluxV9RepoWriter {
     this.influxRetentionPolicy = config.getInfluxDBConfiguration().getRetentionPolicy();
 
     this.baseAuthHeader = "Basic " + new String(Base64.encodeBase64(this.influxCreds.getBytes()));
+
+    PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
+    cm.setMaxTotal(config.getInfluxDBConfiguration().getMaxHttpConnections());
+
+    this.httpClient = HttpClients.custom().setConnectionManager(cm).build();
 
   }
 
@@ -102,13 +108,14 @@ public class InfluxV9RepoWriter {
 
         HttpEntity entity = response.getEntity();
         String responseString = EntityUtils.toString(entity, "UTF-8");
-        logger.error("Failed to write data to Influxdb: {}", String.valueOf(rc));
+        logger.error("Failed to write data to influx database {} at {}: {}",
+                     this.influxName, this.influxUrl, String.valueOf(rc));
         logger.error("Http response: {}", responseString);
 
-        throw new Exception(responseString);
+        throw new Exception(rc + ":" + responseString);
       }
 
-      logger.debug("Successfully wrote {} points to influxdb database {} at {}",
+      logger.debug("Successfully wrote {} points to influx database {} at {}",
                    influxPointArry.length, this.influxName, this.influxUrl);
 
     } finally {
