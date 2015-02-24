@@ -38,7 +38,7 @@ public class InfluxV8AlarmRepo extends InfluxAlarmRepo {
 
   private static final String[]
       COLUMN_NAMES =
-      {"tenant_id", "alarm_id", "metrics", "old_state", "new_state", "reason", "reason_data",
+      {"tenant_id", "alarm_id", "metrics", "old_state", "new_state", "sub_alarms", "reason", "reason_data",
        "time"};
 
   private final InfluxV8RepoWriter influxV8RepoWriter;
@@ -73,6 +73,7 @@ public class InfluxV8AlarmRepo extends InfluxAlarmRepo {
       builder.values(alarmStateTransitionedEvent.tenantId, alarmStateTransitionedEvent.alarmId,
                      this.objectMapper.writeValueAsString(alarmStateTransitionedEvent.metrics),
                      alarmStateTransitionedEvent.oldState, alarmStateTransitionedEvent.newState,
+                     this.objectMapper.writeValueAsString(alarmStateTransitionedEvent.subAlarms),
                      alarmStateTransitionedEvent.stateChangeReason, "{}",
                      alarmStateTransitionedEvent.timestamp);
     }
