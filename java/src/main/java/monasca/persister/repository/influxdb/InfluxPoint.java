@@ -24,14 +24,14 @@ public class InfluxPoint {
   private final String name;
   private final Map<String, String> tags;
   private final String timestamp;
-  private final Map<String, Object> values;
+  private final Map<String, Object> fields;
 
   public InfluxPoint(final String name, final Map<String, String> tags, final String timestamp,
-                     final Map<String, Object> values) {
+                     final Map<String, Object> fields) {
     this.name = name;
     this.tags = tags;
     this.timestamp = timestamp;
-    this.values = values;
+    this.fields = fields;
   }
 
   public String getName() {
@@ -46,8 +46,8 @@ public class InfluxPoint {
     return this.timestamp;
   }
 
-  public Map<String, Object> getValues() {
-    return this.values;
+  public Map<String, Object> getFields() {
+    return this.fields;
   }
 
 }
