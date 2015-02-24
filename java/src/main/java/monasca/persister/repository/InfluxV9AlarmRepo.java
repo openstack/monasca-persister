@@ -62,7 +62,7 @@ public class InfluxV9AlarmRepo extends InfluxAlarmRepo {
   @Override
   protected void write() throws Exception {
 
-//    this.influxV9RepoWriter.write(getInfluxPointArry());
+    this.influxV9RepoWriter.write(getInfluxPointArry());
 
   }
 
