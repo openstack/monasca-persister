@@ -78,6 +78,7 @@ public class InfluxV9AlarmRepo extends InfluxAlarmRepo {
       valueMap.put("metrics", this.objectMapper.writeValueAsString(event.metrics));
       valueMap.put("old_state", event.oldState);
       valueMap.put("new_state", event.newState);
+      valueMap.put("sub_alarms", this.objectMapper.writeValueAsString(event.subAlarms));
       valueMap.put("reason", event.stateChangeReason);
       valueMap.put("reason_data", "{}");
 
