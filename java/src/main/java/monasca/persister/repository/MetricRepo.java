@@ -17,8 +17,10 @@
 
 package monasca.persister.repository;
 
+import java.util.Map;
+
 public interface MetricRepo {
-  void addMetricToBatch(Sha1HashId defDimsId, String timeStamp, double value);
+  void addMetricToBatch(Sha1HashId defDimsId, String timeStamp, double value, Map<String, String> valueMeta);
 
   void addDefinitionToBatch(Sha1HashId defId, String name, String tenantId, String region);
 

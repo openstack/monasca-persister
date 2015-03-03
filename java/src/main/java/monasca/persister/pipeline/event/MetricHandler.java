@@ -51,7 +51,7 @@ public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
 
   private final SimpleDateFormat simpleDateFormat;
 
-  private final MetricRepo verticaMetricRepo;
+  private final MetricRepo metricRepo;
 
   private final Counter metricCounter;
   private final Counter definitionCounter;
@@ -64,7 +64,7 @@ public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
                        @Assisted("ordinal") int ordinal, @Assisted("batchSize") int batchSize) {
     super(configuration, environment, ordinal, batchSize, MetricHandler.class.getName());
     final String handlerName = String.format("%s[%d]", MetricHandler.class.getName(), ordinal);
-    this.verticaMetricRepo = metricRepo;
+    this.metricRepo = metricRepo;
     this.metricCounter =
         environment.metrics().counter(handlerName + "." + "metrics-added-to-batch-counter");
     this.definitionCounter =
@@ -129,7 +129,7 @@ public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
     definitionIdStringToHash.append(trunc(region, MAX_COLUMN_LENGTH));
     byte[] definitionIdSha1Hash = DigestUtils.sha(definitionIdStringToHash.toString());
     Sha1HashId definitionSha1HashId = new Sha1HashId((definitionIdSha1Hash));
-    verticaMetricRepo
+    metricRepo
         .addDefinitionToBatch(definitionSha1HashId, trunc(metric.getName(), MAX_COLUMN_LENGTH),
                               trunc(tenantId, MAX_COLUMN_LENGTH), trunc(region, MAX_COLUMN_LENGTH));
     definitionCounter.inc();
@@ -146,7 +146,7 @@ public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
 
     // Add the dimension name/values to the batch.
     for (Map.Entry<String, String> entry : preppedDimMap.entrySet()) {
-      verticaMetricRepo
+      metricRepo
           .addDimensionToBatch(dimensionsSha1HashId, entry.getKey(), entry.getValue());
       dimensionCounter.inc();
     }
@@ -160,38 +160,23 @@ public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
         definitionDimensionsIdSha1Hash =
         DigestUtils.sha(definitionDimensionsIdStringToHash.toString());
     Sha1HashId definitionDimensionsSha1HashId = new Sha1HashId(definitionDimensionsIdSha1Hash);
-    verticaMetricRepo
+    metricRepo
         .addDefinitionDimensionToBatch(definitionDimensionsSha1HashId, definitionSha1HashId,
                                        dimensionsSha1HashId);
     definitionDimensionsCounter.inc();
-
-    // Add the measurements to the batch.
-    if (metric.getTimeValues() != null)
-
-    {
-      for (double[] timeValuePairs : metric.getTimeValues()) {
-        String timeStamp = simpleDateFormat.format(new Date((long) (timeValuePairs[0] * 1000)));
-        double value = timeValuePairs[1];
-        verticaMetricRepo.addMetricToBatch(definitionDimensionsSha1HashId, timeStamp, value);
-        metricCounter.inc();
-        metricCount++;
-      }
-    } else
-
-    {
-      String timeStamp = simpleDateFormat.format(new Date(metric.getTimestamp() * 1000));
-      double value = metric.getValue();
-      verticaMetricRepo.addMetricToBatch(definitionDimensionsSha1HashId, timeStamp, value);
-      metricCounter.inc();
-      metricCount++;
-    }
+    String timeStamp = simpleDateFormat.format(new Date(metric.getTimestamp() * 1000));
+    double value = metric.getValue();
+    metricRepo.addMetricToBatch(definitionDimensionsSha1HashId, timeStamp, value,
+        metric.getValueMeta());
+    metricCounter.inc();
+    metricCount++;
 
     return metricCount;
   }
 
   @Override
   public void flushRepository() {
-    verticaMetricRepo.flush();
+    metricRepo.flush();
   }
 
 

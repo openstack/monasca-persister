@@ -22,6 +22,7 @@ import monasca.persister.pipeline.MetricPipeline;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
@@ -41,6 +42,7 @@ public class KafkaMetricsConsumerRunnableBasic extends KafkaConsumerRunnableBasi
     this.objectMapper = new ObjectMapper();
     objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     objectMapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+    objectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES);
   }
 
   @Override

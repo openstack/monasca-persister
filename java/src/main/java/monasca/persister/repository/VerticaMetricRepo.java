@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -202,7 +203,9 @@ public class VerticaMetricRepo extends VerticaRepo implements MetricRepo {
   }
 
   @Override
-  public void addMetricToBatch(Sha1HashId defDimsId, String timeStamp, double value) {
+  public void addMetricToBatch(Sha1HashId defDimsId, String timeStamp, double value,
+                               Map<String, String> valueMeta) {
+    // TODO: Actually handle valueMeta
     logger.debug("Adding metric to batch: defDimsId: {}, time: {}, value: {}",
         defDimsId.toHexString(), timeStamp, value);
     metricsBatch.add().bind("definition_dimension_id", defDimsId.getSha1Hash())
