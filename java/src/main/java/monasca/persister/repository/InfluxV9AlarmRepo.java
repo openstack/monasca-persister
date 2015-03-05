@@ -85,9 +85,13 @@ public class InfluxV9AlarmRepo extends InfluxAlarmRepo {
       DateTime dateTime = new DateTime(event.timestamp * 1000, DateTimeZone.UTC);
       String dateString = this.dateFormatter.print(dateTime);
 
+      Map<String, String> tags = new HashMap<>();
+      tags.put("tenant_id", event.tenantId);
+      tags.put("alarm_id", event.alarmId);
+
       InfluxPoint
           influxPoint =
-          new InfluxPoint(ALARM_STATE_HISTORY_NAME, new HashMap(), dateString, valueMap);
+          new InfluxPoint(ALARM_STATE_HISTORY_NAME, tags, dateString, valueMap);
 
       influxPointList.add(influxPoint);
     }
