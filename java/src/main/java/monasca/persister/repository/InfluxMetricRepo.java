@@ -61,8 +61,8 @@ public abstract class InfluxMetricRepo implements MetricRepo {
 
   @Override
   public void addMetricToBatch(final Sha1HashId defDimsId, final String timeStamp,
-                               final double value) {
-    final Measurement measurement = new Measurement(defDimsId, timeStamp, value);
+                               final double value, final Map<String, String> valueMeta) {
+    final Measurement measurement = new Measurement(defDimsId, timeStamp, value, valueMeta);
     List<Measurement> measurementList = this.measurementMap.get(defDimsId);
     if (measurementList == null) {
       measurementList = new LinkedList<>();
@@ -160,11 +160,14 @@ public abstract class InfluxMetricRepo implements MetricRepo {
     protected final Sha1HashId defDimsId;
     protected final String time;
     protected final double value;
+    protected final Map<String, String> valueMeta;
 
-    private Measurement(final Sha1HashId defDimsId, final String time, final double value) {
+    private Measurement(final Sha1HashId defDimsId, final String time, final double value,
+                        final Map<String, String> valueMeta) {
       this.defDimsId = defDimsId;
       this.time = time;
       this.value = value;
+      this.valueMeta = valueMeta;
     }
 
     @Override

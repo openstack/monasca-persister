@@ -17,6 +17,8 @@
 
 package monasca.persister.repository;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 
 import org.influxdb.dto.Serie;
@@ -29,6 +31,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -38,12 +41,14 @@ public class InfluxV8MetricRepo extends InfluxMetricRepo
 {
 
   private static final Logger logger = LoggerFactory.getLogger(InfluxV8MetricRepo.class);
-  private static final String[] COL_NAMES_STRING_ARRY = {"time", "value"};
+  private static final String[] COL_NAMES_STRING_ARRY = {"time", "value", "value_meta"};
 
   private final InfluxV8RepoWriter influxV8RepoWriter;
 
   private final SimpleDateFormat simpleDateFormat =
       new SimpleDateFormat("yyyy-MM-dd HH:mm:ss zzz");
+
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
   @Inject
   public InfluxV8MetricRepo(final Environment env,
@@ -64,7 +69,8 @@ public class InfluxV8MetricRepo extends InfluxMetricRepo
 
     final List<Serie> serieList = new LinkedList<>();
 
-    for (final Sha1HashId defDimId : this.measurementMap.keySet()) {
+    for (Map.Entry<Sha1HashId, List<Measurement>> entry : this.measurementMap.entrySet()) {
+      Sha1HashId defDimId = entry.getKey();
 
       final DefDim defDim = this.defDimMap.get(defDimId);
       final Def def = getDef(defDim.defId);
@@ -73,7 +79,7 @@ public class InfluxV8MetricRepo extends InfluxMetricRepo
 
       builder.columns(COL_NAMES_STRING_ARRY);
 
-      for (final Measurement measurement : this.measurementMap.get(defDimId)) {
+      for (final Measurement measurement : entry.getValue()) {
         final Object[] colValsObjArry = new Object[COL_NAMES_STRING_ARRY.length];
         final Date date = this.simpleDateFormat.parse(measurement.time + " UTC");
         final Long time = date.getTime() / 1000;
@@ -81,6 +87,16 @@ public class InfluxV8MetricRepo extends InfluxMetricRepo
         logger.debug("Added column value to colValsObjArry[{}] = {}", 0, colValsObjArry[0]);
         colValsObjArry[1] = measurement.value;
         logger.debug("Added column value to colValsObjArry[{}] = {}", 1, colValsObjArry[1]);
+        if (measurement.valueMeta != null && !measurement.valueMeta.isEmpty()) {
+          try {
+          final String valueMetaJson = objectMapper.writeValueAsString(measurement.valueMeta);
+          colValsObjArry[2] = valueMetaJson;
+          logger.debug("Added column value to colValsObjArry[{}] = {}", 2, valueMetaJson);
+          }
+          catch (JsonProcessingException e) {
+            logger.error("Unable to serialize " + measurement.valueMeta, e);
+          }
+        }
         builder.values(colValsObjArry);
         this.measurementMeter.mark();
       }
