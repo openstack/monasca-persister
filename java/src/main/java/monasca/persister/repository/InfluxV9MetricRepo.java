@@ -43,7 +43,7 @@ public class InfluxV9MetricRepo extends InfluxMetricRepo {
   private static final Logger logger = LoggerFactory.getLogger(InfluxV9MetricRepo.class);
 
   private final SimpleDateFormat simpleDateFormat =
-      new SimpleDateFormat("yyyy-MM-dd HH:mm:ss zzz");
+      new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS zzz");
 
   private final InfluxV9RepoWriter influxV9RepoWriter;
 

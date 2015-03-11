@@ -46,7 +46,7 @@ public class InfluxV8MetricRepo extends InfluxMetricRepo
   private final InfluxV8RepoWriter influxV8RepoWriter;
 
   private final SimpleDateFormat simpleDateFormat =
-      new SimpleDateFormat("yyyy-MM-dd HH:mm:ss zzz");
+      new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS zzz");
 
   private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -62,7 +62,7 @@ public class InfluxV8MetricRepo extends InfluxMetricRepo
   @Override
   protected void write() throws Exception {
 
-    this.influxV8RepoWriter.write(TimeUnit.SECONDS, getSeries());
+    this.influxV8RepoWriter.write(TimeUnit.MILLISECONDS, getSeries());
   }
 
   private Serie[] getSeries() throws Exception {
@@ -82,7 +82,7 @@ public class InfluxV8MetricRepo extends InfluxMetricRepo
       for (final Measurement measurement : entry.getValue()) {
         final Object[] colValsObjArry = new Object[COL_NAMES_STRING_ARRY.length];
         final Date date = this.simpleDateFormat.parse(measurement.time + " UTC");
-        final Long time = date.getTime() / 1000;
+        final Long time = date.getTime();
         colValsObjArry[0] = time;
         logger.debug("Added column value to colValsObjArry[{}] = {}", 0, colValsObjArry[0]);
         colValsObjArry[1] = measurement.value;

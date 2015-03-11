@@ -79,7 +79,7 @@ public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
 
     this.ordinal = ordinal;
 
-    simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
     simpleDateFormat.setTimeZone(TimeZone.getTimeZone("GMT-0"));
   }
 
@@ -164,10 +164,10 @@ public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
         .addDefinitionDimensionToBatch(definitionDimensionsSha1HashId, definitionSha1HashId,
                                        dimensionsSha1HashId);
     definitionDimensionsCounter.inc();
-    String timeStamp = simpleDateFormat.format(new Date(metric.getTimestamp() * 1000));
+    String timeStamp = simpleDateFormat.format(new Date(metric.getTimestamp()));
     double value = metric.getValue();
     metricRepo.addMetricToBatch(definitionDimensionsSha1HashId, timeStamp, value,
-        metric.getValueMeta());
+                                metric.getValueMeta());
     metricCounter.inc();
     metricCount++;
 
