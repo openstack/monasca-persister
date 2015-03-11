@@ -225,7 +225,7 @@ class AbstractPersister(threading.Thread):
 
         if self._data_points:
             try:
-                self._influxdb_client.write_points(self._data_points.values())
+                self._influxdb_client.write_points(self._data_points.values(), 'ms')
             except Exception:
                 log.exception("Error writing to influxdb: {}"
                               .format(self._data_points.values()))
