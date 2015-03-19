@@ -51,7 +51,28 @@ public class PersisterApplication extends Application<PersisterConfig> {
   private static final Logger logger = LoggerFactory.getLogger(PersisterApplication.class);
 
   public static void main(String[] args) throws Exception {
+    /*
+     * This should allow command line options to show the current version
+     * java -jar monasca-persister.jar --version
+     * java -jar monasca-persister.jar -version
+     * java -jar monasca-persister.jar version
+     * Really anything with the word version in it will show the
+     * version as long as there is only one argument
+     * */
+    if (args.length == 1 && args[0].toLowerCase().contains("version")) {
+      showVersion();
+      System.exit(0);
+    }
+
     new PersisterApplication().run(args);
+  }
+
+  private static void showVersion() {
+    Package pkg;
+    pkg = Package.getPackage("monasca.persister");
+
+    System.out.println("-------- Version Information --------");
+    System.out.println(pkg.getImplementationVersion());
   }
 
   @Override
