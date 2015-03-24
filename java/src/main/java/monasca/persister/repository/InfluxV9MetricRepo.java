@@ -18,6 +18,9 @@
 
 package monasca.persister.repository;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.google.inject.Inject;
 
 import org.joda.time.DateTime;
@@ -41,6 +44,8 @@ import monasca.persister.repository.influxdb.InfluxPoint;
 public class InfluxV9MetricRepo extends InfluxMetricRepo {
 
   private static final Logger logger = LoggerFactory.getLogger(InfluxV9MetricRepo.class);
+
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
   private final SimpleDateFormat simpleDateFormat =
       new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS zzz");
@@ -90,7 +95,17 @@ public class InfluxV9MetricRepo extends InfluxMetricRepo {
 
         Map<String, Object> valueMap = new HashMap<>();
         valueMap.put("value", measurement.value);
-
+        String valueMetaJson = null;
+        if (measurement.valueMeta != null && !measurement.valueMeta.isEmpty()) {
+          try {
+            valueMetaJson = objectMapper.writeValueAsString(measurement.valueMeta);
+            logger.debug("Added value for value_meta of {}", valueMetaJson);
+          } catch (JsonProcessingException e) {
+            logger.error("Unable to serialize " + measurement.valueMeta, e);
+            valueMetaJson = null;
+          }
+        }
+        valueMap.put("value_meta", valueMetaJson);
         InfluxPoint influxPoint = new InfluxPoint(def.name, tagMap, dateString, valueMap);
 
         influxPointList.add(influxPoint);
