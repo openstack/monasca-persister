@@ -95,17 +95,15 @@ public class InfluxV9MetricRepo extends InfluxMetricRepo {
 
         Map<String, Object> valueMap = new HashMap<>();
         valueMap.put("value", measurement.value);
-        String valueMetaJson = null;
         if (measurement.valueMeta != null && !measurement.valueMeta.isEmpty()) {
           try {
-            valueMetaJson = objectMapper.writeValueAsString(measurement.valueMeta);
+            final String valueMetaJson = objectMapper.writeValueAsString(measurement.valueMeta);
             logger.debug("Added value for value_meta of {}", valueMetaJson);
+            valueMap.put("value_meta", valueMetaJson);
           } catch (JsonProcessingException e) {
-            logger.error("Unable to serialize " + measurement.valueMeta, e);
-            valueMetaJson = null;
+            logger.error("Unable to serialize {}", measurement.valueMeta, e);
           }
         }
-        valueMap.put("value_meta", valueMetaJson);
         InfluxPoint influxPoint = new InfluxPoint(def.name, tagMap, dateString, valueMap);
 
         influxPointList.add(influxPoint);
