@@ -18,10 +18,10 @@
 
 package monasca.persister.repository;
 
+import com.google.inject.Inject;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import com.google.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -84,8 +84,8 @@ public class InfluxV9MetricRepo extends InfluxMetricRepo {
       for (Dim dim : dimSet) {
         tagMap.put(dim.name, dim.value);
       }
-      tagMap.put("tenant_id", def.tenantId);
-      tagMap.put("region", def.region);
+      tagMap.put("_tenant_id", def.tenantId);
+      tagMap.put("_region", def.region);
 
       for (final Measurement measurement : this.measurementMap.get(defDimId)) {
 

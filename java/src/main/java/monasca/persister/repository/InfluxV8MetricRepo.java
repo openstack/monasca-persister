@@ -17,9 +17,10 @@
 
 package monasca.persister.repository;
 
+import com.google.inject.Inject;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Inject;
 
 import org.influxdb.dto.Serie;
 import org.slf4j.Logger;
@@ -94,7 +95,7 @@ public class InfluxV8MetricRepo extends InfluxMetricRepo
           logger.debug("Added column value to colValsObjArry[{}] = {}", 2, valueMetaJson);
           }
           catch (JsonProcessingException e) {
-            logger.error("Unable to serialize " + measurement.valueMeta, e);
+            logger.error("Unable to serialize value meta data {}", measurement.valueMeta, e);
           }
         }
         builder.values(colValsObjArry);
