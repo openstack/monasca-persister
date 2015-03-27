@@ -23,6 +23,8 @@
         <mon.common.version>1.0.0-SNAPSHOT</mon.common.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <timestamp>${maven.build.timestamp}</timestamp>
+        <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ss</maven.build.timestamp.format>
         <artifactNamedVersion>${project.artifactId}-${project.version}-${timestamp}-${buildNumber}
         </artifactNamedVersion>
         <shadedJarName>${project.artifactId}-${project.version}-shaded
@@ -176,8 +178,11 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            <packageName>monasca.persister</packageName>
                         </manifest>
+                        <manifestEntries>
+                            <Implementation-Version>${artifactNamedVersion}</Implementation-Version>
+                        </manifestEntries>
                     </archive>
                 </configuration>
             </plugin>
