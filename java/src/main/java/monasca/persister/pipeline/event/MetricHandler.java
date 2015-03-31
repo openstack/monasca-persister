@@ -21,8 +21,6 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
 import com.codahale.metrics.Counter;
-import monasca.common.model.metric.Metric;
-import monasca.common.model.metric.MetricEnvelope;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
@@ -35,6 +33,8 @@ import java.util.TimeZone;
 import java.util.TreeMap;
 
 import io.dropwizard.setup.Environment;
+import monasca.common.model.metric.Metric;
+import monasca.common.model.metric.MetricEnvelope;
 import monasca.persister.configuration.PipelineConfig;
 import monasca.persister.repository.MetricRepo;
 import monasca.persister.repository.Sha1HashId;
@@ -145,11 +145,7 @@ public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
     Sha1HashId dimensionsSha1HashId = new Sha1HashId(dimensionIdSha1Hash);
 
     // Add the dimension name/values to the batch.
-    for (Map.Entry<String, String> entry : preppedDimMap.entrySet()) {
-      metricRepo
-          .addDimensionToBatch(dimensionsSha1HashId, entry.getKey(), entry.getValue());
-      dimensionCounter.inc();
-    }
+    metricRepo.addDimensionsToBatch(dimensionsSha1HashId, preppedDimMap);
 
     // Add the definition dimensions to the batch.
     StringBuilder
@@ -164,6 +160,8 @@ public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
         .addDefinitionDimensionToBatch(definitionDimensionsSha1HashId, definitionSha1HashId,
                                        dimensionsSha1HashId);
     definitionDimensionsCounter.inc();
+
+    // Add the measurement to the batch.
     String timeStamp = simpleDateFormat.format(new Date(metric.getTimestamp()));
     double value = metric.getValue();
     metricRepo.addMetricToBatch(definitionDimensionsSha1HashId, timeStamp, value,
@@ -190,6 +188,7 @@ public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
           String dimValue = dimMap.get(dimName);
           if (dimValue != null && !dimValue.isEmpty()) {
             newDimMap.put(trunc(dimName, MAX_COLUMN_LENGTH), trunc(dimValue, MAX_COLUMN_LENGTH));
+            dimensionCounter.inc();
           }
         }
       }

@@ -17,14 +17,11 @@
 
 package monasca.persister.repository;
 
-import monasca.persister.configuration.PersisterConfig;
-
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.Timer;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
-import io.dropwizard.setup.Environment;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.Timer;
 
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.PreparedBatch;
@@ -38,6 +35,9 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Inject;
+
+import io.dropwizard.setup.Environment;
+import monasca.persister.configuration.PersisterConfig;
 
 public class VerticaMetricRepo extends VerticaRepo implements MetricRepo {
 
@@ -215,43 +215,80 @@ public class VerticaMetricRepo extends VerticaRepo implements MetricRepo {
 
   @Override
   public void addDefinitionToBatch(Sha1HashId defId, String name, String tenantId, String region) {
+
     if (definitionsIdCache.getIfPresent(defId) == null) {
-      logger.debug("Adding definition to batch: defId: {}, name: {}, tenantId: {}, region: {}",
-          defId.toHexString(), name, tenantId, region);
-      stagedDefinitionsBatch.add().bind("id", defId.getSha1Hash()).bind("name", name)
-          .bind("tenant_id", tenantId).bind("region", region);
-      definitionIdSet.add(defId);
+
       definitionCacheMissMeter.mark();
+
+      if (!definitionIdSet.contains(defId)) {
+
+        logger.debug("Adding definition to batch: defId: {}, name: {}, tenantId: {}, region: {}",
+                     defId.toHexString(), name, tenantId, region);
+        stagedDefinitionsBatch.add().bind("id", defId.getSha1Hash()).bind("name", name)
+            .bind("tenant_id", tenantId).bind("region", region);
+        definitionIdSet.add(defId);
+      }
+
     } else {
+
       definitionCacheHitMeter.mark();
+
     }
   }
 
   @Override
-  public void addDimensionToBatch(Sha1HashId dimSetId, String name, String value) {
+  public void addDimensionsToBatch(Sha1HashId dimSetId, Map<String, String> dimMap) {
+
     if (dimensionsIdCache.getIfPresent(dimSetId) == null) {
-      logger.debug("Adding dimension to batch: dimSetId: {}, name: {}, value: {}",
-          dimSetId.toHexString(), name, value);
-      stagedDimensionsBatch.add().bind("dimension_set_id", dimSetId.getSha1Hash())
-          .bind("name", name).bind("value", value);
-      dimensionIdSet.add(dimSetId);
+
       dimensionCacheMissMeter.mark();
+
+      if (!dimensionIdSet.contains(dimSetId)) {
+
+        for (Map.Entry<String, String> entry : dimMap.entrySet()) {
+
+          String name = entry.getKey();
+          String value = entry.getValue();
+
+          logger.debug("Adding dimension to batch: dimSetId: {}, name: {}, value: {}", dimSetId.toHexString(), name, value);
+
+          stagedDimensionsBatch.add().bind("dimension_set_id", dimSetId.getSha1Hash())
+              .bind("name", name).bind("value", value);
+        }
+
+        dimensionIdSet.add(dimSetId);
+      }
+
     } else {
+
       dimensionCacheHitMeter.mark();
+
     }
   }
 
   @Override
-  public void addDefinitionDimensionToBatch(Sha1HashId defDimsId, Sha1HashId defId, Sha1HashId dimId) {
+  public void addDefinitionDimensionToBatch(Sha1HashId defDimsId, Sha1HashId defId,
+                                            Sha1HashId dimId) {
+
     if (definitionDimensionsIdCache.getIfPresent(defDimsId) == null) {
-      logger.debug("Adding definitionDimension to batch: defDimsId: {}, defId: {}, dimId: {}",
-          defDimsId.toHexString(), defId, dimId);
-      stagedDefinitionDimensionsBatch.add().bind("id", defDimsId.getSha1Hash())
-          .bind("definition_id", defId.getSha1Hash()).bind("dimension_set_id", dimId.getSha1Hash());
-      definitionDimensionsIdSet.add(defDimsId);
+
       definitionDimensionCacheMissMeter.mark();
+
+      if (!definitionDimensionsIdSet.contains(defDimsId)) {
+
+        logger.debug("Adding definitionDimension to batch: defDimsId: {}, defId: {}, dimId: {}",
+                     defDimsId.toHexString(), defId, dimId);
+        stagedDefinitionDimensionsBatch.add().bind("id", defDimsId.getSha1Hash())
+            .bind("definition_id", defId.getSha1Hash())
+            .bind("dimension_set_id", dimId.getSha1Hash());
+
+        definitionDimensionsIdSet.add(defDimsId);
+      }
+
     } else {
+
       definitionDimensionCacheHitMeter.mark();
+
     }
   }
 

@@ -62,6 +62,7 @@ public abstract class InfluxMetricRepo implements MetricRepo {
   @Override
   public void addMetricToBatch(final Sha1HashId defDimsId, final String timeStamp,
                                final double value, final Map<String, String> valueMeta) {
+
     final Measurement measurement = new Measurement(defDimsId, timeStamp, value, valueMeta);
     List<Measurement> measurementList = this.measurementMap.get(defDimsId);
     if (measurementList == null) {
@@ -74,28 +75,45 @@ public abstract class InfluxMetricRepo implements MetricRepo {
   @Override
   public void addDefinitionToBatch(final Sha1HashId defId, final String name, final String tenantId,
                                    final String region) {
-    final Def def = new Def(defId, name, tenantId, region);
-    this.defMap.put(defId, def);
+
+    if (!this.defMap.containsKey(defId)) {
+
+      final Def def = new Def(defId, name, tenantId, region);
+      this.defMap.put(defId, def);
+
+    }
   }
 
   @Override
-  public void addDimensionToBatch(final Sha1HashId dimSetId, final String name,
-                                  final String value) {
-    final Dim dim = new Dim(dimSetId, name, value);
-    Set<Dim> dimSet = this.dimMap.get(dimSetId);
-    if (dimSet == null) {
-      dimSet = new TreeSet<>();
-      this.dimMap.put(dimSetId, dimSet);
-    }
+  public void addDimensionsToBatch(final Sha1HashId dimSetId, Map<String, String> dimMap) {
 
-    dimSet.add(dim);
+    if (!this.dimMap.containsKey(dimSetId)) {
+
+      final Set<Dim> dimSet = new TreeSet<>();
+      this.dimMap.put(dimSetId, dimSet);
+
+      for (Map.Entry<String, String> entry : dimMap.entrySet()) {
+
+        final String name = entry.getKey();
+        final String value = entry.getValue();
+
+        final Dim dim = new Dim(dimSetId, name, value);
+        dimSet.add(dim);
+      }
+    }
   }
 
   @Override
   public void addDefinitionDimensionToBatch(final Sha1HashId defDimsId, final Sha1HashId defId,
                                             Sha1HashId dimId) {
-    final DefDim defDim = new DefDim(defDimsId, defId, dimId);
-    this.defDimMap.put(defDimsId, defDim);
+
+    if (!this.defDimMap.containsKey(defDimsId)) {
+
+      final DefDim defDim = new DefDim(defDimsId, defId, dimId);
+      this.defDimMap.put(defDimsId, defDim);
+
+    }
+
   }
 
   @Override

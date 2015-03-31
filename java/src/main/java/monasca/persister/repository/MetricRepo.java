@@ -24,7 +24,7 @@ public interface MetricRepo {
 
   void addDefinitionToBatch(Sha1HashId defId, String name, String tenantId, String region);
 
-  void addDimensionToBatch(Sha1HashId dimSetId, String name, String value);
+  void addDimensionsToBatch(Sha1HashId dimSetId, Map<String, String> dimMap);
 
   void addDefinitionDimensionToBatch(Sha1HashId defDimsId, Sha1HashId defId, Sha1HashId dimId);
 
