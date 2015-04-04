@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package monasca.persister.repository;
+package monasca.persister.repository.vertica;
 
 import org.apache.commons.codec.binary.Hex;
 

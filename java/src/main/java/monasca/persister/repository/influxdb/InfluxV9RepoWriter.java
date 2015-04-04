@@ -15,7 +15,9 @@
  * limitations under the License.
  */
 
-package monasca.persister.repository;
+package monasca.persister.repository.influxdb;
+
+import monasca.persister.configuration.PersisterConfig;
 
 import com.google.inject.Inject;
 
@@ -46,10 +48,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.HashMap;
-
-import monasca.persister.configuration.PersisterConfig;
-import monasca.persister.repository.influxdb.InfluxPoint;
-import monasca.persister.repository.influxdb.InfluxWrite;
 
 public class InfluxV9RepoWriter {
 

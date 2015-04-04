@@ -21,7 +21,7 @@ import monasca.common.model.event.AlarmStateTransitionedEvent;
 
 public interface AlarmRepo {
 
-  public void addToBatch(final AlarmStateTransitionedEvent message);
+  void addToBatch(final AlarmStateTransitionedEvent message);
 
-  public void flush();
+  void flush();
 }

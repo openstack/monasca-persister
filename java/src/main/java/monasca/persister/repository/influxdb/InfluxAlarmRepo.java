@@ -12,7 +12,10 @@
  * the License.
  */
 
-package monasca.persister.repository;
+package monasca.persister.repository.influxdb;
+
+import monasca.common.model.event.AlarmStateTransitionedEvent;
+import monasca.persister.repository.AlarmRepo;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
@@ -25,7 +28,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import io.dropwizard.setup.Environment;
-import monasca.common.model.event.AlarmStateTransitionedEvent;
 
 public abstract class InfluxAlarmRepo implements AlarmRepo {
 

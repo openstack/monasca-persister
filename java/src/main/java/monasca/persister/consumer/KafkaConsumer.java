@@ -45,8 +45,7 @@ public abstract class KafkaConsumer<T> {
 
   public void start() {
     executorService = Executors.newFixedThreadPool(1);
-    KafkaConsumerRunnableBasic<T> kafkaConsumerRunnableBasic =
-        createRunnable(kafkaChannel, this.threadNum);
+    kafkaConsumerRunnableBasic = createRunnable(kafkaChannel, this.threadNum);
     executorService.submit(kafkaConsumerRunnableBasic);
   }
 

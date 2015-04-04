@@ -15,7 +15,9 @@
  * limitations under the License.
  */
 
-package monasca.persister.repository;
+package monasca.persister.repository.influxdb;
+
+import monasca.persister.configuration.PersisterConfig;
 
 import com.google.inject.Inject;
 
@@ -30,7 +32,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import io.dropwizard.setup.Environment;
-import monasca.persister.configuration.PersisterConfig;
 
 public class InfluxV8RepoWriter {
 

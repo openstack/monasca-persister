@@ -20,6 +20,6 @@ package monasca.persister.consumer;
 import monasca.persister.pipeline.MetricPipeline;
 
 public interface KafkaMetricsConsumerFactory {
-  public KafkaMetricsConsumer create(KafkaChannel kafkaChannel, int threadNum,
-      MetricPipeline pipeline);
+  KafkaMetricsConsumer create(KafkaChannel kafkaChannel, int threadNum,
+                              MetricPipeline pipeline);
 }

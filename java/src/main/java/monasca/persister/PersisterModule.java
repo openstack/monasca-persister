@@ -51,15 +51,15 @@ import monasca.persister.pipeline.event.AlarmStateTransitionedEventHandlerFactor
 import monasca.persister.pipeline.event.MetricHandler;
 import monasca.persister.pipeline.event.MetricHandlerFactory;
 import monasca.persister.repository.AlarmRepo;
-import monasca.persister.repository.InfluxV8AlarmRepo;
-import monasca.persister.repository.InfluxV8MetricRepo;
-import monasca.persister.repository.InfluxV8RepoWriter;
-import monasca.persister.repository.InfluxV9AlarmRepo;
-import monasca.persister.repository.InfluxV9MetricRepo;
-import monasca.persister.repository.InfluxV9RepoWriter;
 import monasca.persister.repository.MetricRepo;
-import monasca.persister.repository.VerticaAlarmRepo;
-import monasca.persister.repository.VerticaMetricRepo;
+import monasca.persister.repository.influxdb.InfluxV8AlarmRepo;
+import monasca.persister.repository.influxdb.InfluxV8MetricRepo;
+import monasca.persister.repository.influxdb.InfluxV8RepoWriter;
+import monasca.persister.repository.influxdb.InfluxV9AlarmRepo;
+import monasca.persister.repository.influxdb.InfluxV9MetricRepo;
+import monasca.persister.repository.influxdb.InfluxV9RepoWriter;
+import monasca.persister.repository.vertica.VerticaAlarmRepo;
+import monasca.persister.repository.vertica.VerticaMetricRepo;
 
 public class PersisterModule extends AbstractModule {
 

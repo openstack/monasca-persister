@@ -15,7 +15,9 @@
  * limitations under the License.
  */
 
-package monasca.persister.repository;
+package monasca.persister.repository.influxdb;
+
+import monasca.common.model.event.AlarmStateTransitionedEvent;
 
 import com.google.inject.Inject;
 
@@ -30,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.TimeUnit;
 
 import io.dropwizard.setup.Environment;
-import monasca.common.model.event.AlarmStateTransitionedEvent;
 
 public class InfluxV8AlarmRepo extends InfluxAlarmRepo {
 

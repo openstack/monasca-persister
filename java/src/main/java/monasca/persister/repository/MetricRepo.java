@@ -17,16 +17,11 @@
 
 package monasca.persister.repository;
 
-import java.util.Map;
+import monasca.common.model.metric.MetricEnvelope;
 
 public interface MetricRepo {
-  void addMetricToBatch(Sha1HashId defDimsId, String timeStamp, double value, Map<String, String> valueMeta);
 
-  void addDefinitionToBatch(Sha1HashId defId, String name, String tenantId, String region);
-
-  void addDimensionsToBatch(Sha1HashId dimSetId, Map<String, String> dimMap);
-
-  void addDefinitionDimensionToBatch(Sha1HashId defDimsId, Sha1HashId defId, Sha1HashId dimId);
+  void addToBatch(MetricEnvelope metricEnvelope);
 
   void flush();
 }

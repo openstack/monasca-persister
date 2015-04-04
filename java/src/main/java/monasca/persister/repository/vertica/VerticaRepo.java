@@ -15,8 +15,25 @@
  * limitations under the License.
  */
 
-package monasca.persister.repository;
+package monasca.persister.repository.vertica;
 
-public final class VerticaMetricsConstants {
-  public static final int MAX_COLUMN_LENGTH = 255;
+import org.skife.jdbi.v2.DBI;
+import org.skife.jdbi.v2.Handle;
+
+public class VerticaRepo {
+  protected DBI dbi;
+  protected Handle handle;
+
+  public VerticaRepo(DBI dbi) {
+    this.dbi = dbi;
+    this.handle = dbi.open();
+    this.handle.execute("SET TIME ZONE TO 'UTC'");
+  }
+
+  public VerticaRepo() {}
+
+  public void setDBI(DBI dbi) throws Exception {
+    this.dbi = dbi;
+    this.handle = dbi.open();
+  }
 }

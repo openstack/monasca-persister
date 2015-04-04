@@ -15,14 +15,13 @@
  * limitations under the License.
  */
 
-package monasca.persister.repository;
+package monasca.persister.repository.vertica;
 
 import monasca.common.model.event.AlarmStateTransitionedEvent;
 import monasca.persister.configuration.PersisterConfig;
+import monasca.persister.repository.AlarmRepo;
 
 import com.codahale.metrics.Timer;
-
-import io.dropwizard.setup.Environment;
 
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.PreparedBatch;
@@ -36,6 +35,8 @@ import java.util.Date;
 import java.util.TimeZone;
 
 import javax.inject.Inject;
+
+import io.dropwizard.setup.Environment;
 
 public class VerticaAlarmRepo extends VerticaRepo implements AlarmRepo {
 

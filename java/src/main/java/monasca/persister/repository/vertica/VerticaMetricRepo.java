@@ -15,14 +15,22 @@
  * limitations under the License.
  */
 
-package monasca.persister.repository;
+package monasca.persister.repository.vertica;
+
+import monasca.common.model.metric.Metric;
+import monasca.common.model.metric.MetricEnvelope;
+import monasca.persister.configuration.PersisterConfig;
+import monasca.persister.pipeline.event.MetricHandler;
+import monasca.persister.repository.MetricRepo;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
+import com.codahale.metrics.Counter;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.PreparedBatch;
 import org.slf4j.Logger;
@@ -30,18 +38,29 @@ import org.slf4j.LoggerFactory;
 
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
+import java.util.TimeZone;
+import java.util.TreeMap;
 
 import javax.inject.Inject;
 
 import io.dropwizard.setup.Environment;
-import monasca.persister.configuration.PersisterConfig;
 
 public class VerticaMetricRepo extends VerticaRepo implements MetricRepo {
 
   private static final Logger logger = LoggerFactory.getLogger(VerticaMetricRepo.class);
+
+  public static final int MAX_COLUMN_LENGTH = 255;
+
+  private final SimpleDateFormat simpleDateFormat;
+
+  private static final String TENANT_ID = "tenantId";
+  private static final String REGION = "region";
 
   private final Environment environment;
 
@@ -55,8 +74,6 @@ public class VerticaMetricRepo extends VerticaRepo implements MetricRepo {
 
   private static final String SQL_INSERT_INTO_METRICS =
       "insert into MonMetrics.measurements (definition_dimensions_id, time_stamp, value) values (:definition_dimension_id, :time_stamp, :value)";
-
-  // If any of the columns change size be sure to update VerticaMetricConstants.java as well.
 
   private static final String DEFINITIONS_TEMP_STAGING_TABLE = "(" + "   id BINARY(20) NOT NULL,"
       + "   name VARCHAR(255) NOT NULL," + "   tenant_id VARCHAR(255) NOT NULL,"
@@ -83,6 +100,12 @@ public class VerticaMetricRepo extends VerticaRepo implements MetricRepo {
   private final String dimensionsTempStagingTableInsertStmt;
   private final String definitionDimensionsTempStagingTableInsertStmt;
 
+
+  private final Counter metricCounter;
+  private final Counter definitionCounter;
+  private final Counter dimensionCounter;
+  private final Counter definitionDimensionsCounter;
+
   private final Timer flushTimer;
   public final Meter measurementMeter;
   public final Meter definitionCacheMissMeter;
@@ -98,7 +121,24 @@ public class VerticaMetricRepo extends VerticaRepo implements MetricRepo {
     super(dbi);
     logger.debug("Instantiating: " + this.getClass().getName());
 
+    simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+    simpleDateFormat.setTimeZone(TimeZone.getTimeZone("GMT-0"));
+
     this.environment = environment;
+    final String handlerName = String.format("%s[%d]", MetricHandler.class.getName(), new Random().nextInt());
+
+    this.metricCounter =
+        environment.metrics().counter(handlerName + "." + "metrics-added-to-batch-counter");
+    this.definitionCounter =
+        environment.metrics()
+            .counter(handlerName + "." + "metric-definitions-added-to-batch-counter");
+    this.dimensionCounter =
+        environment.metrics()
+            .counter(handlerName + "." + "metric-dimensions-added-to-batch-counter");
+    this.definitionDimensionsCounter =
+        environment.metrics()
+            .counter(handlerName + "." + "metric-definition-dimensions-added-to-batch-counter");
+
     this.flushTimer =
         this.environment.metrics().timer(this.getClass().getName() + "." + "flush-timer");
     this.measurementMeter =
@@ -203,18 +243,93 @@ public class VerticaMetricRepo extends VerticaRepo implements MetricRepo {
   }
 
   @Override
+  public void addToBatch(MetricEnvelope metricEnvelope) {
+
+    Metric metric = metricEnvelope.metric;
+    Map<String, Object> meta = metricEnvelope.meta;
+
+    logger.debug("metric: {}", metric);
+    logger.debug("meta: {}", meta);
+
+    String tenantId = "";
+    if (meta.containsKey(TENANT_ID)) {
+      tenantId = (String) meta.get(TENANT_ID);
+    } else {
+      logger.warn(
+          "Failed to find tenantId in message envelope meta data. Metric message may be malformed"
+          + ". Setting tenantId to empty string.");
+      logger.warn("metric: {}", metric.toString());
+      logger.warn("meta: {}", meta.toString());
+    }
+
+    String region = "";
+    if (meta.containsKey(REGION)) {
+      region = (String) meta.get(REGION);
+    } else {
+      logger.warn(
+          "Failed to find region in message envelope meta data. Metric message may be malformed. "
+          + "Setting region to empty string.");
+      logger.warn("metric: {}", metric.toString());
+      logger.warn("meta: {}", meta.toString());
+    }
+
+    // Add the definition to the batch.
+    StringBuilder
+        definitionIdStringToHash =
+        new StringBuilder(trunc(metric.getName(), MAX_COLUMN_LENGTH));
+    definitionIdStringToHash.append(trunc(tenantId, MAX_COLUMN_LENGTH));
+    definitionIdStringToHash.append(trunc(region, MAX_COLUMN_LENGTH));
+    byte[] definitionIdSha1Hash = DigestUtils.sha(definitionIdStringToHash.toString());
+    Sha1HashId definitionSha1HashId = new Sha1HashId((definitionIdSha1Hash));
+    this.addDefinitionToBatch(definitionSha1HashId, trunc(metric.getName(), MAX_COLUMN_LENGTH),
+                              trunc(tenantId, MAX_COLUMN_LENGTH), trunc(region, MAX_COLUMN_LENGTH));
+    definitionCounter.inc();
+
+    // Calculate dimensions sha1 hash id.
+    StringBuilder dimensionIdStringToHash = new StringBuilder();
+    Map<String, String> preppedDimMap = prepDimensions(metric.getDimensions());
+    for (Map.Entry<String, String> entry : preppedDimMap.entrySet()) {
+      dimensionIdStringToHash.append(entry.getKey());
+      dimensionIdStringToHash.append(entry.getValue());
+    }
+    byte[] dimensionIdSha1Hash = DigestUtils.sha(dimensionIdStringToHash.toString());
+    Sha1HashId dimensionsSha1HashId = new Sha1HashId(dimensionIdSha1Hash);
+
+    // Add the dimension name/values to the batch.
+    this.addDimensionsToBatch(dimensionsSha1HashId, preppedDimMap);
+
+    // Add the definition dimensions to the batch.
+    StringBuilder
+        definitionDimensionsIdStringToHash =
+        new StringBuilder(definitionSha1HashId.toHexString());
+    definitionDimensionsIdStringToHash.append(dimensionsSha1HashId.toHexString());
+    byte[]
+        definitionDimensionsIdSha1Hash =
+        DigestUtils.sha(definitionDimensionsIdStringToHash.toString());
+    Sha1HashId definitionDimensionsSha1HashId = new Sha1HashId(definitionDimensionsIdSha1Hash);
+    this.addDefinitionDimensionToBatch(definitionDimensionsSha1HashId, definitionSha1HashId,
+                                       dimensionsSha1HashId);
+    definitionDimensionsCounter.inc();
+
+    // Add the measurement to the batch.
+    String timeStamp = simpleDateFormat.format(new Date(metric.getTimestamp()));
+    double value = metric.getValue();
+    this.addMetricToBatch(definitionDimensionsSha1HashId, timeStamp, value, metric.getValueMeta());
+
+    this.metricCounter.inc();
+  }
+
   public void addMetricToBatch(Sha1HashId defDimsId, String timeStamp, double value,
                                Map<String, String> valueMeta) {
     // TODO: Actually handle valueMeta
     logger.debug("Adding metric to batch: defDimsId: {}, time: {}, value: {}",
-        defDimsId.toHexString(), timeStamp, value);
+                 defDimsId.toHexString(), timeStamp, value);
     metricsBatch.add().bind("definition_dimension_id", defDimsId.getSha1Hash())
         .bind("time_stamp", timeStamp).bind("value", value);
     measurementMeter.mark();
   }
 
-  @Override
-  public void addDefinitionToBatch(Sha1HashId defId, String name, String tenantId, String region) {
+  private void addDefinitionToBatch(Sha1HashId defId, String name, String tenantId, String region) {
 
     if (definitionsIdCache.getIfPresent(defId) == null) {
 
@@ -236,8 +351,7 @@ public class VerticaMetricRepo extends VerticaRepo implements MetricRepo {
     }
   }
 
-  @Override
-  public void addDimensionsToBatch(Sha1HashId dimSetId, Map<String, String> dimMap) {
+  private void addDimensionsToBatch(Sha1HashId dimSetId, Map<String, String> dimMap) {
 
     if (dimensionsIdCache.getIfPresent(dimSetId) == null) {
 
@@ -266,8 +380,7 @@ public class VerticaMetricRepo extends VerticaRepo implements MetricRepo {
     }
   }
 
-  @Override
-  public void addDefinitionDimensionToBatch(Sha1HashId defDimsId, Sha1HashId defId,
+  private void addDefinitionDimensionToBatch(Sha1HashId defDimsId, Sha1HashId defId,
                                             Sha1HashId dimId) {
 
     if (definitionDimensionsIdCache.getIfPresent(defDimsId) == null) {
@@ -353,5 +466,38 @@ public class VerticaMetricRepo extends VerticaRepo implements MetricRepo {
     definitionIdSet.clear();
     dimensionIdSet.clear();
     definitionDimensionsIdSet.clear();
+  }
+
+  private Map<String, String> prepDimensions(Map<String, String> dimMap) {
+
+    Map<String, String> newDimMap = new TreeMap<>();
+
+    if (dimMap != null) {
+      for (String dimName : dimMap.keySet()) {
+        if (dimName != null && !dimName.isEmpty()) {
+          String dimValue = dimMap.get(dimName);
+          if (dimValue != null && !dimValue.isEmpty()) {
+            newDimMap.put(trunc(dimName, MAX_COLUMN_LENGTH), trunc(dimValue, MAX_COLUMN_LENGTH));
+            dimensionCounter.inc();
+          }
+        }
+      }
+    }
+    return newDimMap;
+  }
+
+  private String trunc(String s, int l) {
+
+    if (s == null) {
+      return "";
+    } else if (s.length() <= l) {
+      return s;
+    } else {
+      String r = s.substring(0, l);
+      logger.warn("Input string exceeded max column length. Truncating input string {} to {} chars",
+                  s, l);
+      logger.warn("Resulting string {}", r);
+      return r;
+    }
   }
 }
