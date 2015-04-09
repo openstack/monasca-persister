@@ -27,20 +27,20 @@ import javax.inject.Singleton;
 
 import io.dropwizard.setup.Environment;
 import monasca.persister.configuration.PersisterConfig;
-import monasca.persister.consumer.AlarmStateTransitionConsumer;
-import monasca.persister.consumer.AlarmStateTransitionConsumerFactory;
-import monasca.persister.consumer.KafkaAlarmStateTransitionConsumer;
-import monasca.persister.consumer.KafkaAlarmStateTransitionConsumerFactory;
-import monasca.persister.consumer.KafkaAlarmStateTransitionConsumerRunnableBasic;
-import monasca.persister.consumer.KafkaAlarmStateTransitionConsumerRunnableBasicFactory;
+import monasca.persister.consumer.alarmstate.AlarmStateTransitionConsumer;
+import monasca.persister.consumer.alarmstate.AlarmStateTransitionConsumerFactory;
+import monasca.persister.consumer.alarmstate.KafkaAlarmStateTransitionConsumer;
+import monasca.persister.consumer.alarmstate.KafkaAlarmStateTransitionConsumerFactory;
+import monasca.persister.consumer.alarmstate.KafkaAlarmStateTransitionConsumerRunnableBasic;
+import monasca.persister.consumer.alarmstate.KafkaAlarmStateTransitionConsumerRunnableBasicFactory;
 import monasca.persister.consumer.KafkaChannel;
 import monasca.persister.consumer.KafkaChannelFactory;
-import monasca.persister.consumer.KafkaMetricsConsumer;
-import monasca.persister.consumer.KafkaMetricsConsumerFactory;
-import monasca.persister.consumer.KafkaMetricsConsumerRunnableBasic;
-import monasca.persister.consumer.KafkaMetricsConsumerRunnableBasicFactory;
-import monasca.persister.consumer.MetricsConsumer;
-import monasca.persister.consumer.MetricsConsumerFactory;
+import monasca.persister.consumer.metric.KafkaMetricsConsumer;
+import monasca.persister.consumer.metric.KafkaMetricsConsumerFactory;
+import monasca.persister.consumer.metric.KafkaMetricsConsumerRunnableBasic;
+import monasca.persister.consumer.metric.KafkaMetricsConsumerRunnableBasicFactory;
+import monasca.persister.consumer.metric.MetricsConsumer;
+import monasca.persister.consumer.metric.MetricsConsumerFactory;
 import monasca.persister.dbi.DBIProvider;
 import monasca.persister.pipeline.AlarmStateTransitionPipeline;
 import monasca.persister.pipeline.AlarmStateTransitionPipelineFactory;
@@ -125,8 +125,7 @@ public class PersisterModule extends AbstractModule {
 
     install(new FactoryModuleBuilder().implement(
         MetricsConsumer.class,
-        MetricsConsumer.class).build(
-            MetricsConsumerFactory.class));
+        MetricsConsumer.class).build(MetricsConsumerFactory.class));
 
     install(new FactoryModuleBuilder().implement(KafkaChannel.class, KafkaChannel.class).build(
         KafkaChannelFactory.class));

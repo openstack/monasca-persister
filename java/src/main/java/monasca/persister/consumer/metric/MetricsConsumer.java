@@ -15,10 +15,19 @@
  * limitations under the License.
  */
 
-package monasca.persister.consumer;
+package monasca.persister.consumer.metric;
 
+import monasca.common.model.metric.MetricEnvelope;
+import monasca.persister.consumer.Consumer;
 import monasca.persister.pipeline.MetricPipeline;
 
-public interface KafkaMetricsConsumerRunnableBasicFactory {
-  KafkaMetricsConsumerRunnableBasic create(MetricPipeline pipeline, KafkaChannel kafkaChannel, int threadNumber);
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
+
+public class MetricsConsumer extends Consumer<MetricEnvelope[]> {
+
+  @Inject
+  public MetricsConsumer(@Assisted KafkaMetricsConsumer kafkaConsumer, @Assisted MetricPipeline pipeline) {
+    super(kafkaConsumer, pipeline);
+  }
 }

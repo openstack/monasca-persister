@@ -15,9 +15,12 @@
  * limitations under the License.
  */
 
-package monasca.persister.consumer;
+package monasca.persister.consumer.alarmstate;
 
 import monasca.common.model.event.AlarmStateTransitionedEvent;
+import monasca.persister.consumer.KafkaChannel;
+import monasca.persister.consumer.KafkaConsumer;
+import monasca.persister.consumer.KafkaConsumerRunnableBasic;
 import monasca.persister.pipeline.AlarmStateTransitionPipeline;
 
 import com.google.inject.Inject;

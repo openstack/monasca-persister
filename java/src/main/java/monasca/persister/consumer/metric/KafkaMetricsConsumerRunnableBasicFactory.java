@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-package monasca.persister.consumer;
+package monasca.persister.consumer.metric;
 
-import monasca.persister.pipeline.AlarmStateTransitionPipeline;
+import monasca.persister.consumer.KafkaChannel;
+import monasca.persister.pipeline.MetricPipeline;
 
-public interface KafkaAlarmStateTransitionConsumerFactory {
-  KafkaAlarmStateTransitionConsumer create(KafkaChannel kafkaChannel, int threadNum,
-      final AlarmStateTransitionPipeline pipeline);
+public interface KafkaMetricsConsumerRunnableBasicFactory {
+  KafkaMetricsConsumerRunnableBasic create(MetricPipeline pipeline, KafkaChannel kafkaChannel, int threadNumber);
 }

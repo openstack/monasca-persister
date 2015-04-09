@@ -15,19 +15,12 @@
  * limitations under the License.
  */
 
-package monasca.persister.consumer;
+package monasca.persister.consumer.alarmstate;
 
-import monasca.common.model.event.AlarmStateTransitionedEvent;
+import monasca.persister.consumer.KafkaChannel;
 import monasca.persister.pipeline.AlarmStateTransitionPipeline;
 
-import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
-
-public class AlarmStateTransitionConsumer extends Consumer<AlarmStateTransitionedEvent> {
-
-  @Inject
-  public AlarmStateTransitionConsumer(@Assisted KafkaAlarmStateTransitionConsumer kafkaConsumer,
-      @Assisted AlarmStateTransitionPipeline pipeline) {
-    super(kafkaConsumer, pipeline);
-  }
+public interface KafkaAlarmStateTransitionConsumerRunnableBasicFactory {
+  KafkaAlarmStateTransitionConsumerRunnableBasic create(AlarmStateTransitionPipeline pipeline, KafkaChannel kafkaChannel,
+      int threadNumber);
 }

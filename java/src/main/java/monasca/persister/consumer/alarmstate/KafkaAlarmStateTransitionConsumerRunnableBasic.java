@@ -15,9 +15,11 @@
  * limitations under the License.
  */
 
-package monasca.persister.consumer;
+package monasca.persister.consumer.alarmstate;
 
 import monasca.common.model.event.AlarmStateTransitionedEvent;
+import monasca.persister.consumer.KafkaChannel;
+import monasca.persister.consumer.KafkaConsumerRunnableBasic;
 import monasca.persister.pipeline.AlarmStateTransitionPipeline;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -29,7 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class KafkaAlarmStateTransitionConsumerRunnableBasic extends
-    KafkaConsumerRunnableBasic<AlarmStateTransitionedEvent> {
+                                                            KafkaConsumerRunnableBasic<AlarmStateTransitionedEvent> {
 
   private static final Logger logger = LoggerFactory
       .getLogger(KafkaAlarmStateTransitionConsumerRunnableBasic.class);

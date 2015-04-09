@@ -51,13 +51,14 @@ public class InfluxV9MetricRepo extends InfluxMetricRepo {
 
     List<InfluxPoint> influxPointList = new LinkedList<>();
 
-    for (Map.Entry<Definition, Map<Dimensions, List<Measurement>>> definitionMapEntry :
-        this.measurementBuffer.entrySet()) {
+    for (Map.Entry<Definition, Map<Dimensions, List<Measurement>>> definitionMapEntry
+        : this.measurementBuffer.entrySet()) {
 
       Definition definition = definitionMapEntry.getKey();
       Map<Dimensions, List<Measurement>> dimensionsMap = definitionMapEntry.getValue();
 
-      for (Map.Entry<Dimensions, List<Measurement>> dimensionsMapEntry : dimensionsMap.entrySet()) {
+      for (Map.Entry<Dimensions, List<Measurement>> dimensionsMapEntry
+          : dimensionsMap.entrySet()) {
 
         Dimensions dimensions = dimensionsMapEntry.getKey();
         List<Measurement> measurementList = dimensionsMapEntry.getValue();

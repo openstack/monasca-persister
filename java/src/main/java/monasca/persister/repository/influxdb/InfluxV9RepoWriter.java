@@ -53,14 +53,13 @@ public class InfluxV9RepoWriter {
 
   private static final Logger logger = LoggerFactory.getLogger(InfluxV9RepoWriter.class);
 
-  private final PersisterConfig config;
-
   private final String influxName;
   private final String influxUrl;
   private final String influxCreds;
   private final String influxUser;
   private final String influxPass;
   private final String influxRetentionPolicy;
+  private final boolean gzip;
 
   private final CloseableHttpClient httpClient;
 
@@ -71,21 +70,20 @@ public class InfluxV9RepoWriter {
   @Inject
   public InfluxV9RepoWriter(final PersisterConfig config) {
 
-    this.config = config;
-
     this.influxName = config.getInfluxDBConfiguration().getName();
     this.influxUrl = config.getInfluxDBConfiguration().getUrl() + "/write";
     this.influxUser = config.getInfluxDBConfiguration().getUser();
     this.influxPass = config.getInfluxDBConfiguration().getPassword();
     this.influxCreds = this.influxUser + ":" + this.influxPass;
     this.influxRetentionPolicy = config.getInfluxDBConfiguration().getRetentionPolicy();
+    this.gzip = config.getInfluxDBConfiguration().getGzip();
 
     this.baseAuthHeader = "Basic " + new String(Base64.encodeBase64(this.influxCreds.getBytes()));
 
     PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
     cm.setMaxTotal(config.getInfluxDBConfiguration().getMaxHttpConnections());
 
-    if (config.getInfluxDBConfiguration().getGzip()) {
+    if (this.gzip) {
 
       this.httpClient =
           HttpClients.custom().setConnectionManager(cm)
@@ -123,7 +121,6 @@ public class InfluxV9RepoWriter {
       this.httpClient = HttpClients.custom().setConnectionManager(cm).build();
 
     }
-
   }
 
   protected void write(final InfluxPoint[] influxPointArry) throws Exception {
@@ -140,7 +137,7 @@ public class InfluxV9RepoWriter {
 
     String json = this.objectMapper.writeValueAsString(influxWrite);
 
-    if (this.config.getInfluxDBConfiguration().getGzip()) {
+    if (this.gzip) {
 
       HttpEntity
           requestEntity =

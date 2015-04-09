@@ -12,7 +12,7 @@
  * the License.
  */
 
-package monasca.persister.consumer;
+package monasca.persister.consumer.metric;
 
 import monasca.persister.pipeline.MetricPipeline;
 

@@ -17,8 +17,8 @@
 
 package monasca.persister;
 
-import monasca.persister.consumer.KafkaMetricsConsumer;
-import monasca.persister.consumer.MetricsConsumer;
+import monasca.persister.consumer.metric.KafkaMetricsConsumer;
+import monasca.persister.consumer.metric.MetricsConsumer;
 import monasca.persister.pipeline.MetricPipeline;
 import monasca.persister.pipeline.event.MetricHandler;
 

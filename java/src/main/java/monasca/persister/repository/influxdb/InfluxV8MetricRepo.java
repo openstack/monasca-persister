@@ -66,7 +66,8 @@ public class InfluxV8MetricRepo extends InfluxMetricRepo
       Definition definition = definitionMapEntry.getKey();
       Map<Dimensions, List<Measurement>> dimensionsMap = definitionMapEntry.getValue();
 
-      for (Map.Entry<Dimensions, List<Measurement>> dimensionsMapEntry : dimensionsMap.entrySet()) {
+      for (Map.Entry<Dimensions, List<Measurement>> dimensionsMapEntry
+          : dimensionsMap.entrySet()) {
 
         Dimensions dimensions = dimensionsMapEntry.getKey();
         List<Measurement> measurementList = dimensionsMapEntry.getValue();

@@ -15,9 +15,11 @@
  * limitations under the License.
  */
 
-package monasca.persister.consumer;
+package monasca.persister.consumer.metric;
 
 import monasca.common.model.metric.MetricEnvelope;
+import monasca.persister.consumer.KafkaChannel;
+import monasca.persister.consumer.KafkaConsumerRunnableBasic;
 import monasca.persister.pipeline.MetricPipeline;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -29,7 +31,8 @@ import com.google.inject.assistedinject.Assisted;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class KafkaMetricsConsumerRunnableBasic extends KafkaConsumerRunnableBasic<MetricEnvelope[]> {
+public class KafkaMetricsConsumerRunnableBasic extends
+                                               KafkaConsumerRunnableBasic<MetricEnvelope[]> {
 
   private static final Logger logger = LoggerFactory
       .getLogger(KafkaMetricsConsumerRunnableBasic.class);

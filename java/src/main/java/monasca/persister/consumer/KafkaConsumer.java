@@ -58,7 +58,7 @@ public abstract class KafkaConsumer<T> {
           logger.warn("Did not shut down in {} seconds", WAIT_TIME);
         }
       } catch (InterruptedException e) {
-        logger.info("awaitTerminiation interrupted", e);
+        logger.info("awaitTermination interrupted", e);
       }
     }
   }

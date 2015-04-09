@@ -19,10 +19,10 @@ package monasca.persister.consumer;
 
 import monasca.persister.pipeline.ManagedPipeline;
 
-import kafka.consumer.ConsumerIterator;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import kafka.consumer.ConsumerIterator;
 
 public abstract class KafkaConsumerRunnableBasic<T> implements Runnable {
 
@@ -44,7 +44,7 @@ public abstract class KafkaConsumerRunnableBasic<T> implements Runnable {
 
   abstract protected void handleMessage(String message);
 
-  protected void markRead() {
+  private void markRead() {
     this.kafkaChannel.markRead();
   }
 
@@ -66,7 +66,6 @@ public abstract class KafkaConsumerRunnableBasic<T> implements Runnable {
         }
       } catch (kafka.consumer.ConsumerTimeoutException cte) {
         publishHeartbeat();
-        continue;
       }
     }
     logger.debug("Shutting down Thread: {}", threadNumber);

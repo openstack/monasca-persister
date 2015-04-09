@@ -18,16 +18,16 @@
 package monasca.persister;
 
 import monasca.persister.configuration.PersisterConfig;
-import monasca.persister.consumer.AlarmStateTransitionConsumer;
-import monasca.persister.consumer.AlarmStateTransitionConsumerFactory;
-import monasca.persister.consumer.KafkaAlarmStateTransitionConsumer;
-import monasca.persister.consumer.KafkaAlarmStateTransitionConsumerFactory;
+import monasca.persister.consumer.alarmstate.AlarmStateTransitionConsumer;
+import monasca.persister.consumer.alarmstate.AlarmStateTransitionConsumerFactory;
+import monasca.persister.consumer.alarmstate.KafkaAlarmStateTransitionConsumer;
+import monasca.persister.consumer.alarmstate.KafkaAlarmStateTransitionConsumerFactory;
 import monasca.persister.consumer.KafkaChannel;
 import monasca.persister.consumer.KafkaChannelFactory;
-import monasca.persister.consumer.KafkaMetricsConsumer;
-import monasca.persister.consumer.KafkaMetricsConsumerFactory;
-import monasca.persister.consumer.MetricsConsumer;
-import monasca.persister.consumer.MetricsConsumerFactory;
+import monasca.persister.consumer.metric.KafkaMetricsConsumer;
+import monasca.persister.consumer.metric.KafkaMetricsConsumerFactory;
+import monasca.persister.consumer.metric.MetricsConsumer;
+import monasca.persister.consumer.metric.MetricsConsumerFactory;
 import monasca.persister.healthcheck.SimpleHealthCheck;
 import monasca.persister.pipeline.AlarmStateTransitionPipeline;
 import monasca.persister.pipeline.AlarmStateTransitionPipelineFactory;
