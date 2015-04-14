@@ -82,7 +82,7 @@ public class InfluxV9AlarmRepo extends InfluxAlarmRepo {
       valueMap.put("reason", event.stateChangeReason);
       valueMap.put("reason_data", "{}");
 
-      DateTime dateTime = new DateTime(event.timestamp * 1000, DateTimeZone.UTC);
+      DateTime dateTime = new DateTime(event.timestamp, DateTimeZone.UTC);
       String dateString = this.dateFormatter.print(dateTime);
 
       Map<String, String> tags = new HashMap<>();

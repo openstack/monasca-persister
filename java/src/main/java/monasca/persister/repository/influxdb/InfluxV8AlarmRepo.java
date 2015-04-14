@@ -85,7 +85,7 @@ public class InfluxV8AlarmRepo extends InfluxAlarmRepo {
       this.influxV8RepoWriter.logColValues(series[0]);
     }
 
-    this.influxV8RepoWriter.write(TimeUnit.SECONDS, series);
+    this.influxV8RepoWriter.write(TimeUnit.MILLISECONDS, series);
   }
 
 }
