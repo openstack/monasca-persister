@@ -15,19 +15,14 @@
  * limitations under the License.
  */
 
-package monasca.persister.consumer.metric;
+package monasca.persister.consumer;
 
-import monasca.common.model.metric.MetricEnvelope;
-import monasca.persister.consumer.Consumer;
-import monasca.persister.pipeline.MetricPipeline;
+import monasca.persister.pipeline.ManagedPipeline;
 
-import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
+public interface ConsumerFactory<T> {
 
-public class MetricsConsumer extends Consumer<MetricEnvelope[]> {
+  Consumer<T> create(
+      KafkaConsumer<T> kafkaConsumer,
+      ManagedPipeline<T> pipeline);
 
-  @Inject
-  public MetricsConsumer(@Assisted KafkaMetricsConsumer kafkaConsumer, @Assisted MetricPipeline pipeline) {
-    super(kafkaConsumer, pipeline);
-  }
 }

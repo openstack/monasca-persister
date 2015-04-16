@@ -22,46 +22,63 @@ import com.google.inject.assistedinject.Assisted;
 
 import com.codahale.metrics.Counter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.dropwizard.setup.Environment;
 import monasca.common.model.metric.MetricEnvelope;
 import monasca.persister.configuration.PipelineConfig;
 import monasca.persister.repository.MetricRepo;
 
-public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
+public class MetricHandler<T> extends FlushableHandler<T> {
 
-  private final int ordinal;
+  private static final Logger logger = LoggerFactory
+      .getLogger(MetricHandler.class);
 
   private final MetricRepo metricRepo;
+
+  private final int ordinal;
 
   private final Counter metricCounter;
 
   @Inject
-  public MetricHandler(MetricRepo metricRepo, @Assisted PipelineConfig configuration,
-                       Environment environment, @Assisted("ordinal") int ordinal,
-                       @Assisted("batchSize") int batchSize) {
+  public MetricHandler(
+      MetricRepo metricRepo,
+      @Assisted PipelineConfig configuration,
+      Environment environment,
+      @Assisted("ordinal") int ordinal,
+      @Assisted("batchSize") int batchSize) {
 
-    super(configuration, environment, ordinal, batchSize, MetricHandler.class.getName());
+    super(configuration,
+          environment,
+          ordinal,
+          batchSize,
+          MetricHandler.class.getName());
+
     this.metricRepo = metricRepo;
+
+    this.ordinal = ordinal;
 
     final String handlerName = String.format("%s[%d]", MetricHandler.class.getName(), ordinal);
     this.metricCounter =
         environment.metrics().counter(handlerName + "." + "metrics-added-to-batch-counter");
 
-    this.ordinal = ordinal;
-
   }
 
   @Override
-  public int process(MetricEnvelope[] metricEnvelopes) throws Exception {
+  public int process(T metricEnvelopes) throws Exception {
 
-    for (final MetricEnvelope metricEnvelope : metricEnvelopes) {
+    MetricEnvelope[] metricEnvelopesArry = (MetricEnvelope[]) metricEnvelopes;
+    for (final MetricEnvelope metricEnvelope : metricEnvelopesArry) {
       processEnvelope(metricEnvelope);
     }
 
-    return metricEnvelopes.length;
+    return metricEnvelopesArry.length;
   }
 
   private void processEnvelope(MetricEnvelope metricEnvelope) {
+
+    logger.debug("Ordinal: {}: {}", this.ordinal, metricEnvelope);
 
     this.metricRepo.addToBatch(metricEnvelope);
 

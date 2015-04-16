@@ -17,30 +17,44 @@
 
 package monasca.persister.pipeline;
 
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
+
 import monasca.persister.pipeline.event.FlushableHandler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ManagedPipeline<T> {
+
   private static final Logger logger = LoggerFactory.getLogger(ManagedPipeline.class);
 
-  private final FlushableHandler<T> eventHandler;
+  private final FlushableHandler<T> handler;
 
-  public ManagedPipeline(FlushableHandler<T> eventHandler) {
-    this.eventHandler = eventHandler;
+  @Inject
+  public ManagedPipeline(
+      @Assisted FlushableHandler<T> handler) {
+
+    this.handler = handler;
+
   }
 
   public void shutdown() {
-    eventHandler.flush();
+    handler.flush();
   }
 
   public boolean publishEvent(T holder) {
+
       try {
-        return this.eventHandler.onEvent(holder);
+
+        return this.handler.onEvent(holder);
+
       } catch (Exception e) {
+
         logger.error("Failed to handle event", e);
+
         return false;
+
       }
   }
 }

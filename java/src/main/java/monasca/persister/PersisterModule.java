@@ -19,6 +19,7 @@ package monasca.persister;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 
 import org.skife.jdbi.v2.DBI;
@@ -26,26 +27,22 @@ import org.skife.jdbi.v2.DBI;
 import javax.inject.Singleton;
 
 import io.dropwizard.setup.Environment;
+import monasca.common.model.event.AlarmStateTransitionedEvent;
+import monasca.common.model.metric.MetricEnvelope;
 import monasca.persister.configuration.PersisterConfig;
-import monasca.persister.consumer.alarmstate.AlarmStateTransitionConsumer;
-import monasca.persister.consumer.alarmstate.AlarmStateTransitionConsumerFactory;
-import monasca.persister.consumer.alarmstate.KafkaAlarmStateTransitionConsumer;
-import monasca.persister.consumer.alarmstate.KafkaAlarmStateTransitionConsumerFactory;
-import monasca.persister.consumer.alarmstate.KafkaAlarmStateTransitionConsumerRunnableBasic;
-import monasca.persister.consumer.alarmstate.KafkaAlarmStateTransitionConsumerRunnableBasicFactory;
+import monasca.persister.consumer.Consumer;
+import monasca.persister.consumer.ConsumerFactory;
 import monasca.persister.consumer.KafkaChannel;
 import monasca.persister.consumer.KafkaChannelFactory;
+import monasca.persister.consumer.KafkaConsumerRunnableBasic;
+import monasca.persister.consumer.KafkaConsumerRunnableBasicFactory;
+import monasca.persister.consumer.alarmstate.KafkaAlarmStateTransitionConsumer;
+import monasca.persister.consumer.alarmstate.KafkaAlarmStateTransitionConsumerFactory;
 import monasca.persister.consumer.metric.KafkaMetricsConsumer;
 import monasca.persister.consumer.metric.KafkaMetricsConsumerFactory;
-import monasca.persister.consumer.metric.KafkaMetricsConsumerRunnableBasic;
-import monasca.persister.consumer.metric.KafkaMetricsConsumerRunnableBasicFactory;
-import monasca.persister.consumer.metric.MetricsConsumer;
-import monasca.persister.consumer.metric.MetricsConsumerFactory;
 import monasca.persister.dbi.DBIProvider;
-import monasca.persister.pipeline.AlarmStateTransitionPipeline;
-import monasca.persister.pipeline.AlarmStateTransitionPipelineFactory;
-import monasca.persister.pipeline.MetricPipeline;
-import monasca.persister.pipeline.MetricPipelineFactory;
+import monasca.persister.pipeline.ManagedPipelineFactory;
+import monasca.persister.pipeline.ManagedPipeline;
 import monasca.persister.pipeline.event.AlarmStateTransitionedEventHandler;
 import monasca.persister.pipeline.event.AlarmStateTransitionedEventHandlerFactory;
 import monasca.persister.pipeline.event.MetricHandler;
@@ -82,53 +79,69 @@ public class PersisterModule extends AbstractModule {
     bind(PersisterConfig.class).toInstance(config);
     bind(Environment.class).toInstance(env);
 
-    install(new FactoryModuleBuilder().implement(MetricHandler.class, MetricHandler.class).build(
-        MetricHandlerFactory.class));
+    install(
+        new FactoryModuleBuilder().implement(
+            new TypeLiteral<MetricHandler<MetricEnvelope[]>>() {},
+            new TypeLiteral<MetricHandler<MetricEnvelope[]>>() {})
+            .build(new TypeLiteral<MetricHandlerFactory<MetricEnvelope[]>>() {}));
 
-    install(new FactoryModuleBuilder().implement(AlarmStateTransitionedEventHandler.class,
-        AlarmStateTransitionedEventHandler.class).build(
-        AlarmStateTransitionedEventHandlerFactory.class));
+    install(
+        new FactoryModuleBuilder().implement(
+        new TypeLiteral<AlarmStateTransitionedEventHandler<AlarmStateTransitionedEvent>>() {},
+        new TypeLiteral<AlarmStateTransitionedEventHandler<AlarmStateTransitionedEvent>>() {})
+            .build(new TypeLiteral<AlarmStateTransitionedEventHandlerFactory<AlarmStateTransitionedEvent>>() {}));
 
-    install(new FactoryModuleBuilder().implement(KafkaMetricsConsumerRunnableBasic.class,
-        KafkaMetricsConsumerRunnableBasic.class).build(
-        KafkaMetricsConsumerRunnableBasicFactory.class));
+    install(
+        new FactoryModuleBuilder().implement(
+            new TypeLiteral<KafkaConsumerRunnableBasic<MetricEnvelope[]>>() {},
+            new TypeLiteral<KafkaConsumerRunnableBasic<MetricEnvelope[]>>() {})
+            .build(new TypeLiteral<KafkaConsumerRunnableBasicFactory<MetricEnvelope[]>>() {}));
 
-    install(new FactoryModuleBuilder().implement(
-        KafkaAlarmStateTransitionConsumerRunnableBasic.class,
-        KafkaAlarmStateTransitionConsumerRunnableBasic.class).build(
-        KafkaAlarmStateTransitionConsumerRunnableBasicFactory.class));
+    install(
+        new FactoryModuleBuilder().implement(
+        new TypeLiteral<KafkaConsumerRunnableBasic<AlarmStateTransitionedEvent>>() {},
+        new TypeLiteral<KafkaConsumerRunnableBasic<AlarmStateTransitionedEvent>>() {})
+            .build(new TypeLiteral<KafkaConsumerRunnableBasicFactory<AlarmStateTransitionedEvent>>() {}));
 
-    install(new FactoryModuleBuilder().implement(
-        KafkaMetricsConsumer.class,
-        KafkaMetricsConsumer.class).build(
-            KafkaMetricsConsumerFactory.class));
+    install(
+        new FactoryModuleBuilder().implement(
+            new TypeLiteral<KafkaMetricsConsumer<MetricEnvelope[]>>() {},
+            new TypeLiteral<KafkaMetricsConsumer<MetricEnvelope[]>>() {})
+            .build(new TypeLiteral<KafkaMetricsConsumerFactory<MetricEnvelope[]>>() {}));
 
-    install(new FactoryModuleBuilder().implement(
-        MetricPipeline.class,
-        MetricPipeline.class).build(
-            MetricPipelineFactory.class));
+    install(
+        new FactoryModuleBuilder().implement(
+            new TypeLiteral<ManagedPipeline<MetricEnvelope[]>>() {},
+            new TypeLiteral<ManagedPipeline<MetricEnvelope[]>>() {})
+            .build(new TypeLiteral<ManagedPipelineFactory<MetricEnvelope[]>>() {}));
 
-    install(new FactoryModuleBuilder().implement(
-        AlarmStateTransitionPipeline.class,
-        AlarmStateTransitionPipeline.class).build(
-            AlarmStateTransitionPipelineFactory.class));
+    install(
+        new FactoryModuleBuilder().implement(
+        new TypeLiteral<ManagedPipeline<AlarmStateTransitionedEvent>>() {},
+        new TypeLiteral<ManagedPipeline<AlarmStateTransitionedEvent>>() {})
+            .build(new TypeLiteral<ManagedPipelineFactory<AlarmStateTransitionedEvent>>() {}));
 
-    install(new FactoryModuleBuilder().implement(
-        AlarmStateTransitionConsumer.class,
-        AlarmStateTransitionConsumer.class).build(
-            AlarmStateTransitionConsumerFactory.class));
+    install(
+        new FactoryModuleBuilder().implement(
+        new TypeLiteral<Consumer<AlarmStateTransitionedEvent>>() {},
+        new TypeLiteral<Consumer<AlarmStateTransitionedEvent>>() {})
+            .build(new TypeLiteral<ConsumerFactory<AlarmStateTransitionedEvent>>() {}));
 
-    install(new FactoryModuleBuilder().implement(
-        KafkaAlarmStateTransitionConsumer.class,
-        KafkaAlarmStateTransitionConsumer.class).build(
-            KafkaAlarmStateTransitionConsumerFactory.class));
+    install(
+        new FactoryModuleBuilder().implement(
+        new TypeLiteral<KafkaAlarmStateTransitionConsumer<AlarmStateTransitionedEvent>>() {},
+        new TypeLiteral<KafkaAlarmStateTransitionConsumer<AlarmStateTransitionedEvent>>() {})
+            .build(new TypeLiteral<KafkaAlarmStateTransitionConsumerFactory<AlarmStateTransitionedEvent>>() {}));
 
-    install(new FactoryModuleBuilder().implement(
-        MetricsConsumer.class,
-        MetricsConsumer.class).build(MetricsConsumerFactory.class));
+    install(
+        new FactoryModuleBuilder().implement(
+            new TypeLiteral<Consumer<MetricEnvelope[]>>() {},
+            new TypeLiteral<Consumer<MetricEnvelope[]>>() {})
+            .build(new TypeLiteral<ConsumerFactory<MetricEnvelope[]>>() {}));
 
-    install(new FactoryModuleBuilder().implement(KafkaChannel.class, KafkaChannel.class).build(
-        KafkaChannelFactory.class));
+    install(
+        new FactoryModuleBuilder().implement(
+            KafkaChannel.class, KafkaChannel.class).build(KafkaChannelFactory.class));
 
     if (config.getDatabaseConfiguration().getDatabaseType().equalsIgnoreCase(VERTICA)) {
 
@@ -139,10 +152,10 @@ public class PersisterModule extends AbstractModule {
     } else if (config.getDatabaseConfiguration().getDatabaseType().equalsIgnoreCase(INFLUXDB)) {
 
       // Check for null to not break existing configs. If no version, default to V8.
-      if (config.getInfluxDBConfiguration().getVersion() == null ||
-          config.getInfluxDBConfiguration().getVersion().equalsIgnoreCase(INFLUXDB_V8)) {
+      if (config.getInfluxDBConfiguration().getVersion() == null || config
+          .getInfluxDBConfiguration().getVersion().equalsIgnoreCase(INFLUXDB_V8)) {
 
-        bind (InfluxV8RepoWriter.class);
+        bind(InfluxV8RepoWriter.class);
         bind(MetricRepo.class).to(InfluxV8MetricRepo.class);
         bind(AlarmRepo.class).to(InfluxV8AlarmRepo.class);
 

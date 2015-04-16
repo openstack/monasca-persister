@@ -21,7 +21,7 @@ import monasca.common.model.metric.MetricEnvelope;
 
 public interface MetricRepo {
 
-  void addToBatch(MetricEnvelope metricEnvelope);
+  void addToBatch(final MetricEnvelope metricEnvelope);
 
   void flush();
 }

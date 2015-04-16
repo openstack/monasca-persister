@@ -18,9 +18,12 @@
 package monasca.persister.consumer.alarmstate;
 
 import monasca.persister.consumer.KafkaChannel;
-import monasca.persister.pipeline.AlarmStateTransitionPipeline;
+import monasca.persister.pipeline.ManagedPipeline;
 
-public interface KafkaAlarmStateTransitionConsumerFactory {
-  KafkaAlarmStateTransitionConsumer create(KafkaChannel kafkaChannel, int threadNum,
-      final AlarmStateTransitionPipeline pipeline);
+public interface KafkaAlarmStateTransitionConsumerFactory<T> {
+
+  KafkaAlarmStateTransitionConsumer<T> create(
+      Class<T> clazz,
+      KafkaChannel kafkaChannel, int threadNum,
+      final ManagedPipeline<T> pipeline);
 }

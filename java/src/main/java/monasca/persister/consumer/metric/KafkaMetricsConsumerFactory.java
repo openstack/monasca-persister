@@ -18,9 +18,13 @@
 package monasca.persister.consumer.metric;
 
 import monasca.persister.consumer.KafkaChannel;
-import monasca.persister.pipeline.MetricPipeline;
+import monasca.persister.pipeline.ManagedPipeline;
 
-public interface KafkaMetricsConsumerFactory {
-  KafkaMetricsConsumer create(KafkaChannel kafkaChannel, int threadNum,
-                              MetricPipeline pipeline);
+public interface KafkaMetricsConsumerFactory<T> {
+
+  KafkaMetricsConsumer<T> create(
+      Class<T> clazz,
+      KafkaChannel kafkaChannel,
+      int threadNum,
+      ManagedPipeline<T> pipeline);
 }

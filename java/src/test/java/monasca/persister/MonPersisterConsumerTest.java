@@ -17,9 +17,10 @@
 
 package monasca.persister;
 
+import monasca.common.model.metric.MetricEnvelope;
+import monasca.persister.consumer.Consumer;
 import monasca.persister.consumer.metric.KafkaMetricsConsumer;
-import monasca.persister.consumer.metric.MetricsConsumer;
-import monasca.persister.pipeline.MetricPipeline;
+import monasca.persister.pipeline.ManagedPipeline;
 import monasca.persister.pipeline.event.MetricHandler;
 
 import org.junit.Before;
@@ -34,16 +35,16 @@ public class MonPersisterConsumerTest {
   private KafkaMetricsConsumer kafkaConsumer;
 
   @Mock
-  private MetricsConsumer monConsumer;
+  private Consumer monConsumer;
 
   private MetricHandler metricHandler;
 
-  private MetricPipeline metricPipeline;
+  private ManagedPipeline<MetricEnvelope[]> metricPipeline;
 
   @Before
   public void initMocks() {
     metricHandler = Mockito.mock(MetricHandler.class);
-    metricPipeline = Mockito.spy(new MetricPipeline(metricHandler));
+    metricPipeline = Mockito.spy(new ManagedPipeline<MetricEnvelope[]>(metricHandler));
     MockitoAnnotations.initMocks(this);
   }
 

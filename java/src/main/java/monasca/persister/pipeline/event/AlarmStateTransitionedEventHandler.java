@@ -24,41 +24,56 @@ import monasca.persister.repository.AlarmRepo;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
+import com.codahale.metrics.Counter;
+
 import io.dropwizard.setup.Environment;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AlarmStateTransitionedEventHandler extends
-    FlushableHandler<AlarmStateTransitionedEvent> {
+public class AlarmStateTransitionedEventHandler<T> extends
+    FlushableHandler<T> {
 
   private static final Logger logger = LoggerFactory
       .getLogger(AlarmStateTransitionedEventHandler.class);
 
-  private final AlarmRepo repository;
+  private final AlarmRepo alarmRepo;
   private final int ordinal;
 
+  private final Counter alarmStateTransitionCounter;
+
   @Inject
-  public AlarmStateTransitionedEventHandler(AlarmRepo repository,
-      @Assisted PipelineConfig configuration, Environment environment,
+  public AlarmStateTransitionedEventHandler(
+      AlarmRepo alarmRepo,
+      @Assisted PipelineConfig configuration,
+      Environment environment,
       @Assisted("ordinal") int ordinal,
       @Assisted("batchSize") int batchSize) {
+
     super(configuration, environment, ordinal, batchSize,
         AlarmStateTransitionedEventHandler.class.getName());
-    this.repository = repository;
+
+    this.alarmRepo = alarmRepo;
+
     this.ordinal = ordinal;
+
+    final String handlerName = String.format("%s[%d]", AlarmStateTransitionedEventHandler.class.getName(), ordinal);
+    this.alarmStateTransitionCounter =
+        environment.metrics().counter(handlerName + "." + "alarm-state-transitions-added-to-batch-counter");
   }
 
   @Override
-  protected int process(AlarmStateTransitionedEvent event) throws Exception {
-    logger.debug("Ordinal:  Event: {}", this.ordinal, event);
+  protected int process(T event) throws Exception {
 
-    repository.addToBatch(event);
+    logger.debug("Ordinal: {}: {}", this.ordinal, event);
+
+    alarmRepo.addToBatch((AlarmStateTransitionedEvent) event);
+
     return 1;
   }
 
   @Override
   protected void flushRepository() {
-    repository.flush();
+    alarmRepo.flush();
   }
 }

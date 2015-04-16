@@ -17,14 +17,18 @@
 
 package monasca.persister.consumer;
 
-import monasca.persister.pipeline.ManagedPipeline;
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import kafka.consumer.ConsumerIterator;
+import monasca.persister.pipeline.ManagedPipeline;
 
-public abstract class KafkaConsumerRunnableBasic<T> implements Runnable {
+public class KafkaConsumerRunnableBasic<T> implements Runnable {
 
   private static final Logger logger = LoggerFactory.getLogger(KafkaConsumerRunnableBasic.class);
   private final KafkaChannel kafkaChannel;
@@ -32,17 +36,42 @@ public abstract class KafkaConsumerRunnableBasic<T> implements Runnable {
   private final ManagedPipeline<T> pipeline;
   private volatile boolean stop = false;
 
-  public KafkaConsumerRunnableBasic(KafkaChannel kafkaChannel,
-      ManagedPipeline<T> pipeline,
-      int threadNumber) {
+  private final ObjectMapper objectMapper;
+
+  private final Class<T> clazz;
+
+  @Inject
+  public KafkaConsumerRunnableBasic(
+      @Assisted Class<T> clazz,
+      @Assisted ObjectMapper objectMapper,
+      @Assisted KafkaChannel kafkaChannel,
+      @Assisted ManagedPipeline<T> pipeline,
+      @Assisted int threadNumber) {
+
     this.kafkaChannel = kafkaChannel;
     this.pipeline = pipeline;
     this.threadNumber = threadNumber;
+    this.objectMapper = objectMapper;
+    this.clazz = clazz;
   }
 
-  abstract protected void publishHeartbeat();
+  protected void publishHeartbeat() {
+    publishEvent(null);
+  }
 
-  abstract protected void handleMessage(String message);
+  protected void handleMessage(String message) {
+
+    try {
+
+      final T o = objectMapper.readValue(message, this.clazz);
+
+      publishEvent(o);
+
+    } catch (Exception e) {
+
+      logger.error("Failed to deserialize JSON message and send to handler: " + message, e);
+    }
+  }
 
   private void markRead() {
     this.kafkaChannel.markRead();
@@ -53,28 +82,43 @@ public abstract class KafkaConsumerRunnableBasic<T> implements Runnable {
   }
 
   public void run() {
+
     final ConsumerIterator<byte[], byte[]> it = kafkaChannel.getKafkaStream().iterator();
+
     logger.debug("KafkaChannel {} has stream", this.threadNumber);
+
     while (!this.stop) {
+
       try {
+
         if (it.hasNext()) {
+
           final String s = new String(it.next().message());
 
           logger.debug("Thread {}: {}", threadNumber, s);
 
           handleMessage(s);
+
         }
+
       } catch (kafka.consumer.ConsumerTimeoutException cte) {
+
         publishHeartbeat();
+
       }
     }
+
     logger.debug("Shutting down Thread: {}", threadNumber);
+
     this.kafkaChannel.stop();
   }
 
   protected void publishEvent(final T event) {
+
     if (pipeline.publishEvent(event)) {
+
       markRead();
+
     }
   }
 }

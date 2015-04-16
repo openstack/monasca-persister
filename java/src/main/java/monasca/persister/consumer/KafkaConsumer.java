@@ -40,7 +40,8 @@ public abstract class KafkaConsumer<T> {
     this.threadNum = threadNum;
   }
 
-  protected abstract KafkaConsumerRunnableBasic<T> createRunnable(KafkaChannel kafkaChannel,
+  protected abstract KafkaConsumerRunnableBasic<T> createRunnable(
+      KafkaChannel kafkaChannel,
       int threadNumber);
 
   public void start() {

@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 public abstract class FlushableHandler<T> {
 
   private static final Logger logger = LoggerFactory.getLogger(FlushableHandler.class);
+
   private final int ordinal;
   private final int batchSize;
   private final String handlerName;
@@ -45,8 +46,12 @@ public abstract class FlushableHandler<T> {
   private final Meter commitMeter;
   private final Timer commitTimer;
 
-  protected FlushableHandler(PipelineConfig configuration, Environment environment,
-      int ordinal, int batchSize, String baseName) {
+  protected FlushableHandler(
+      PipelineConfig configuration,
+      Environment environment,
+      int ordinal,
+      int batchSize,
+      String baseName) {
 
     this.handlerName = String.format("%s[%d]", baseName, ordinal);
     this.environment = environment;
@@ -72,24 +77,30 @@ public abstract class FlushableHandler<T> {
   public boolean onEvent(final T event) throws Exception {
 
     if (event == null) {
+
       long delta = millisSinceLastFlush + millisBetweenFlushes;
       logger.debug("{} received heartbeat message, flush every {} seconds.", this.handlerName,
           this.secondsBetweenFlushes);
+
       if (delta < System.currentTimeMillis()) {
+
         logger.debug("{}: {} seconds since last flush. Flushing to repository now.",
             this.handlerName, delta);
+
         flush();
+
         return true;
+
       } else {
+
         logger.debug("{}: {} seconds since last flush. No need to flush at this time.",
             this.handlerName, delta);
         return false;
+
       }
     }
 
     processedMeter.mark();
-
-    logger.debug("Ordinal:  Event: {}", ordinal, event);
 
     eventCount += process(event);
 

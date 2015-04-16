@@ -17,32 +17,51 @@
 
 package monasca.persister.consumer.alarmstate;
 
-import monasca.common.model.event.AlarmStateTransitionedEvent;
 import monasca.persister.consumer.KafkaChannel;
 import monasca.persister.consumer.KafkaConsumer;
 import monasca.persister.consumer.KafkaConsumerRunnableBasic;
-import monasca.persister.pipeline.AlarmStateTransitionPipeline;
+import monasca.persister.consumer.KafkaConsumerRunnableBasicFactory;
+import monasca.persister.pipeline.ManagedPipeline;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
-public class KafkaAlarmStateTransitionConsumer extends KafkaConsumer<AlarmStateTransitionedEvent> {
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+
+public class KafkaAlarmStateTransitionConsumer<T> extends KafkaConsumer<T> {
 
   @Inject
-  private KafkaAlarmStateTransitionConsumerRunnableBasicFactory factory;
+  private KafkaConsumerRunnableBasicFactory<T> factory;
 
-  private final AlarmStateTransitionPipeline pipeline;
+  private final ManagedPipeline<T> pipeline;
+
+  private final Class<T> clazz;
 
   @Inject
-  public KafkaAlarmStateTransitionConsumer(@Assisted KafkaChannel kafkaChannel,
-      @Assisted int threadNum, @Assisted final AlarmStateTransitionPipeline pipeline) {
+  public KafkaAlarmStateTransitionConsumer(
+      @Assisted Class<T> clazz,
+      @Assisted KafkaChannel kafkaChannel,
+      @Assisted int threadNum,
+      @Assisted final ManagedPipeline<T> pipeline) {
+
     super(kafkaChannel, threadNum);
+
     this.pipeline = pipeline;
+    this.clazz = clazz;
   }
 
   @Override
-  protected KafkaConsumerRunnableBasic<AlarmStateTransitionedEvent> createRunnable(
-      KafkaChannel kafkaChannel, int threadNumber) {
-    return factory.create(pipeline, kafkaChannel, threadNumber);
+  protected KafkaConsumerRunnableBasic<T> createRunnable(
+      KafkaChannel kafkaChannel,
+      int threadNumber) {
+
+    ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+    objectMapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+    objectMapper.enable(DeserializationFeature.UNWRAP_ROOT_VALUE);
+
+    return factory.create(objectMapper, clazz, pipeline, kafkaChannel, threadNumber);
   }
 }

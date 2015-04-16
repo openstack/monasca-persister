@@ -46,8 +46,11 @@ public class KafkaChannel {
   private final int threadNum;
 
   @Inject
-  public KafkaChannel(@Assisted PersisterConfig configuration,
-      @Assisted PipelineConfig pipelineConfig, @Assisted int threadNum) {
+  public KafkaChannel(
+      @Assisted PersisterConfig configuration,
+      @Assisted PipelineConfig pipelineConfig,
+      @Assisted int threadNum) {
+
     this.topic = pipelineConfig.getTopic();
     this.threadNum = threadNum;
     Properties kafkaProperties =

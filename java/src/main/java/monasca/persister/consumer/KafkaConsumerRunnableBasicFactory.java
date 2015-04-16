@@ -14,13 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package monasca.persister.consumer;
 
-package monasca.persister.consumer.alarmstate;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import monasca.persister.consumer.KafkaChannel;
-import monasca.persister.pipeline.AlarmStateTransitionPipeline;
+import monasca.persister.pipeline.ManagedPipeline;
 
-public interface KafkaAlarmStateTransitionConsumerRunnableBasicFactory {
-  KafkaAlarmStateTransitionConsumerRunnableBasic create(AlarmStateTransitionPipeline pipeline, KafkaChannel kafkaChannel,
+public interface KafkaConsumerRunnableBasicFactory<T> {
+
+  KafkaConsumerRunnableBasic<T> create(
+      ObjectMapper objectMapper,
+      Class<T> clazz,
+      ManagedPipeline<T> pipeline,
+      KafkaChannel kafkaChannel,
       int threadNumber);
+
 }

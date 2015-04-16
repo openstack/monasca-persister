@@ -17,32 +17,52 @@
 
 package monasca.persister.consumer.metric;
 
-import monasca.common.model.metric.MetricEnvelope;
 import monasca.persister.consumer.KafkaChannel;
 import monasca.persister.consumer.KafkaConsumer;
 import monasca.persister.consumer.KafkaConsumerRunnableBasic;
-import monasca.persister.pipeline.MetricPipeline;
+import monasca.persister.consumer.KafkaConsumerRunnableBasicFactory;
+import monasca.persister.pipeline.ManagedPipeline;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
-public class KafkaMetricsConsumer extends KafkaConsumer<MetricEnvelope[]> {
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+
+public class KafkaMetricsConsumer<T> extends KafkaConsumer<T> {
 
   @Inject
-  private KafkaMetricsConsumerRunnableBasicFactory factory;
+  private KafkaConsumerRunnableBasicFactory<T> factory;
 
-  private final MetricPipeline pipeline;
+  private final ManagedPipeline<T> pipeline;
+
+  private final Class<T> clazz;
 
   @Inject
-  public KafkaMetricsConsumer(@Assisted KafkaChannel kafkaChannel, @Assisted int threadNum,
-      @Assisted MetricPipeline pipeline) {
+  public KafkaMetricsConsumer(
+      @Assisted Class<T> clazz,
+      @Assisted KafkaChannel kafkaChannel,
+      @Assisted int threadNum,
+      @Assisted ManagedPipeline<T> pipeline) {
+
     super(kafkaChannel, threadNum);
+
     this.pipeline = pipeline;
+    this.clazz = clazz;
   }
 
   @Override
-  protected KafkaConsumerRunnableBasic<MetricEnvelope[]> createRunnable(KafkaChannel kafkaChannel,
+  protected KafkaConsumerRunnableBasic<T> createRunnable(
+      KafkaChannel kafkaChannel,
       int threadNumber) {
-    return factory.create(pipeline, kafkaChannel, threadNumber);
+
+    ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+    objectMapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+    objectMapper.setPropertyNamingStrategy(
+        PropertyNamingStrategy.CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES);
+
+    return factory.create(objectMapper, clazz, pipeline, kafkaChannel, threadNumber);
   }
 }

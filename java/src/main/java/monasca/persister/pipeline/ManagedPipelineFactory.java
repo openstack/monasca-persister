@@ -14,11 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package monasca.persister.pipeline;
 
-import monasca.persister.pipeline.event.AlarmStateTransitionedEventHandler;
+import monasca.persister.pipeline.event.FlushableHandler;
 
-public interface AlarmStateTransitionPipelineFactory {
-  AlarmStateTransitionPipeline create(AlarmStateTransitionedEventHandler handler);
+public interface ManagedPipelineFactory<T> {
+
+  ManagedPipeline<T> create(FlushableHandler<T> handler);
+
 }

@@ -20,6 +20,7 @@ package monasca.persister.consumer;
 import monasca.persister.pipeline.ManagedPipeline;
 
 import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 
 import io.dropwizard.lifecycle.Managed;
 
@@ -33,7 +34,10 @@ public class Consumer<T> implements Managed {
   private final ManagedPipeline<T> pipeline;
 
   @Inject
-  public Consumer(KafkaConsumer<T> kafkaConsumer, ManagedPipeline<T> pipeline) {
+  public Consumer(
+      @Assisted KafkaConsumer<T> kafkaConsumer,
+      @Assisted ManagedPipeline<T> pipeline) {
+
     this.consumer = kafkaConsumer;
     this.pipeline = pipeline;
   }
