@@ -141,8 +141,13 @@ public class InfluxV9RepoWriter {
 
       HttpEntity
           requestEntity =
-          EntityBuilder.create().setText(json).setContentType(ContentType.APPLICATION_JSON)
-              .gzipCompress().build();
+          EntityBuilder
+              .create()
+              .setText(json)
+              .setContentType(ContentType.APPLICATION_JSON)
+              .setContentEncoding("UTF-8")
+              .gzipCompress()
+              .build();
 
       request.setEntity(requestEntity);
 
@@ -150,7 +155,7 @@ public class InfluxV9RepoWriter {
 
     } else {
 
-      StringEntity stringEntity = new StringEntity(json);
+      StringEntity stringEntity = new StringEntity(json, "UTF-8");
 
       request.setEntity(stringEntity);
 
