@@ -41,17 +41,14 @@ import monasca.persister.consumer.alarmstate.KafkaAlarmStateTransitionConsumerFa
 import monasca.persister.consumer.metric.KafkaMetricsConsumer;
 import monasca.persister.consumer.metric.KafkaMetricsConsumerFactory;
 import monasca.persister.dbi.DBIProvider;
-import monasca.persister.pipeline.ManagedPipelineFactory;
 import monasca.persister.pipeline.ManagedPipeline;
+import monasca.persister.pipeline.ManagedPipelineFactory;
 import monasca.persister.pipeline.event.AlarmStateTransitionedEventHandler;
 import monasca.persister.pipeline.event.AlarmStateTransitionedEventHandlerFactory;
 import monasca.persister.pipeline.event.MetricHandler;
 import monasca.persister.pipeline.event.MetricHandlerFactory;
 import monasca.persister.repository.AlarmRepo;
 import monasca.persister.repository.MetricRepo;
-import monasca.persister.repository.influxdb.InfluxV8AlarmRepo;
-import monasca.persister.repository.influxdb.InfluxV8MetricRepo;
-import monasca.persister.repository.influxdb.InfluxV8RepoWriter;
 import monasca.persister.repository.influxdb.InfluxV9AlarmRepo;
 import monasca.persister.repository.influxdb.InfluxV9MetricRepo;
 import monasca.persister.repository.influxdb.InfluxV9RepoWriter;
@@ -62,7 +59,7 @@ public class PersisterModule extends AbstractModule {
 
   private static final String VERTICA = "vertica";
   private static final String INFLUXDB = "influxdb";
-  private static final String INFLUXDB_V8 = "v8";
+
   private static final String INFLUXDB_V9 = "v9";
 
   private final PersisterConfig config;
@@ -151,29 +148,20 @@ public class PersisterModule extends AbstractModule {
 
     } else if (config.getDatabaseConfiguration().getDatabaseType().equalsIgnoreCase(INFLUXDB)) {
 
-      // Check for null to not break existing configs. If no version, default to V8.
-      if (config.getInfluxDBConfiguration().getVersion() == null || config
-          .getInfluxDBConfiguration().getVersion().equalsIgnoreCase(INFLUXDB_V8)) {
-
-        bind(InfluxV8RepoWriter.class);
-        bind(MetricRepo.class).to(InfluxV8MetricRepo.class);
-        bind(AlarmRepo.class).to(InfluxV8AlarmRepo.class);
-
-      } else if (config.getInfluxDBConfiguration().getVersion().equalsIgnoreCase(INFLUXDB_V9)) {
-
-        bind(InfluxV9RepoWriter.class).in(Singleton.class);
-        bind(MetricRepo.class).to(InfluxV9MetricRepo.class);
-        bind(AlarmRepo.class).to(InfluxV9AlarmRepo.class);
-
-      } else {
+      if (config.getInfluxDBConfiguration().getVersion() != null && !config
+          .getInfluxDBConfiguration().getVersion().equalsIgnoreCase(INFLUXDB_V9)) {
 
         System.err.println(
-            "Found unknown Influxdb version: " + config.getInfluxDBConfiguration().getVersion());
-        System.err.println("Supported Influxdb versions are 'v8' and 'v9'");
+            "Found unsupported Influxdb version: " + config.getInfluxDBConfiguration()
+                .getVersion());
+        System.err.println("Supported Influxdb versions are 'v9'");
         System.err.println("Check your config file");
         System.exit(1);
-
       }
+
+      bind(InfluxV9RepoWriter.class).in(Singleton.class);
+      bind(MetricRepo.class).to(InfluxV9MetricRepo.class);
+      bind(AlarmRepo.class).to(InfluxV9AlarmRepo.class);
 
     } else {
 

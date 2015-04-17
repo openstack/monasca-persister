@@ -49,10 +49,6 @@ databaseConfiguration:
 #  databaseType: vertica
 
 influxDbConfiguration:
-  # Version and retention policy must be set for V9. If no
-  # version set then defaults to V8.
-  # version can be (V8 | V9)
-  version: V9
   # Retention policy may be left blank to indicate default policy.
   retentionPolicy:
   # Used only if version is V9.
