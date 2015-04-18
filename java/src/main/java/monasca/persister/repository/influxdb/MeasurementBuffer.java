@@ -55,6 +55,12 @@ public class MeasurementBuffer {
 
   }
 
+  public boolean isEmpty() {
+
+    return this.measurementMap.isEmpty();
+
+  }
+
   private Map<Dimensions, List<Measurement>> initDimensionsMap(Definition definition,
                                                                Dimensions dimensions) {
 

@@ -21,6 +21,7 @@ import monasca.persister.configuration.PipelineConfig;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.dropwizard.setup.Environment;
 
@@ -31,61 +32,75 @@ public abstract class FlushableHandler<T> {
 
   private static final Logger logger = LoggerFactory.getLogger(FlushableHandler.class);
 
-  private final int ordinal;
   private final int batchSize;
-  private final String handlerName;
 
-  private long millisSinceLastFlush = System.currentTimeMillis();
+  private long flushTimeMillis = System.currentTimeMillis();
   private final long millisBetweenFlushes;
   private final int secondsBetweenFlushes;
-  private int eventCount = 0;
-
-  private final Environment environment;
+  private int msgCount = 0;
+  private long batchCount = 0;
 
   private final Meter processedMeter;
   private final Meter commitMeter;
   private final Timer commitTimer;
 
+  protected final String threadId;
+
+  protected ObjectMapper objectMapper = new ObjectMapper();
+
+  protected final String handlerName;
+
   protected FlushableHandler(
       PipelineConfig configuration,
       Environment environment,
-      int ordinal,
-      int batchSize,
-      String baseName) {
+      String threadId,
+      int batchSize) {
 
-    this.handlerName = String.format("%s[%d]", baseName, ordinal);
-    this.environment = environment;
+    this.threadId = threadId;
+
+    this.handlerName =
+        String.format(
+            "%s[%s]",
+            this.getClass().getName(),
+            threadId);
+
     this.processedMeter =
-        this.environment.metrics()
+        environment.metrics()
             .meter(handlerName + "." + "events-processed-processedMeter");
+
     this.commitMeter =
-        this.environment.metrics().meter(handlerName + "." + "commits-executed-processedMeter");
+        environment.metrics().meter(handlerName + "." + "commits-executed-processedMeter");
+
     this.commitTimer =
-        this.environment.metrics().timer(handlerName + "." + "total-commit-and-flush-timer");
+        environment.metrics().timer(handlerName + "." + "total-commit-and-flush-timer");
 
     this.secondsBetweenFlushes = configuration.getMaxBatchTime();
+
     this.millisBetweenFlushes = secondsBetweenFlushes * 1000;
 
-    this.ordinal = ordinal;
     this.batchSize = batchSize;
+
+    initObjectMapper();
+
   }
+
+  protected abstract void initObjectMapper();
 
   protected abstract void flushRepository();
 
-  protected abstract int process(T metricEvent) throws Exception;
+  protected abstract int process(String msg) throws Exception;
 
-  public boolean onEvent(final T event) throws Exception {
+  public boolean onEvent(final String msg) throws Exception {
 
-    if (event == null) {
+    if (msg == null) {
 
-      long delta = millisSinceLastFlush + millisBetweenFlushes;
-      logger.debug("{} received heartbeat message, flush every {} seconds.", this.handlerName,
+      logger.debug("[{}]: got heartbeat message, flush every {} seconds.", this.threadId,
           this.secondsBetweenFlushes);
 
-      if (delta < System.currentTimeMillis()) {
+      if (this.flushTimeMillis < System.currentTimeMillis()) {
 
-        logger.debug("{}: {} seconds since last flush. Flushing to repository now.",
-            this.handlerName, delta);
+        logger.debug("[{}]: {} millis past flush time. flushing to repository now.",
+            this.threadId, (System.currentTimeMillis() - this.flushTimeMillis));
 
         flush();
 
@@ -93,35 +108,67 @@ public abstract class FlushableHandler<T> {
 
       } else {
 
-        logger.debug("{}: {} seconds since last flush. No need to flush at this time.",
-            this.handlerName, delta);
+        logger.debug("[{}]: {} millis to next flush time. no need to flush at this time.",
+            this.threadId,  this.flushTimeMillis - System.currentTimeMillis());
+
         return false;
 
       }
     }
 
-    processedMeter.mark();
+    this.processedMeter.mark();
 
-    eventCount += process(event);
+    this.msgCount += process(msg);
 
-    if (eventCount >= batchSize) {
+    if (this.msgCount >= this.batchSize) {
+
+      logger.debug("[{}]: batch sized {} attained", this.threadId, this.batchSize);
+
       flush();
+
       return true;
+
     } else {
+
       return false;
+
     }
   }
 
   public void flush() {
-    if (eventCount == 0) {
-      logger.debug("{}: Nothing to flush", this.handlerName);
+
+    logger.debug("[{}]: flush", this.threadId);
+
+    if (this.msgCount == 0) {
+
+      logger.debug("[{}]: nothing to flush", this.threadId);
     }
-    Timer.Context context = commitTimer.time();
+
+    Timer.Context context = this.commitTimer.time();
+
     flushRepository();
+
     context.stop();
-    commitMeter.mark();
-    millisSinceLastFlush = System.currentTimeMillis();
-    logger.debug("{}: Flushed {} events", this.handlerName, this.eventCount);
-    eventCount = 0;
+
+    this.commitMeter.mark();
+
+    this.flushTimeMillis = System.currentTimeMillis() + this.millisBetweenFlushes;
+
+    logger.debug("[{}]: flushed {} msg", this.threadId, this.msgCount);
+
+    this.msgCount = 0;
+    this.batchCount++;
+
+  }
+
+  public long getBatchCount() {
+
+    return this.batchCount;
+
+  }
+
+  public int getMsgCount() {
+
+    return this.msgCount;
   }
 }

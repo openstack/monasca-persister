@@ -17,6 +17,9 @@
 
 package monasca.persister.consumer;
 
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,42 +27,65 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public abstract class KafkaConsumer<T> {
+public class KafkaConsumer<T> {
 
   private static final Logger logger = LoggerFactory.getLogger(KafkaConsumer.class);
 
   private static final int WAIT_TIME = 10;
 
   private ExecutorService executorService;
-  private final KafkaChannel kafkaChannel;
-  private final int threadNum;
-  private KafkaConsumerRunnableBasic<T> kafkaConsumerRunnableBasic;
 
-  public KafkaConsumer(KafkaChannel kafkaChannel, int threadNum) {
-    this.kafkaChannel = kafkaChannel;
-    this.threadNum = threadNum;
+  private final KafkaConsumerRunnableBasic<T> kafkaConsumerRunnableBasic;
+  private final String threadId;
+
+  @Inject
+  public KafkaConsumer(
+      @Assisted KafkaConsumerRunnableBasic<T> kafkaConsumerRunnableBasic,
+      @Assisted String threadId) {
+
+    this.kafkaConsumerRunnableBasic = kafkaConsumerRunnableBasic;
+    this.threadId = threadId;
+
   }
 
-  protected abstract KafkaConsumerRunnableBasic<T> createRunnable(
-      KafkaChannel kafkaChannel,
-      int threadNumber);
-
   public void start() {
+
+    logger.info("[{}]: start", this.threadId);
+
     executorService = Executors.newFixedThreadPool(1);
-    kafkaConsumerRunnableBasic = createRunnable(kafkaChannel, this.threadNum);
+
     executorService.submit(kafkaConsumerRunnableBasic);
+
   }
 
   public void stop() {
+
+    logger.info("[{}]: stop", this.threadId);
+
     kafkaConsumerRunnableBasic.stop();
+
     if (executorService != null) {
+
+      logger.info("[{}]: shutting down executor service", this.threadId);
+
       executorService.shutdown();
+
       try {
+
+        logger.info("[{}]: awaiting termination...", this.threadId);
+
         if (!executorService.awaitTermination(WAIT_TIME, TimeUnit.SECONDS)) {
-          logger.warn("Did not shut down in {} seconds", WAIT_TIME);
+
+          logger.warn("[{}]: did not shut down in {} seconds", this.threadId, WAIT_TIME);
+
         }
+
+        logger.info("[{}]: terminated", this.threadId);
+
       } catch (InterruptedException e) {
-        logger.info("awaitTermination interrupted", e);
+
+        logger.info("[{}]: awaitTermination interrupted", this.threadId, e);
+
       }
     }
   }

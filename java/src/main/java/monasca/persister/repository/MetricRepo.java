@@ -23,5 +23,5 @@ public interface MetricRepo {
 
   void addToBatch(final MetricEnvelope metricEnvelope);
 
-  void flush();
+  void flush(String id);
 }

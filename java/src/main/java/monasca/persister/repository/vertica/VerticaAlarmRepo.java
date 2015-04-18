@@ -73,7 +73,7 @@ public class VerticaAlarmRepo extends VerticaRepo implements AlarmRepo {
         .bind(6, timeStamp);
   }
 
-  public void flush() {
+  public void flush(String id) {
     try {
       commitBatch();
     } catch (Exception e) {

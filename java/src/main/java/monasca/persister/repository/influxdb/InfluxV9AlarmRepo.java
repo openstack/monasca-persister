@@ -28,8 +28,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -39,8 +37,6 @@ import java.util.Map;
 import io.dropwizard.setup.Environment;
 
 public class InfluxV9AlarmRepo extends InfluxAlarmRepo {
-
-  private static final Logger logger = LoggerFactory.getLogger(InfluxV9AlarmRepo.class);
 
   private final InfluxV9RepoWriter influxV9RepoWriter;
 
@@ -60,9 +56,9 @@ public class InfluxV9AlarmRepo extends InfluxAlarmRepo {
   }
 
   @Override
-  protected void write() throws Exception {
+  protected void write(String id) throws Exception {
 
-    this.influxV9RepoWriter.write(getInfluxPointArry());
+    this.influxV9RepoWriter.write(getInfluxPointArry(), id);
 
   }
 

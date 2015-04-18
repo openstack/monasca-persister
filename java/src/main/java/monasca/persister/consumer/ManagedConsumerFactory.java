@@ -15,16 +15,12 @@
  * limitations under the License.
  */
 
-package monasca.persister.consumer.metric;
+package monasca.persister.consumer;
 
-import monasca.persister.consumer.KafkaChannel;
-import monasca.persister.pipeline.ManagedPipeline;
+public interface ManagedConsumerFactory<T> {
 
-public interface KafkaMetricsConsumerFactory<T> {
+  ManagedConsumer<T> create(
+      KafkaConsumer<T> kafkaConsumer,
+      String threadId);
 
-  KafkaMetricsConsumer<T> create(
-      Class<T> clazz,
-      KafkaChannel kafkaChannel,
-      int threadNum,
-      ManagedPipeline<T> pipeline);
 }

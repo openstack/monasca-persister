@@ -50,7 +50,7 @@ public abstract class InfluxAlarmRepo implements AlarmRepo {
             MetricRegistry.name(getClass(), "alarm_state_history-meter"));
   }
 
-  protected abstract void write () throws Exception;
+  protected abstract void write (String id) throws Exception;
 
   @Override
   public void addToBatch(AlarmStateTransitionedEvent alarmStateTransitionedEvent) {
@@ -61,25 +61,26 @@ public abstract class InfluxAlarmRepo implements AlarmRepo {
   }
 
   @Override
-  public void flush() {
+  public void flush(String id) {
     try {
+
       if (this.alarmStateTransitionedEventList.isEmpty()) {
-        logger.debug("There are no alarm state transition events to be written to the influxDB");
-        logger.debug("Returning from flush");
+        logger.debug("[{}]: no alarm state transition msg to be written to the influxDB", id);
+        logger.debug("[{}]: returning from flush", id);
         return;
       }
 
       long startTime = System.currentTimeMillis();
       Timer.Context context = flushTimer.time();
 
-      write();
+      write(id);
 
       context.stop();
       long endTime = System.currentTimeMillis();
-      logger.debug("Commiting batch took {} seconds", (endTime - startTime) / 1000);
+      logger.debug("[{}]: flushing batch took {} seconds", id, (endTime - startTime) / 1000);
 
     } catch (Exception e) {
-      logger.error("Failed to write alarm state history to database", e);
+      logger.error("[{}]: failed to write alarm state history to database", id, e);
     }
 
     this.alarmStateTransitionedEventList.clear();

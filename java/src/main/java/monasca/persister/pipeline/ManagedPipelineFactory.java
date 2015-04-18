@@ -20,6 +20,8 @@ import monasca.persister.pipeline.event.FlushableHandler;
 
 public interface ManagedPipelineFactory<T> {
 
-  ManagedPipeline<T> create(FlushableHandler<T> handler);
+  ManagedPipeline<T> create(
+      FlushableHandler<T> handler,
+      String threadId);
 
 }

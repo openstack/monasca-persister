@@ -30,28 +30,34 @@ public class ManagedPipeline<T> {
   private static final Logger logger = LoggerFactory.getLogger(ManagedPipeline.class);
 
   private final FlushableHandler<T> handler;
+  private final String threadId;
 
   @Inject
   public ManagedPipeline(
-      @Assisted FlushableHandler<T> handler) {
+      @Assisted FlushableHandler<T> handler,
+      @Assisted String threadId) {
 
     this.handler = handler;
+    this.threadId = threadId;
 
   }
 
   public void shutdown() {
+
+    logger.info("[{}]: shutdown", this.threadId);
+
     handler.flush();
   }
 
-  public boolean publishEvent(T holder) {
+  public boolean publishEvent(String msg) {
 
       try {
 
-        return this.handler.onEvent(holder);
+        return this.handler.onEvent(msg);
 
       } catch (Exception e) {
 
-        logger.error("Failed to handle event", e);
+        logger.error("[{}]: failed to handle msg: {}", msg, e);
 
         return false;
 

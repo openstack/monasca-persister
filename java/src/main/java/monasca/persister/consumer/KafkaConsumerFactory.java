@@ -14,15 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package monasca.persister.consumer;
 
-import monasca.persister.pipeline.ManagedPipeline;
 
-public interface ConsumerFactory<T> {
+public interface KafkaConsumerFactory<T> {
 
-  Consumer<T> create(
-      KafkaConsumer<T> kafkaConsumer,
-      ManagedPipeline<T> pipeline);
+  KafkaConsumer<T> create(
+      KafkaConsumerRunnableBasic<T> kafkaConsumerRunnableBasic,
+      String threadId);
 
 }
