@@ -5,5 +5,5 @@ Architecture: all
 Depends: openjdk-7-jre-headless | openjdk-7-jre
 Version: [[version]]-[[timestamp]]-[[buildNumber]]
 Maintainer: HPCloud Monitoring <hpcs-mon@hp.com>
-Description: Mon-Persister
-  Pulls data from various sources and inserts into the SOM DB.
+Description: Monasca-Persister
+  Reads data from Kafka and inserts into the Monasca DB.
