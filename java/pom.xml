@@ -254,11 +254,6 @@
                                 </data>
                                 <data>
                                     <type>file</type>
-                                    <src>${project.basedir}/src/deb/init/monasca-persister.conf</src>
-                                    <dst>/etc/init/monasca-persister.conf</dst>
-                                </data>
-                                <data>
-                                    <type>file</type>
                                     <src>
                                         ${project.basedir}/src/deb/etc/persister-config.yml-sample
                                     </src>

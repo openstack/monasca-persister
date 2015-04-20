@@ -25,9 +25,5 @@
         <source>${project.basedir}/src/deb/etc/persister-config.yml-sample</source>
         <outputDirectory>examples</outputDirectory>
     </file>
-    <file>
-        <source>${project.basedir}/src/deb/init/monasca-persister.conf</source>
-        <outputDirectory>examples</outputDirectory>
-    </file>
   </files>
 </assembly>
