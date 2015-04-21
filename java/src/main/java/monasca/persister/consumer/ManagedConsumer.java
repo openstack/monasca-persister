@@ -17,8 +17,6 @@
 
 package monasca.persister.consumer;
 
-import monasca.persister.pipeline.ManagedPipeline;
-
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
@@ -27,31 +25,36 @@ import io.dropwizard.lifecycle.Managed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Consumer<T> implements Managed {
+public class ManagedConsumer<T> implements Managed {
 
-  private static final Logger logger = LoggerFactory.getLogger(Consumer.class);
+  private static final Logger logger = LoggerFactory.getLogger(ManagedConsumer.class);
+
   private final KafkaConsumer<T> consumer;
-  private final ManagedPipeline<T> pipeline;
+  private final String threadId;
 
   @Inject
-  public Consumer(
+  public ManagedConsumer(
       @Assisted KafkaConsumer<T> kafkaConsumer,
-      @Assisted ManagedPipeline<T> pipeline) {
+      @Assisted String threadId) {
 
     this.consumer = kafkaConsumer;
-    this.pipeline = pipeline;
+    this.threadId = threadId;
+
   }
 
   @Override
   public void start() throws Exception {
-    logger.debug("start");
-    consumer.start();
+
+    logger.debug("[{}]: start", this.threadId);
+
+    this.consumer.start();
   }
 
   @Override
   public void stop() throws Exception {
-    logger.debug("stop");
-    consumer.stop();
-    pipeline.shutdown();
+
+    logger.debug("[{}]: stop", this.threadId);
+
+    this.consumer.stop();
   }
 }

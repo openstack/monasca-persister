@@ -43,16 +43,16 @@ public class KafkaChannel {
 
   private final String topic;
   private final ConsumerConnector consumerConnector;
-  private final int threadNum;
+  private final String threadId;
 
   @Inject
   public KafkaChannel(
-      @Assisted PersisterConfig configuration,
+      PersisterConfig configuration,
       @Assisted PipelineConfig pipelineConfig,
-      @Assisted int threadNum) {
+      @Assisted String threadId) {
 
     this.topic = pipelineConfig.getTopic();
-    this.threadNum = threadNum;
+    this.threadId = threadId;
     Properties kafkaProperties =
         createKafkaProperties(configuration.getKafkaConfig(), pipelineConfig);
     consumerConnector = Consumer.createJavaConsumerConnector(createConsumerConfig(kafkaProperties));
@@ -90,7 +90,7 @@ public class KafkaChannel {
     properties.put("group.id", pipelineConfig.getGroupId());
     properties.put("zookeeper.connect", kafkaConfig.getZookeeperConnect());
     properties.put("consumer.id",
-        String.format("%s_%d", pipelineConfig.getConsumerId(), this.threadNum));
+        String.format("%s_%s", pipelineConfig.getConsumerId(), this.threadId));
     properties.put("socket.timeout.ms", kafkaConfig.getSocketTimeoutMs().toString());
     properties.put("socket.receive.buffer.bytes", kafkaConfig.getSocketReceiveBufferBytes()
         .toString());
@@ -108,7 +108,7 @@ public class KafkaChannel {
         .toString());
     properties.put("auto.offset.reset", kafkaConfig.getAutoOffsetReset());
     properties.put("consumer.timeout.ms", kafkaConfig.getConsumerTimeoutMs().toString());
-    properties.put("client.id", String.format("%s_%d", pipelineConfig.getClientId(), threadNum));
+    properties.put("client.id", String.format("%s_%s", pipelineConfig.getClientId(), threadId));
     properties.put("zookeeper.session.timeout.ms", kafkaConfig
         .getZookeeperSessionTimeoutMs().toString());
     properties.put("zookeeper.connection.timeout.ms", kafkaConfig
@@ -117,7 +117,7 @@ public class KafkaChannel {
         .put("zookeeper.sync.time.ms", kafkaConfig.getZookeeperSyncTimeMs().toString());
 
     for (String key : properties.stringPropertyNames()) {
-      logger.info(KAFKA_CONFIGURATION + " " + key + " = " + properties.getProperty(key));
+      logger.info("[{}]: " + KAFKA_CONFIGURATION + " " + key + " = " + properties.getProperty(key), threadId);
     }
 
     return properties;

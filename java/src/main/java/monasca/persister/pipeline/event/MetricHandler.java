@@ -21,6 +21,8 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
 import com.codahale.metrics.Counter;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,47 +32,43 @@ import monasca.common.model.metric.MetricEnvelope;
 import monasca.persister.configuration.PipelineConfig;
 import monasca.persister.repository.MetricRepo;
 
-public class MetricHandler<T> extends FlushableHandler<T> {
+public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
 
-  private static final Logger logger = LoggerFactory
-      .getLogger(MetricHandler.class);
+  private static final Logger logger =
+      LoggerFactory.getLogger(MetricHandler.class);
 
   private final MetricRepo metricRepo;
-
-  private final int ordinal;
 
   private final Counter metricCounter;
 
   @Inject
   public MetricHandler(
       MetricRepo metricRepo,
-      @Assisted PipelineConfig configuration,
       Environment environment,
-      @Assisted("ordinal") int ordinal,
+      @Assisted PipelineConfig configuration,
+      @Assisted("threadId") String threadId,
       @Assisted("batchSize") int batchSize) {
 
-    super(configuration,
-          environment,
-          ordinal,
-          batchSize,
-          MetricHandler.class.getName());
+    super(configuration, environment, threadId, batchSize);
 
     this.metricRepo = metricRepo;
 
-    this.ordinal = ordinal;
-
-    final String handlerName = String.format("%s[%d]", MetricHandler.class.getName(), ordinal);
     this.metricCounter =
-        environment.metrics().counter(handlerName + "." + "metrics-added-to-batch-counter");
+        environment.metrics()
+            .counter(this.handlerName + "." + "metrics-added-to-batch-counter");
 
   }
 
   @Override
-  public int process(T metricEnvelopes) throws Exception {
+  public int process(String msg) throws Exception {
 
-    MetricEnvelope[] metricEnvelopesArry = (MetricEnvelope[]) metricEnvelopes;
+    MetricEnvelope[] metricEnvelopesArry =
+        objectMapper.readValue(msg, MetricEnvelope[].class);
+
     for (final MetricEnvelope metricEnvelope : metricEnvelopesArry) {
+
       processEnvelope(metricEnvelope);
+
     }
 
     return metricEnvelopesArry.length;
@@ -78,17 +76,34 @@ public class MetricHandler<T> extends FlushableHandler<T> {
 
   private void processEnvelope(MetricEnvelope metricEnvelope) {
 
-    logger.debug("Ordinal: {}: {}", this.ordinal, metricEnvelope);
+    logger.debug("[{}]: [{}:{}]: {}",
+                 this.threadId,
+                 this.getBatchCount(),
+                 this.getMsgCount(),
+                 metricEnvelope);
 
     this.metricRepo.addToBatch(metricEnvelope);
 
-    metricCounter.inc();
+    this.metricCounter.inc();
+
+  }
+
+  @Override
+  protected void initObjectMapper() {
+
+    this.objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+
+    this.objectMapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+
+    this.objectMapper.setPropertyNamingStrategy(
+        PropertyNamingStrategy.CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES);
 
   }
 
   @Override
   public void flushRepository() {
-    metricRepo.flush();
+
+    metricRepo.flush(this.threadId);
   }
 
 }

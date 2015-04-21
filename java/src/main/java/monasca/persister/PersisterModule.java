@@ -30,16 +30,14 @@ import io.dropwizard.setup.Environment;
 import monasca.common.model.event.AlarmStateTransitionedEvent;
 import monasca.common.model.metric.MetricEnvelope;
 import monasca.persister.configuration.PersisterConfig;
-import monasca.persister.consumer.Consumer;
-import monasca.persister.consumer.ConsumerFactory;
+import monasca.persister.consumer.ManagedConsumer;
+import monasca.persister.consumer.ManagedConsumerFactory;
 import monasca.persister.consumer.KafkaChannel;
 import monasca.persister.consumer.KafkaChannelFactory;
+import monasca.persister.consumer.KafkaConsumer;
+import monasca.persister.consumer.KafkaConsumerFactory;
 import monasca.persister.consumer.KafkaConsumerRunnableBasic;
 import monasca.persister.consumer.KafkaConsumerRunnableBasicFactory;
-import monasca.persister.consumer.alarmstate.KafkaAlarmStateTransitionConsumer;
-import monasca.persister.consumer.alarmstate.KafkaAlarmStateTransitionConsumerFactory;
-import monasca.persister.consumer.metric.KafkaMetricsConsumer;
-import monasca.persister.consumer.metric.KafkaMetricsConsumerFactory;
 import monasca.persister.dbi.DBIProvider;
 import monasca.persister.pipeline.ManagedPipeline;
 import monasca.persister.pipeline.ManagedPipelineFactory;
@@ -78,15 +76,15 @@ public class PersisterModule extends AbstractModule {
 
     install(
         new FactoryModuleBuilder().implement(
-            new TypeLiteral<MetricHandler<MetricEnvelope[]>>() {},
-            new TypeLiteral<MetricHandler<MetricEnvelope[]>>() {})
-            .build(new TypeLiteral<MetricHandlerFactory<MetricEnvelope[]>>() {}));
+            MetricHandler.class,
+            MetricHandler.class)
+            .build(MetricHandlerFactory.class));
 
     install(
         new FactoryModuleBuilder().implement(
-        new TypeLiteral<AlarmStateTransitionedEventHandler<AlarmStateTransitionedEvent>>() {},
-        new TypeLiteral<AlarmStateTransitionedEventHandler<AlarmStateTransitionedEvent>>() {})
-            .build(new TypeLiteral<AlarmStateTransitionedEventHandlerFactory<AlarmStateTransitionedEvent>>() {}));
+            AlarmStateTransitionedEventHandler.class,
+            AlarmStateTransitionedEventHandler.class)
+            .build(AlarmStateTransitionedEventHandlerFactory.class));
 
     install(
         new FactoryModuleBuilder().implement(
@@ -102,14 +100,14 @@ public class PersisterModule extends AbstractModule {
 
     install(
         new FactoryModuleBuilder().implement(
-            new TypeLiteral<KafkaMetricsConsumer<MetricEnvelope[]>>() {},
-            new TypeLiteral<KafkaMetricsConsumer<MetricEnvelope[]>>() {})
-            .build(new TypeLiteral<KafkaMetricsConsumerFactory<MetricEnvelope[]>>() {}));
+        new TypeLiteral<KafkaConsumer<MetricEnvelope[]>>() {},
+        new TypeLiteral<KafkaConsumer<MetricEnvelope[]>>() {})
+            .build(new TypeLiteral<KafkaConsumerFactory<MetricEnvelope[]>>() {}));
 
     install(
         new FactoryModuleBuilder().implement(
-            new TypeLiteral<ManagedPipeline<MetricEnvelope[]>>() {},
-            new TypeLiteral<ManagedPipeline<MetricEnvelope[]>>() {})
+        new TypeLiteral<ManagedPipeline<MetricEnvelope[]>>() {},
+        new TypeLiteral<ManagedPipeline<MetricEnvelope[]>>() {})
             .build(new TypeLiteral<ManagedPipelineFactory<MetricEnvelope[]>>() {}));
 
     install(
@@ -120,21 +118,21 @@ public class PersisterModule extends AbstractModule {
 
     install(
         new FactoryModuleBuilder().implement(
-        new TypeLiteral<Consumer<AlarmStateTransitionedEvent>>() {},
-        new TypeLiteral<Consumer<AlarmStateTransitionedEvent>>() {})
-            .build(new TypeLiteral<ConsumerFactory<AlarmStateTransitionedEvent>>() {}));
+        new TypeLiteral<ManagedConsumer<AlarmStateTransitionedEvent>>() {},
+        new TypeLiteral<ManagedConsumer<AlarmStateTransitionedEvent>>() {})
+            .build(new TypeLiteral<ManagedConsumerFactory<AlarmStateTransitionedEvent>>() {}));
 
     install(
         new FactoryModuleBuilder().implement(
-        new TypeLiteral<KafkaAlarmStateTransitionConsumer<AlarmStateTransitionedEvent>>() {},
-        new TypeLiteral<KafkaAlarmStateTransitionConsumer<AlarmStateTransitionedEvent>>() {})
-            .build(new TypeLiteral<KafkaAlarmStateTransitionConsumerFactory<AlarmStateTransitionedEvent>>() {}));
+        new TypeLiteral<KafkaConsumer<AlarmStateTransitionedEvent>>() {},
+        new TypeLiteral<KafkaConsumer<AlarmStateTransitionedEvent>>() {})
+            .build(new TypeLiteral<KafkaConsumerFactory<AlarmStateTransitionedEvent>>() {}));
 
     install(
         new FactoryModuleBuilder().implement(
-            new TypeLiteral<Consumer<MetricEnvelope[]>>() {},
-            new TypeLiteral<Consumer<MetricEnvelope[]>>() {})
-            .build(new TypeLiteral<ConsumerFactory<MetricEnvelope[]>>() {}));
+        new TypeLiteral<ManagedConsumer<MetricEnvelope[]>>() {},
+        new TypeLiteral<ManagedConsumer<MetricEnvelope[]>>() {})
+            .build(new TypeLiteral<ManagedConsumerFactory<MetricEnvelope[]>>() {}));
 
     install(
         new FactoryModuleBuilder().implement(

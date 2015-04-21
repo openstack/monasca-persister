@@ -16,17 +16,13 @@
  */
 package monasca.persister.consumer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import monasca.persister.pipeline.ManagedPipeline;
 
 public interface KafkaConsumerRunnableBasicFactory<T> {
 
   KafkaConsumerRunnableBasic<T> create(
-      ObjectMapper objectMapper,
-      Class<T> clazz,
       ManagedPipeline<T> pipeline,
       KafkaChannel kafkaChannel,
-      int threadNumber);
+      String threadId);
 
 }

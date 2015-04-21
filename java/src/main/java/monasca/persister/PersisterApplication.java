@@ -31,14 +31,14 @@ import io.dropwizard.setup.Environment;
 import monasca.common.model.event.AlarmStateTransitionedEvent;
 import monasca.common.model.metric.MetricEnvelope;
 import monasca.persister.configuration.PersisterConfig;
-import monasca.persister.consumer.Consumer;
-import monasca.persister.consumer.ConsumerFactory;
+import monasca.persister.consumer.ManagedConsumer;
+import monasca.persister.consumer.ManagedConsumerFactory;
 import monasca.persister.consumer.KafkaChannel;
 import monasca.persister.consumer.KafkaChannelFactory;
-import monasca.persister.consumer.alarmstate.KafkaAlarmStateTransitionConsumer;
-import monasca.persister.consumer.alarmstate.KafkaAlarmStateTransitionConsumerFactory;
-import monasca.persister.consumer.metric.KafkaMetricsConsumer;
-import monasca.persister.consumer.metric.KafkaMetricsConsumerFactory;
+import monasca.persister.consumer.KafkaConsumer;
+import monasca.persister.consumer.KafkaConsumerFactory;
+import monasca.persister.consumer.KafkaConsumerRunnableBasic;
+import monasca.persister.consumer.KafkaConsumerRunnableBasicFactory;
 import monasca.persister.healthcheck.SimpleHealthCheck;
 import monasca.persister.pipeline.ManagedPipeline;
 import monasca.persister.pipeline.ManagedPipelineFactory;
@@ -97,70 +97,88 @@ public class PersisterApplication extends Application<PersisterConfig> {
 
     final KafkaChannelFactory kafkaChannelFactory = injector.getInstance(KafkaChannelFactory.class);
 
-    final ConsumerFactory<MetricEnvelope[]> metricsConsumerFactory =
-        injector.getInstance(Key.get(new TypeLiteral<ConsumerFactory<MetricEnvelope[]>>() {
-        }));
+    final ManagedConsumerFactory<MetricEnvelope[]> metricManagedConsumerFactory =
+        injector.getInstance(Key.get(new TypeLiteral<ManagedConsumerFactory<MetricEnvelope[]>>() {}));
 
     // Metrics
-    final KafkaMetricsConsumerFactory<MetricEnvelope[]> kafkaMetricsConsumerFactory =
-        injector.getInstance(Key.get(new TypeLiteral<KafkaMetricsConsumerFactory<MetricEnvelope[]>>(){}));
+    final KafkaConsumerFactory<MetricEnvelope[]> kafkaMetricConsumerFactory =
+        injector.getInstance(Key.get(new TypeLiteral<KafkaConsumerFactory<MetricEnvelope[]>>(){}));
+
+    final KafkaConsumerRunnableBasicFactory<MetricEnvelope[]> kafkaMetricConsumerRunnableBasicFactory =
+        injector.getInstance(Key.get(new TypeLiteral<KafkaConsumerRunnableBasicFactory
+            <MetricEnvelope[]>>(){}));
 
     for (int i = 0; i < configuration.getMetricConfiguration().getNumThreads(); i++) {
 
-      final KafkaChannel kafkaChannel =
-          kafkaChannelFactory.create(configuration, configuration.getMetricConfiguration(), i);
+      String threadId = "metric-" + String.valueOf(i);
 
-      final ManagedPipeline<MetricEnvelope[]> metricPipeline = getMetricPipeline(
-          configuration, i, injector);
+      final KafkaChannel kafkaMetricChannel =
+          kafkaChannelFactory.create(configuration.getMetricConfiguration(), threadId);
 
-      final KafkaMetricsConsumer<MetricEnvelope[]> kafkaMetricsConsumer =
-          kafkaMetricsConsumerFactory.create(MetricEnvelope[].class, kafkaChannel, i, metricPipeline);
+      final ManagedPipeline<MetricEnvelope[]> managedMetricPipeline =
+          getMetricPipeline(configuration, threadId, injector);
 
-      Consumer<MetricEnvelope[]> metricsConsumer =
-          metricsConsumerFactory.create(kafkaMetricsConsumer, metricPipeline);
+      KafkaConsumerRunnableBasic<MetricEnvelope[]> kafkaMetricConsumerRunnableBasic =
+          kafkaMetricConsumerRunnableBasicFactory.create(managedMetricPipeline, kafkaMetricChannel, threadId);
 
-      environment.lifecycle().manage(metricsConsumer);
+      final KafkaConsumer<MetricEnvelope[]> kafkaMetricConsumer =
+          kafkaMetricConsumerFactory.create(kafkaMetricConsumerRunnableBasic, threadId);
+
+      ManagedConsumer<MetricEnvelope[]> managedMetricConsumer =
+          metricManagedConsumerFactory.create(kafkaMetricConsumer, threadId);
+
+      environment.lifecycle().manage(managedMetricConsumer);
     }
 
     // AlarmStateTransitions
-    final ConsumerFactory<AlarmStateTransitionedEvent>
-        alarmStateTransitionsConsumerFactory = injector.getInstance(Key.get(new TypeLiteral
-        <ConsumerFactory<AlarmStateTransitionedEvent>>(){}));
+    final ManagedConsumerFactory<AlarmStateTransitionedEvent>
+        alarmStateTransitionsManagedConsumerFactory = injector.getInstance(Key.get(new TypeLiteral
+        <ManagedConsumerFactory<AlarmStateTransitionedEvent>>(){}));
 
-    final KafkaAlarmStateTransitionConsumerFactory<AlarmStateTransitionedEvent>
+    final KafkaConsumerFactory<AlarmStateTransitionedEvent>
         kafkaAlarmStateTransitionConsumerFactory =
-        injector.getInstance(Key.get(new TypeLiteral<KafkaAlarmStateTransitionConsumerFactory<AlarmStateTransitionedEvent
-                >>() {}));
+        injector.getInstance(Key.get(new TypeLiteral<KafkaConsumerFactory<AlarmStateTransitionedEvent>>() { }));
+
+    final KafkaConsumerRunnableBasicFactory<AlarmStateTransitionedEvent> kafkaAlarmStateTransitionConsumerRunnableBasicFactory =
+        injector.getInstance(Key.get(new TypeLiteral<KafkaConsumerRunnableBasicFactory
+            <AlarmStateTransitionedEvent>>(){}))      ;
 
     for (int i = 0; i < configuration.getAlarmHistoryConfiguration().getNumThreads(); i++) {
 
-      final KafkaChannel kafkaChannel =
+      String threadId = "alarm-state-transition-" + String.valueOf(i);
+
+      final KafkaChannel kafkaAlarmStateTransitionChannel =
           kafkaChannelFactory
-              .create(configuration, configuration.getAlarmHistoryConfiguration(), i);
+              .create(configuration.getAlarmHistoryConfiguration(), threadId);
 
-      final ManagedPipeline<AlarmStateTransitionedEvent> pipeline =
-          getAlarmStateHistoryPipeline(configuration, i, injector);
+      final ManagedPipeline<AlarmStateTransitionedEvent> managedAlarmStateTransitionPipeline =
+          getAlarmStateHistoryPipeline(configuration, threadId, injector);
 
-      final KafkaAlarmStateTransitionConsumer<AlarmStateTransitionedEvent> kafkaAlarmStateTransitionConsumer =
-          kafkaAlarmStateTransitionConsumerFactory.create(AlarmStateTransitionedEvent.class, kafkaChannel, i, pipeline);
+      KafkaConsumerRunnableBasic<AlarmStateTransitionedEvent> kafkaAlarmStateTransitionConsumerRunnableBasic =
+          kafkaAlarmStateTransitionConsumerRunnableBasicFactory.create(managedAlarmStateTransitionPipeline, kafkaAlarmStateTransitionChannel, threadId);
 
-      Consumer<AlarmStateTransitionedEvent> alarmStateTransitionConsumer =
-          alarmStateTransitionsConsumerFactory.create(kafkaAlarmStateTransitionConsumer, pipeline);
+      final KafkaConsumer<AlarmStateTransitionedEvent> kafkaAlarmStateTransitionConsumer =
+          kafkaAlarmStateTransitionConsumerFactory.create(kafkaAlarmStateTransitionConsumerRunnableBasic, threadId);
 
-      environment.lifecycle().manage(alarmStateTransitionConsumer);
+      ManagedConsumer<AlarmStateTransitionedEvent> managedAlarmStateTransitionConsumer =
+          alarmStateTransitionsManagedConsumerFactory.create(kafkaAlarmStateTransitionConsumer, threadId);
+
+      environment.lifecycle().manage(managedAlarmStateTransitionConsumer);
     }
   }
 
-  private ManagedPipeline<MetricEnvelope[]> getMetricPipeline(PersisterConfig configuration, int threadNum,
+  private ManagedPipeline<MetricEnvelope[]> getMetricPipeline(
+      PersisterConfig configuration,
+      String threadId,
       Injector injector) {
 
-    logger.debug("Creating metric pipeline...");
+    logger.debug("Creating metric pipeline [{}]...", threadId);
 
     final int batchSize = configuration.getMetricConfiguration().getBatchSize();
-    logger.debug("Batch size for metric pipeline [" + batchSize + "]");
+    logger.debug("Batch size for metric pipeline [{}]", batchSize);
 
-    MetricHandlerFactory<MetricEnvelope[]> metricEventHandlerFactory =
-        injector.getInstance(Key.get(new TypeLiteral<MetricHandlerFactory<MetricEnvelope[]>>(){}));
+    MetricHandlerFactory metricEventHandlerFactory =
+        injector.getInstance(MetricHandlerFactory.class);
 
     ManagedPipelineFactory<MetricEnvelope[]>
         managedPipelineFactory = injector.getInstance(Key.get(new TypeLiteral
@@ -168,33 +186,34 @@ public class PersisterApplication extends Application<PersisterConfig> {
 
     final ManagedPipeline<MetricEnvelope[]> pipeline =
         managedPipelineFactory.create(metricEventHandlerFactory.create(
-            configuration.getMetricConfiguration(), threadNum, batchSize));
+            configuration.getMetricConfiguration(), threadId, batchSize), threadId);
 
-    logger.debug("Instance of metric pipeline fully created");
+    logger.debug("Instance of metric pipeline [{}] fully created", threadId);
 
     return pipeline;
   }
 
   public ManagedPipeline<AlarmStateTransitionedEvent> getAlarmStateHistoryPipeline(
-      PersisterConfig configuration, int threadNum, Injector injector) {
+      PersisterConfig configuration,
+      String threadId,
+      Injector injector) {
 
-    logger.debug("Creating alarm state history pipeline...");
+    logger.debug("Creating alarm state history pipeline [{}]...", threadId);
 
     int batchSize = configuration.getAlarmHistoryConfiguration().getBatchSize();
-    logger.debug("Batch size for each AlarmStateHistoryPipeline [" + batchSize + "]");
+    logger.debug("Batch size for each AlarmStateHistoryPipeline [{}]", batchSize);
 
-    AlarmStateTransitionedEventHandlerFactory<AlarmStateTransitionedEvent> alarmHistoryEventHandlerFactory =
-        injector.getInstance(Key.get(new TypeLiteral<AlarmStateTransitionedEventHandlerFactory
-            <AlarmStateTransitionedEvent>>(){}));
+    AlarmStateTransitionedEventHandlerFactory alarmHistoryEventHandlerFactory =
+        injector.getInstance(AlarmStateTransitionedEventHandlerFactory.class);
 
     ManagedPipelineFactory<AlarmStateTransitionedEvent> alarmStateTransitionPipelineFactory =
         injector.getInstance(new Key<ManagedPipelineFactory<AlarmStateTransitionedEvent>>(){});
 
     ManagedPipeline<AlarmStateTransitionedEvent> pipeline =
         alarmStateTransitionPipelineFactory.create(alarmHistoryEventHandlerFactory.create(
-            configuration.getAlarmHistoryConfiguration(), threadNum, batchSize));
+            configuration.getAlarmHistoryConfiguration(), threadId, batchSize), threadId);
 
-    logger.debug("Instance of alarm state history pipeline fully created");
+    logger.debug("Instance of alarm state history pipeline [{}] fully created", threadId);
 
     return pipeline;
   }

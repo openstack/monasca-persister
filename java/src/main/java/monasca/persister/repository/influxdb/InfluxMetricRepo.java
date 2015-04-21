@@ -40,7 +40,7 @@ public abstract class InfluxMetricRepo implements MetricRepo {
   public final com.codahale.metrics.Timer flushTimer;
   public final Meter measurementMeter;
 
-  protected abstract void write() throws Exception;
+  protected abstract void write(String id) throws Exception;
 
   public InfluxMetricRepo(final Environment env) {
 
@@ -72,22 +72,31 @@ public abstract class InfluxMetricRepo implements MetricRepo {
 
 
   @Override
-  public void flush() {
+  public void flush(String id) {
 
     try {
+
+      if (this.measurementBuffer.isEmpty()) {
+        logger.debug("[{}]: no metric msg to be written to the influxDB", id);
+        logger.debug("[{}]: returning from flush", id);
+        return;
+      }
+
       final long startTime = System.currentTimeMillis();
       final Timer.Context context = flushTimer.time();
 
-      write();
+      write(id);
 
       final long endTime = System.currentTimeMillis();
       context.stop();
 
-      logger.debug("Writing measurements, definitions, and dimensions to InfluxDB took {} seconds",
-                   (endTime - startTime) / 1000);
+      logger.debug("[{}]: flushing batch took {} seconds",
+                   id, (endTime - startTime) / 1000);
 
     } catch (Exception e) {
-      logger.error("Failed to write measurements to InfluxDB", e);
+
+      logger.error("[{}]: failed to write measurements to InfluxDB", id, e);
+
     }
 
     clearBuffers();

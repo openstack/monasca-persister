@@ -406,7 +406,7 @@ public class VerticaMetricRepo extends VerticaRepo implements MetricRepo {
   }
 
   @Override
-  public void flush() {
+  public void flush(String id) {
     try {
       long startTime = System.currentTimeMillis();
       Timer.Context context = flushTimer.time();

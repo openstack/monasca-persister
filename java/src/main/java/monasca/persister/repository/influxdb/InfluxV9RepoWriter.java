@@ -123,7 +123,7 @@ public class InfluxV9RepoWriter {
     }
   }
 
-  protected void write(final InfluxPoint[] influxPointArry) throws Exception {
+  protected void write(final InfluxPoint[] influxPointArry, String id) throws Exception {
 
     HttpPost request = new HttpPost(this.influxUrl);
 
@@ -133,11 +133,13 @@ public class InfluxV9RepoWriter {
     InfluxWrite
         influxWrite =
         new InfluxWrite(this.influxName, this.influxRetentionPolicy, influxPointArry,
-                        new HashMap());
+                        new HashMap<String, String>());
 
     String json = this.objectMapper.writeValueAsString(influxWrite);
 
     if (this.gzip) {
+
+      logger.debug("[{}]: gzip set to true. sending gzip msg", id);
 
       HttpEntity
           requestEntity =
@@ -155,6 +157,8 @@ public class InfluxV9RepoWriter {
 
     } else {
 
+      logger.debug("[{}]: gzip set to false. sending non-gzip msg", id);
+
       StringEntity stringEntity = new StringEntity(json, "UTF-8");
 
       request.setEntity(stringEntity);
@@ -163,8 +167,8 @@ public class InfluxV9RepoWriter {
 
     try {
 
-      logger.debug("Writing {} points to influxdb database {} at {}", influxPointArry.length,
-                   this.influxName, this.influxUrl);
+      logger.debug("[{}]: sending {} points to influxdb database {} at {}", id,
+                   influxPointArry.length, this.influxName, this.influxUrl);
 
       HttpResponse response = this.httpClient.execute(request);
 
@@ -173,17 +177,20 @@ public class InfluxV9RepoWriter {
       if (rc != HttpStatus.SC_OK) {
 
         HttpEntity responseEntity = response.getEntity();
+
         String responseString = EntityUtils.toString(responseEntity, "UTF-8");
-        logger.error("Failed to write data to influx database {} at {}: {}", this.influxName,
-                     this.influxUrl, String.valueOf(rc));
-        logger.error("Http response: {}", responseString);
+
+        logger.error("[{}]: failed to send data to influxdb database {} at {}: {}", id,
+                     this.influxName, this.influxUrl, String.valueOf(rc));
+
+        logger.error("[{}]: http response: {}", id, responseString);
 
         throw new Exception(rc + ":" + responseString);
       }
 
       logger
-          .debug("Successfully wrote {} points to influx database {} at {}", influxPointArry.length,
-                 this.influxName, this.influxUrl);
+          .debug("[{}]: successfully sent {} points to influxdb database {} at {}", id,
+                 influxPointArry.length, this.influxName, this.influxUrl);
 
     } finally {
 

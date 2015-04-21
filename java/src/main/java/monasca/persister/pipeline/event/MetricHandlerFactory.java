@@ -21,10 +21,10 @@ import monasca.persister.configuration.PipelineConfig;
 
 import com.google.inject.assistedinject.Assisted;
 
-public interface MetricHandlerFactory<T> {
+public interface MetricHandlerFactory{
 
-  MetricHandler<T> create(
+  MetricHandler create(
       PipelineConfig pipelineConfig,
-      @Assisted("ordinal") int ordinal,
+      @Assisted("threadId") String threadId,
       @Assisted("batchSize") int batchSize);
 }

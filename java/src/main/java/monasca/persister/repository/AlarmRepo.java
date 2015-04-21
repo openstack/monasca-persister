@@ -23,5 +23,5 @@ public interface AlarmRepo {
 
   void addToBatch(final AlarmStateTransitionedEvent message);
 
-  void flush();
+  void flush(String id);
 }

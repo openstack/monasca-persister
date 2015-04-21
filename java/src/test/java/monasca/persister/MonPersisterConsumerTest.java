@@ -18,8 +18,8 @@
 package monasca.persister;
 
 import monasca.common.model.metric.MetricEnvelope;
-import monasca.persister.consumer.Consumer;
-import monasca.persister.consumer.metric.KafkaMetricsConsumer;
+import monasca.persister.consumer.ManagedConsumer;
+import monasca.persister.consumer.KafkaConsumer;
 import monasca.persister.pipeline.ManagedPipeline;
 import monasca.persister.pipeline.event.MetricHandler;
 
@@ -32,10 +32,10 @@ import org.mockito.MockitoAnnotations;
 public class MonPersisterConsumerTest {
 
   @Mock
-  private KafkaMetricsConsumer kafkaConsumer;
+  private KafkaConsumer<MetricEnvelope[]> kafkaConsumer;
 
   @Mock
-  private Consumer monConsumer;
+  private ManagedConsumer<MetricEnvelope[]> monManagedConsumer;
 
   private MetricHandler metricHandler;
 
@@ -44,14 +44,14 @@ public class MonPersisterConsumerTest {
   @Before
   public void initMocks() {
     metricHandler = Mockito.mock(MetricHandler.class);
-    metricPipeline = Mockito.spy(new ManagedPipeline<MetricEnvelope[]>(metricHandler));
+    metricPipeline = Mockito.spy(new ManagedPipeline<MetricEnvelope[]>(metricHandler, "metric-1"));
     MockitoAnnotations.initMocks(this);
   }
 
   @Test
   public void testKafkaConsumerLifecycle() throws Exception {
-    monConsumer.start();
-    monConsumer.stop();
+    monManagedConsumer.start();
+    monManagedConsumer.stop();
     metricPipeline.shutdown();
     Mockito.verify(metricHandler).flush();
   }

@@ -41,9 +41,9 @@ public class InfluxV9MetricRepo extends InfluxMetricRepo {
   }
 
   @Override
-  protected void write() throws Exception {
+  protected void write(String id) throws Exception {
 
-    this.influxV9RepoWriter.write(getInfluxPointArry());
+    this.influxV9RepoWriter.write(getInfluxPointArry(), id);
 
   }
 
@@ -77,9 +77,7 @@ public class InfluxV9MetricRepo extends InfluxMetricRepo {
           influxPointList.add(influxPoint);
 
         }
-
       }
-
     }
 
     return influxPointList.toArray(new InfluxPoint[influxPointList.size()]);
@@ -89,11 +87,17 @@ public class InfluxV9MetricRepo extends InfluxMetricRepo {
   private Map<String, Object> buildValueMap(Measurement measurement) {
 
     Map<String, Object> valueMap = new HashMap<>();
+
     valueMap.put("value", measurement.getValue());
+
     String valueMetaJSONString = measurement.getValueMetaJSONString();
+
     if (valueMetaJSONString != null) {
+
       valueMap.put("value_meta", valueMetaJSONString);
+
     }
+
     return valueMap;
 
   }
@@ -111,10 +115,10 @@ public class InfluxV9MetricRepo extends InfluxMetricRepo {
     }
 
     tagMap.put("_tenant_id", definition.getTenantId());
+
     tagMap.put("_region", definition.getRegion());
 
     return tagMap;
 
   }
-
 }

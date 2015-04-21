@@ -20,8 +20,6 @@ package monasca.persister.consumer;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,61 +29,68 @@ import monasca.persister.pipeline.ManagedPipeline;
 public class KafkaConsumerRunnableBasic<T> implements Runnable {
 
   private static final Logger logger = LoggerFactory.getLogger(KafkaConsumerRunnableBasic.class);
+
   private final KafkaChannel kafkaChannel;
-  private final int threadNumber;
+  private final String threadId;
   private final ManagedPipeline<T> pipeline;
   private volatile boolean stop = false;
 
-  private final ObjectMapper objectMapper;
-
-  private final Class<T> clazz;
 
   @Inject
   public KafkaConsumerRunnableBasic(
-      @Assisted Class<T> clazz,
-      @Assisted ObjectMapper objectMapper,
       @Assisted KafkaChannel kafkaChannel,
       @Assisted ManagedPipeline<T> pipeline,
-      @Assisted int threadNumber) {
+      @Assisted String threadId) {
 
     this.kafkaChannel = kafkaChannel;
     this.pipeline = pipeline;
-    this.threadNumber = threadNumber;
-    this.objectMapper = objectMapper;
-    this.clazz = clazz;
+    this.threadId = threadId;
   }
 
   protected void publishHeartbeat() {
     publishEvent(null);
   }
 
-  protected void handleMessage(String message) {
+  protected void handleMessage(String msg) {
 
     try {
 
-      final T o = objectMapper.readValue(message, this.clazz);
-
-      publishEvent(o);
+      publishEvent(msg);
 
     } catch (Exception e) {
 
-      logger.error("Failed to deserialize JSON message and send to handler: " + message, e);
+      logger.error(
+          "[{}]: failed to deserialize JSON message and send to handler: {} ",
+          threadId,
+          msg,
+          e);
     }
   }
 
   private void markRead() {
+
+    logger.debug("[{}]: marking read", this.threadId);
+
     this.kafkaChannel.markRead();
   }
 
   public void stop() {
+
+    logger.info("[{}]: stop", this.threadId);
+
     this.stop = true;
+
+    this.pipeline.shutdown();
+
   }
 
   public void run() {
 
+    logger.info("[{}]: run", this.threadId);
+
     final ConsumerIterator<byte[], byte[]> it = kafkaChannel.getKafkaStream().iterator();
 
-    logger.debug("KafkaChannel {} has stream", this.threadNumber);
+    logger.debug("[{}]: KafkaChannel has stream iterator", this.threadId);
 
     while (!this.stop) {
 
@@ -93,11 +98,11 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
 
         if (it.hasNext()) {
 
-          final String s = new String(it.next().message());
+          final String msg = new String(it.next().message());
 
-          logger.debug("Thread {}: {}", threadNumber, s);
+          logger.debug("[{}]: {}", this.threadId, msg);
 
-          handleMessage(s);
+          handleMessage(msg);
 
         }
 
@@ -108,14 +113,14 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
       }
     }
 
-    logger.debug("Shutting down Thread: {}", threadNumber);
+    logger.info("[{}]: shutting down", this.threadId);
 
     this.kafkaChannel.stop();
   }
 
-  protected void publishEvent(final T event) {
+  protected void publishEvent(final String msg) {
 
-    if (pipeline.publishEvent(event)) {
+    if (pipeline.publishEvent(msg)) {
 
       markRead();
 

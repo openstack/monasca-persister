@@ -25,55 +25,75 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
 import com.codahale.metrics.Counter;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 
 import io.dropwizard.setup.Environment;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AlarmStateTransitionedEventHandler<T> extends
-    FlushableHandler<T> {
+public class AlarmStateTransitionedEventHandler extends
+    FlushableHandler<AlarmStateTransitionedEvent> {
 
-  private static final Logger logger = LoggerFactory
-      .getLogger(AlarmStateTransitionedEventHandler.class);
+  private static final Logger logger =
+      LoggerFactory.getLogger(AlarmStateTransitionedEventHandler.class);
 
   private final AlarmRepo alarmRepo;
-  private final int ordinal;
 
   private final Counter alarmStateTransitionCounter;
 
   @Inject
   public AlarmStateTransitionedEventHandler(
       AlarmRepo alarmRepo,
-      @Assisted PipelineConfig configuration,
       Environment environment,
-      @Assisted("ordinal") int ordinal,
+      @Assisted PipelineConfig configuration,
+      @Assisted("threadId") String threadId,
       @Assisted("batchSize") int batchSize) {
 
-    super(configuration, environment, ordinal, batchSize,
-        AlarmStateTransitionedEventHandler.class.getName());
+    super(configuration, environment, threadId, batchSize);
 
     this.alarmRepo = alarmRepo;
 
-    this.ordinal = ordinal;
-
-    final String handlerName = String.format("%s[%d]", AlarmStateTransitionedEventHandler.class.getName(), ordinal);
     this.alarmStateTransitionCounter =
-        environment.metrics().counter(handlerName + "." + "alarm-state-transitions-added-to-batch-counter");
+        environment.metrics()
+            .counter(this.handlerName + "." + "alarm-state-transitions-added-to-batch-counter");
+
   }
 
   @Override
-  protected int process(T event) throws Exception {
+  protected int process(String msg) throws Exception {
 
-    logger.debug("Ordinal: {}: {}", this.ordinal, event);
+    AlarmStateTransitionedEvent alarmStateTransitionedEvent =
+                  objectMapper.readValue(msg, AlarmStateTransitionedEvent.class);
 
-    alarmRepo.addToBatch((AlarmStateTransitionedEvent) event);
+    logger.debug("[{}]: [{}:{}]: {}",
+                 this.threadId,
+                 this.getBatchCount(),
+                 this.getMsgCount(),
+                 alarmStateTransitionedEvent);
+
+    alarmRepo.addToBatch(alarmStateTransitionedEvent);
+
+    this.alarmStateTransitionCounter.inc();
 
     return 1;
   }
 
   @Override
+  protected void initObjectMapper() {
+
+    this.objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+
+    this.objectMapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+
+    this.objectMapper.enable(DeserializationFeature.UNWRAP_ROOT_VALUE);
+
+  }
+
+  @Override
   protected void flushRepository() {
-    alarmRepo.flush();
+
+    alarmRepo.flush(this.threadId);
+
   }
 }
