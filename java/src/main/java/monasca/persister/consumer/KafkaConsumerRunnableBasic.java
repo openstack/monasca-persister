@@ -53,18 +53,8 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
 
   protected void handleMessage(String msg) {
 
-    try {
-
       publishEvent(msg);
 
-    } catch (Exception e) {
-
-      logger.error(
-          "[{}]: failed to deserialize JSON message and send to handler: {} ",
-          threadId,
-          msg,
-          e);
-    }
   }
 
   private void markRead() {

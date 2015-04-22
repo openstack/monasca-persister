@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Hewlett-Packard Development Company, L.P.
+ * Copyright (c) 2015 Hewlett-Packard Development Company, L.P.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package monasca.persister.repository;
 
-import monasca.common.model.metric.MetricEnvelope;
+public interface Repo<T> {
 
-public interface MetricRepo {
-
-  void addToBatch(final MetricEnvelope metricEnvelope);
+  void addToBatch(final T msg);
 
   void flush(String id);
+
 }

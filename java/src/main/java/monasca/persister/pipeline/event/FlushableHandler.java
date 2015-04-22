@@ -94,31 +94,19 @@ public abstract class FlushableHandler<T> {
 
     if (msg == null) {
 
-      logger.debug("[{}]: got heartbeat message, flush every {} seconds.", this.threadId,
-          this.secondsBetweenFlushes);
+      return checkFlushTime();
 
-      if (this.flushTimeMillis < System.currentTimeMillis()) {
-
-        logger.debug("[{}]: {} millis past flush time. flushing to repository now.",
-            this.threadId, (System.currentTimeMillis() - this.flushTimeMillis));
-
-        flush();
-
-        return true;
-
-      } else {
-
-        logger.debug("[{}]: {} millis to next flush time. no need to flush at this time.",
-            this.threadId,  this.flushTimeMillis - System.currentTimeMillis());
-
-        return false;
-
-      }
     }
+
+    this.msgCount += process(msg);
 
     this.processedMeter.mark();
 
-    this.msgCount += process(msg);
+    return checkBatchSize();
+
+  }
+
+  private boolean checkBatchSize() {
 
     if (this.msgCount >= this.batchSize) {
 
@@ -135,6 +123,36 @@ public abstract class FlushableHandler<T> {
     }
   }
 
+  private boolean checkFlushTime() {
+
+    logger.debug(
+        "[{}]: got heartbeat message, flush every {} seconds.",
+        this.threadId,
+        this.secondsBetweenFlushes);
+
+    if (this.flushTimeMillis < System.currentTimeMillis()) {
+
+      logger.debug(
+          "[{}]: {} millis past flush time. flushing to repository now.",
+          this.threadId,
+          (System.currentTimeMillis() - this.flushTimeMillis));
+
+      flush();
+
+      return true;
+
+    } else {
+
+      logger.debug(
+          "[{}]: {} millis to next flush time. no need to flush at this time.",
+          this.threadId,
+          this.flushTimeMillis - System.currentTimeMillis());
+
+      return false;
+
+    }
+  }
+
   public void flush() {
 
     logger.debug("[{}]: flush", this.threadId);
@@ -142,6 +160,8 @@ public abstract class FlushableHandler<T> {
     if (this.msgCount == 0) {
 
       logger.debug("[{}]: nothing to flush", this.threadId);
+
+      return;
     }
 
     Timer.Context context = this.commitTimer.time();
@@ -161,13 +181,13 @@ public abstract class FlushableHandler<T> {
 
   }
 
-  public long getBatchCount() {
+  protected long getBatchCount() {
 
     return this.batchCount;
 
   }
 
-  public int getMsgCount() {
+  protected int getMsgCount() {
 
     return this.msgCount;
   }

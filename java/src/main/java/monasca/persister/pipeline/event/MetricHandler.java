@@ -30,20 +30,20 @@ import org.slf4j.LoggerFactory;
 import io.dropwizard.setup.Environment;
 import monasca.common.model.metric.MetricEnvelope;
 import monasca.persister.configuration.PipelineConfig;
-import monasca.persister.repository.MetricRepo;
+import monasca.persister.repository.Repo;
 
 public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
 
   private static final Logger logger =
       LoggerFactory.getLogger(MetricHandler.class);
 
-  private final MetricRepo metricRepo;
+  private final Repo<MetricEnvelope> metricRepo;
 
   private final Counter metricCounter;
 
   @Inject
   public MetricHandler(
-      MetricRepo metricRepo,
+      Repo<MetricEnvelope> metricRepo,
       Environment environment,
       @Assisted PipelineConfig configuration,
       @Assisted("threadId") String threadId,
@@ -76,7 +76,7 @@ public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
 
   private void processEnvelope(MetricEnvelope metricEnvelope) {
 
-    logger.debug("[{}]: [{}:{}]: {}",
+    logger.debug("[{}]: [{}:{}] {}",
                  this.threadId,
                  this.getBatchCount(),
                  this.getMsgCount(),

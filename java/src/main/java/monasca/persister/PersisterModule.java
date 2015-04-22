@@ -45,8 +45,7 @@ import monasca.persister.pipeline.event.AlarmStateTransitionedEventHandler;
 import monasca.persister.pipeline.event.AlarmStateTransitionedEventHandlerFactory;
 import monasca.persister.pipeline.event.MetricHandler;
 import monasca.persister.pipeline.event.MetricHandlerFactory;
-import monasca.persister.repository.AlarmRepo;
-import monasca.persister.repository.MetricRepo;
+import monasca.persister.repository.Repo;
 import monasca.persister.repository.influxdb.InfluxV9AlarmRepo;
 import monasca.persister.repository.influxdb.InfluxV9MetricRepo;
 import monasca.persister.repository.influxdb.InfluxV9RepoWriter;
@@ -141,8 +140,12 @@ public class PersisterModule extends AbstractModule {
     if (config.getDatabaseConfiguration().getDatabaseType().equalsIgnoreCase(VERTICA)) {
 
       bind(DBI.class).toProvider(DBIProvider.class).in(Scopes.SINGLETON);
-      bind(MetricRepo.class).to(VerticaMetricRepo.class);
-      bind(AlarmRepo.class).to(VerticaAlarmRepo.class);
+
+      bind(new TypeLiteral<Repo<MetricEnvelope>>(){})
+          .to(VerticaMetricRepo.class);
+
+      bind(new TypeLiteral<Repo<AlarmStateTransitionedEvent>>(){})
+          .to(VerticaAlarmRepo.class);
 
     } else if (config.getDatabaseConfiguration().getDatabaseType().equalsIgnoreCase(INFLUXDB)) {
 
@@ -158,8 +161,12 @@ public class PersisterModule extends AbstractModule {
       }
 
       bind(InfluxV9RepoWriter.class).in(Singleton.class);
-      bind(MetricRepo.class).to(InfluxV9MetricRepo.class);
-      bind(AlarmRepo.class).to(InfluxV9AlarmRepo.class);
+
+      bind(new TypeLiteral<Repo<MetricEnvelope>>() {})
+          .to(InfluxV9MetricRepo.class);
+
+      bind(new TypeLiteral<Repo<AlarmStateTransitionedEvent>> () {})
+          .to(InfluxV9AlarmRepo.class);
 
     } else {
 

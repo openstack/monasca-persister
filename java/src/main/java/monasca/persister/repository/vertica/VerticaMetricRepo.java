@@ -21,7 +21,6 @@ import monasca.common.model.metric.Metric;
 import monasca.common.model.metric.MetricEnvelope;
 import monasca.persister.configuration.PersisterConfig;
 import monasca.persister.pipeline.event.MetricHandler;
-import monasca.persister.repository.MetricRepo;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -50,8 +49,9 @@ import java.util.TreeMap;
 import javax.inject.Inject;
 
 import io.dropwizard.setup.Environment;
+import monasca.persister.repository.Repo;
 
-public class VerticaMetricRepo extends VerticaRepo implements MetricRepo {
+public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelope> {
 
   private static final Logger logger = LoggerFactory.getLogger(VerticaMetricRepo.class);
 

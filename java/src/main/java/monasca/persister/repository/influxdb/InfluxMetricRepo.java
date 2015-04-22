@@ -19,94 +19,68 @@ package monasca.persister.repository.influxdb;
 
 import monasca.common.model.metric.Metric;
 import monasca.common.model.metric.MetricEnvelope;
-import monasca.persister.repository.MetricRepo;
 
 import com.codahale.metrics.Meter;
-import com.codahale.metrics.Timer;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
 import io.dropwizard.setup.Environment;
 
-public abstract class InfluxMetricRepo implements MetricRepo {
-
-  private static final Logger logger = LoggerFactory.getLogger(InfluxMetricRepo.class);
+public abstract class InfluxMetricRepo extends InfluxRepo<MetricEnvelope> {
 
   protected final MeasurementBuffer measurementBuffer = new MeasurementBuffer();
 
-  public final com.codahale.metrics.Timer flushTimer;
-  public final Meter measurementMeter;
+  protected final Meter measurementMeter;
 
   protected abstract void write(String id) throws Exception;
 
   public InfluxMetricRepo(final Environment env) {
 
-    this.flushTimer = env.metrics().timer(this.getClass().getName() + ".flush-timer");
-    this.measurementMeter = env.metrics().meter(this.getClass().getName() + ".measurement-meter");
+    super(env);
+
+    this.measurementMeter =
+        env.metrics().meter(this.getClass().getName() + ".measurement-meter");
+
   }
 
   @Override
   public void addToBatch(MetricEnvelope metricEnvelope) {
 
     Metric metric = metricEnvelope.metric;
+
     Map<String, Object> meta = metricEnvelope.meta;
 
-    Definition
-        definition =
-        new Definition(metric.getName(), (String) meta.get("tenantId"),
-                       (String) meta.get("region"));
+    Definition definition =
+        new Definition(
+            metric.getName(),
+            (String) meta.get("tenantId"),
+            (String) meta.get("region"));
 
     Dimensions dimensions = new Dimensions(metric.getDimensions());
 
-    Measurement
-        measurement =
-        new Measurement(metric.getTimestamp(), metric.getValue(), metric.getValueMeta());
+    Measurement measurement =
+        new Measurement(
+            metric.getTimestamp(),
+            metric.getValue(),
+            metric.getValueMeta());
 
     this.measurementBuffer.put(definition, dimensions, measurement);
+
     this.measurementMeter.mark();
 
   }
 
-
   @Override
-  public void flush(String id) {
-
-    try {
-
-      if (this.measurementBuffer.isEmpty()) {
-        logger.debug("[{}]: no metric msg to be written to the influxDB", id);
-        logger.debug("[{}]: returning from flush", id);
-        return;
-      }
-
-      final long startTime = System.currentTimeMillis();
-      final Timer.Context context = flushTimer.time();
-
-      write(id);
-
-      final long endTime = System.currentTimeMillis();
-      context.stop();
-
-      logger.debug("[{}]: flushing batch took {} seconds",
-                   id, (endTime - startTime) / 1000);
-
-    } catch (Exception e) {
-
-      logger.error("[{}]: failed to write measurements to InfluxDB", id, e);
-
-    }
-
-    clearBuffers();
-  }
-
-
-  private void clearBuffers() {
+  protected void clearBuffers() {
 
     this.measurementBuffer.clear();
 
   }
 
+  @Override
+  protected boolean isBufferEmpty() {
+
+    return this.measurementBuffer.isEmpty();
+
+  }
 }

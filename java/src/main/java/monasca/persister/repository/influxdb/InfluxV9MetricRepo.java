@@ -32,10 +32,12 @@ public class InfluxV9MetricRepo extends InfluxMetricRepo {
   private final InfluxV9RepoWriter influxV9RepoWriter;
 
   @Inject
-  public InfluxV9MetricRepo(final Environment env,
-                            final InfluxV9RepoWriter influxV9RepoWriter) {
+  public InfluxV9MetricRepo(
+      final Environment env,
+      final InfluxV9RepoWriter influxV9RepoWriter) {
 
     super(env);
+
     this.influxV9RepoWriter = influxV9RepoWriter;
 
   }

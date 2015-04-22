@@ -19,7 +19,6 @@ package monasca.persister.pipeline.event;
 
 import monasca.common.model.event.AlarmStateTransitionedEvent;
 import monasca.persister.configuration.PipelineConfig;
-import monasca.persister.repository.AlarmRepo;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
@@ -28,6 +27,7 @@ import com.codahale.metrics.Counter;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 
 import io.dropwizard.setup.Environment;
+import monasca.persister.repository.Repo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,13 +38,13 @@ public class AlarmStateTransitionedEventHandler extends
   private static final Logger logger =
       LoggerFactory.getLogger(AlarmStateTransitionedEventHandler.class);
 
-  private final AlarmRepo alarmRepo;
+  private final Repo<AlarmStateTransitionedEvent> alarmRepo;
 
   private final Counter alarmStateTransitionCounter;
 
   @Inject
   public AlarmStateTransitionedEventHandler(
-      AlarmRepo alarmRepo,
+      Repo<AlarmStateTransitionedEvent> alarmRepo,
       Environment environment,
       @Assisted PipelineConfig configuration,
       @Assisted("threadId") String threadId,
@@ -66,7 +66,7 @@ public class AlarmStateTransitionedEventHandler extends
     AlarmStateTransitionedEvent alarmStateTransitionedEvent =
                   objectMapper.readValue(msg, AlarmStateTransitionedEvent.class);
 
-    logger.debug("[{}]: [{}:{}]: {}",
+    logger.debug("[{}]: [{}:{}] {}",
                  this.threadId,
                  this.getBatchCount(),
                  this.getMsgCount(),

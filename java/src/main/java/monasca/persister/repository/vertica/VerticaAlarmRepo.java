@@ -19,7 +19,6 @@ package monasca.persister.repository.vertica;
 
 import monasca.common.model.event.AlarmStateTransitionedEvent;
 import monasca.persister.configuration.PersisterConfig;
-import monasca.persister.repository.AlarmRepo;
 
 import com.codahale.metrics.Timer;
 
@@ -37,8 +36,9 @@ import java.util.TimeZone;
 import javax.inject.Inject;
 
 import io.dropwizard.setup.Environment;
+import monasca.persister.repository.Repo;
 
-public class VerticaAlarmRepo extends VerticaRepo implements AlarmRepo {
+public class VerticaAlarmRepo extends VerticaRepo implements Repo<AlarmStateTransitionedEvent> {
 
   private static final Logger logger = LoggerFactory.getLogger(VerticaAlarmRepo.class);
   private final Environment environment;

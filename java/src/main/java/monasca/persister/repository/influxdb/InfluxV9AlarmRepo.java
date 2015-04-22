@@ -45,10 +45,12 @@ public class InfluxV9AlarmRepo extends InfluxAlarmRepo {
   private final DateTimeFormatter dateFormatter = ISODateTimeFormat.dateTime();
 
   @Inject
-  public InfluxV9AlarmRepo(final Environment env,
-                           final InfluxV9RepoWriter influxV9RepoWriter) {
+  public InfluxV9AlarmRepo(
+      final Environment env,
+      final InfluxV9RepoWriter influxV9RepoWriter) {
 
     super(env);
+
     this.influxV9RepoWriter = influxV9RepoWriter;
 
     this.objectMapper.setPropertyNamingStrategy(

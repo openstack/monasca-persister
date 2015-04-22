@@ -167,7 +167,7 @@ public class InfluxV9RepoWriter {
 
     try {
 
-      logger.debug("[{}]: sending {} points to influxdb database {} at {}", id,
+      logger.debug("[{}]: sending {} points to influxdb {} at {}", id,
                    influxPointArry.length, this.influxName, this.influxUrl);
 
       HttpResponse response = this.httpClient.execute(request);
@@ -180,7 +180,7 @@ public class InfluxV9RepoWriter {
 
         String responseString = EntityUtils.toString(responseEntity, "UTF-8");
 
-        logger.error("[{}]: failed to send data to influxdb database {} at {}: {}", id,
+        logger.error("[{}]: failed to send data to influxdb {} at {}: {}", id,
                      this.influxName, this.influxUrl, String.valueOf(rc));
 
         logger.error("[{}]: http response: {}", id, responseString);
@@ -189,7 +189,7 @@ public class InfluxV9RepoWriter {
       }
 
       logger
-          .debug("[{}]: successfully sent {} points to influxdb database {} at {}", id,
+          .debug("[{}]: successfully sent {} points to influxdb {} at {}", id,
                  influxPointArry.length, this.influxName, this.influxUrl);
 
     } finally {
