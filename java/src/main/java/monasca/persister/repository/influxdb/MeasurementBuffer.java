@@ -30,13 +30,17 @@ public class MeasurementBuffer {
     Map<Dimensions, List<Measurement>> dimensionsMap = this.measurementMap.get(definition);
 
     if (dimensionsMap == null) {
+
       dimensionsMap = initDimensionsMap(definition, dimensions);
+
     }
 
     List<Measurement> measurementList = dimensionsMap.get(dimensions);
 
     if (measurementList == null) {
+
       measurementList = initMeasurementList(dimensionsMap, dimensions);
+
     }
 
     measurementList.add(measurement);
@@ -65,8 +69,11 @@ public class MeasurementBuffer {
                                                                Dimensions dimensions) {
 
     Map<Dimensions, List<Measurement>> dimensionsMap = new HashMap<>();
+
     List<Measurement> measurementList = new LinkedList<>();
+
     dimensionsMap.put(dimensions, measurementList);
+
     this.measurementMap.put(definition, dimensionsMap);
 
     return dimensionsMap;
@@ -76,6 +83,7 @@ public class MeasurementBuffer {
                                                 Dimensions dimensions) {
 
     List<Measurement> measurementList = new LinkedList<>();
+
     dimensionsMap.put(dimensions, measurementList);
 
     return measurementList;

@@ -69,22 +69,33 @@ public class InfluxV9AlarmRepo extends InfluxAlarmRepo {
     List<InfluxPoint> influxPointList = new LinkedList<>();
 
     for (AlarmStateTransitionedEvent event : this.alarmStateTransitionedEventList) {
+
       Map<String, Object> valueMap = new HashMap<>();
 
       valueMap.put("tenant_id", event.tenantId);
+
       valueMap.put("alarm_id", event.alarmId);
+
       valueMap.put("metrics", this.objectMapper.writeValueAsString(event.metrics));
+
       valueMap.put("old_state", event.oldState);
+
       valueMap.put("new_state", event.newState);
+
       valueMap.put("sub_alarms", this.objectMapper.writeValueAsString(event.subAlarms));
+
       valueMap.put("reason", event.stateChangeReason);
+
       valueMap.put("reason_data", "{}");
 
       DateTime dateTime = new DateTime(event.timestamp, DateTimeZone.UTC);
+
       String dateString = this.dateFormatter.print(dateTime);
 
       Map<String, String> tags = new HashMap<>();
+
       tags.put("tenant_id", event.tenantId);
+
       tags.put("alarm_id", event.alarmId);
 
       InfluxPoint
@@ -92,6 +103,7 @@ public class InfluxV9AlarmRepo extends InfluxAlarmRepo {
           new InfluxPoint(ALARM_STATE_HISTORY_NAME, tags, dateString, valueMap);
 
       influxPointList.add(influxPoint);
+
     }
 
     return influxPointList.toArray(new InfluxPoint[influxPointList.size()]);

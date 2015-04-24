@@ -94,7 +94,7 @@ public abstract class FlushableHandler<T> {
 
     if (msg == null) {
 
-      if (checkFlushTime()) {
+      if (isFlushTime()) {
 
         int msgFlushCnt = flush();
 
@@ -111,7 +111,7 @@ public abstract class FlushableHandler<T> {
 
     this.processedMeter.mark();
 
-    if (checkBatchSize()) {
+    if (isBatchSize()) {
 
       int msgFlushCnt = flush();
 
@@ -124,7 +124,7 @@ public abstract class FlushableHandler<T> {
     }
   }
 
-  private boolean checkBatchSize() throws Exception {
+  private boolean isBatchSize() throws Exception {
 
     logger.debug("[{}]: checking batch size", this.threadId);
 
@@ -141,7 +141,7 @@ public abstract class FlushableHandler<T> {
     }
   }
 
-  private boolean checkFlushTime() throws Exception {
+  private boolean isFlushTime() throws Exception {
 
     logger.debug("[{}}: checking flush time", this.threadId);
 
@@ -150,12 +150,14 @@ public abstract class FlushableHandler<T> {
         this.threadId,
         this.secondsBetweenFlushes);
 
-    if (this.flushTimeMillis < System.currentTimeMillis()) {
+    long now = System.currentTimeMillis();
+
+    if (this.flushTimeMillis <= now ) {
 
       logger.debug(
           "[{}]: {} millis past flush time. flushing to repository now.",
           this.threadId,
-          (System.currentTimeMillis() - this.flushTimeMillis));
+          now - this.flushTimeMillis);
 
       return true;
 
@@ -164,7 +166,7 @@ public abstract class FlushableHandler<T> {
       logger.debug(
           "[{}]: {} millis to next flush time. no need to flush at this time.",
           this.threadId,
-          this.flushTimeMillis - System.currentTimeMillis());
+          this.flushTimeMillis - now);
 
       return false;
 
@@ -188,6 +190,7 @@ public abstract class FlushableHandler<T> {
     logger.debug("[{}]: flushed {} msg", this.threadId, msgFlushCnt);
 
     this.msgCount = 0;
+
     this.batchCount++;
 
     return msgFlushCnt;

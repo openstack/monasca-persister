@@ -111,7 +111,9 @@ public class InfluxV9MetricRepo extends InfluxMetricRepo {
     for (Map.Entry<String, String> dimensionsEntry : dimensions.entrySet()) {
 
       String name = dimensionsEntry.getKey();
+
       String value = dimensionsEntry.getValue();
+
       tagMap.put(name, value);
 
     }
