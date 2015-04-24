@@ -73,7 +73,7 @@ public class VerticaAlarmRepo extends VerticaRepo implements Repo<AlarmStateTran
         .bind(6, timeStamp);
   }
 
-  public void flush(String id) {
+  public int flush(String id) {
     try {
       commitBatch();
     } catch (Exception e) {
@@ -83,6 +83,10 @@ public class VerticaAlarmRepo extends VerticaRepo implements Repo<AlarmStateTran
       }
       handle.begin();
     }
+
+
+    // Todo. implement cnt.
+    return 0;
   }
 
   private void commitBatch() {

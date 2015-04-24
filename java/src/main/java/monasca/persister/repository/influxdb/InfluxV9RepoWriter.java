@@ -123,7 +123,7 @@ public class InfluxV9RepoWriter {
     }
   }
 
-  protected void write(final InfluxPoint[] influxPointArry, String id) throws Exception {
+  protected int write(final InfluxPoint[] influxPointArry, String id) throws Exception {
 
     HttpPost request = new HttpPost(this.influxUrl);
 
@@ -191,6 +191,8 @@ public class InfluxV9RepoWriter {
       logger
           .debug("[{}]: successfully sent {} points to influxdb {} at {}", id,
                  influxPointArry.length, this.influxName, this.influxUrl);
+
+      return influxPointArry.length;
 
     } finally {
 

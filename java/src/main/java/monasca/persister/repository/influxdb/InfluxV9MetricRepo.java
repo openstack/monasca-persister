@@ -43,9 +43,9 @@ public class InfluxV9MetricRepo extends InfluxMetricRepo {
   }
 
   @Override
-  protected void write(String id) throws Exception {
+  protected int write(String id) throws Exception {
 
-    this.influxV9RepoWriter.write(getInfluxPointArry(), id);
+    return this.influxV9RepoWriter.write(getInfluxPointArry(), id);
 
   }
 

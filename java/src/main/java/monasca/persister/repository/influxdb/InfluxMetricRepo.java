@@ -32,8 +32,6 @@ public abstract class InfluxMetricRepo extends InfluxRepo<MetricEnvelope> {
 
   protected final Meter measurementMeter;
 
-  protected abstract void write(String id) throws Exception;
-
   public InfluxMetricRepo(final Environment env) {
 
     super(env);

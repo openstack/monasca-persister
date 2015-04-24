@@ -86,7 +86,7 @@ public abstract class FlushableHandler<T> {
 
   protected abstract void initObjectMapper();
 
-  protected abstract void flushRepository();
+  protected abstract int flushRepository() throws Exception;
 
   protected abstract int process(String msg) throws Exception;
 
@@ -94,25 +94,43 @@ public abstract class FlushableHandler<T> {
 
     if (msg == null) {
 
-      return checkFlushTime();
+      if (checkFlushTime()) {
 
+        int msgFlushCnt = flush();
+
+        return msgFlushCnt > 0 ? true : false;
+
+      } else {
+
+         return false;
+
+      }
     }
 
     this.msgCount += process(msg);
 
     this.processedMeter.mark();
 
-    return checkBatchSize();
+    if (checkBatchSize()) {
 
+      int msgFlushCnt = flush();
+
+      return msgFlushCnt > 0 ? true : false;
+
+    } else {
+
+      return false;
+
+    }
   }
 
-  private boolean checkBatchSize() {
+  private boolean checkBatchSize() throws Exception {
+
+    logger.debug("[{}]: checking batch size", this.threadId);
 
     if (this.msgCount >= this.batchSize) {
 
       logger.debug("[{}]: batch sized {} attained", this.threadId, this.batchSize);
-
-      flush();
 
       return true;
 
@@ -123,7 +141,9 @@ public abstract class FlushableHandler<T> {
     }
   }
 
-  private boolean checkFlushTime() {
+  private boolean checkFlushTime() throws Exception {
+
+    logger.debug("[{}}: checking flush time", this.threadId);
 
     logger.debug(
         "[{}]: got heartbeat message, flush every {} seconds.",
@@ -136,8 +156,6 @@ public abstract class FlushableHandler<T> {
           "[{}]: {} millis past flush time. flushing to repository now.",
           this.threadId,
           (System.currentTimeMillis() - this.flushTimeMillis));
-
-      flush();
 
       return true;
 
@@ -153,20 +171,13 @@ public abstract class FlushableHandler<T> {
     }
   }
 
-  public void flush() {
+  public int flush() throws Exception {
 
-    logger.debug("[{}]: flush", this.threadId);
-
-    if (this.msgCount == 0) {
-
-      logger.debug("[{}]: nothing to flush", this.threadId);
-
-      return;
-    }
+    logger.debug("[{}]: flushing", this.threadId);
 
     Timer.Context context = this.commitTimer.time();
 
-    flushRepository();
+    int msgFlushCnt = flushRepository();
 
     context.stop();
 
@@ -174,10 +185,12 @@ public abstract class FlushableHandler<T> {
 
     this.flushTimeMillis = System.currentTimeMillis() + this.millisBetweenFlushes;
 
-    logger.debug("[{}]: flushed {} msg", this.threadId, this.msgCount);
+    logger.debug("[{}]: flushed {} msg", this.threadId, msgFlushCnt);
 
     this.msgCount = 0;
     this.batchCount++;
+
+    return msgFlushCnt;
 
   }
 

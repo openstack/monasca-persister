@@ -91,9 +91,9 @@ public class AlarmStateTransitionedEventHandler extends
   }
 
   @Override
-  protected void flushRepository() {
+  protected int flushRepository() throws Exception {
 
-    alarmRepo.flush(this.threadId);
+    return alarmRepo.flush(this.threadId);
 
   }
 }

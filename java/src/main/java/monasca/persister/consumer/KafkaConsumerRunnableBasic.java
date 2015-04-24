@@ -48,12 +48,8 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
   }
 
   protected void publishHeartbeat() {
+
     publishEvent(null);
-  }
-
-  protected void handleMessage(String msg) {
-
-      publishEvent(msg);
 
   }
 
@@ -62,6 +58,7 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
     logger.debug("[{}]: marking read", this.threadId);
 
     this.kafkaChannel.markRead();
+
   }
 
   public void stop() {
@@ -70,8 +67,11 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
 
     this.stop = true;
 
-    this.pipeline.shutdown();
+    if (pipeline.shutdown()) {
 
+      markRead();
+
+    }
   }
 
   public void run() {
@@ -92,7 +92,7 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
 
           logger.debug("[{}]: {}", this.threadId, msg);
 
-          handleMessage(msg);
+          publishEvent(msg);
 
         }
 

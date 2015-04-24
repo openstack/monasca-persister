@@ -41,8 +41,6 @@ public abstract class InfluxAlarmRepo extends InfluxRepo<AlarmStateTransitionedE
             MetricRegistry.name(getClass(), "alarm_state_history-meter"));
   }
 
-  protected abstract void write (String id) throws Exception;
-
   @Override
   public void addToBatch(AlarmStateTransitionedEvent alarmStateTransitionedEvent) {
 

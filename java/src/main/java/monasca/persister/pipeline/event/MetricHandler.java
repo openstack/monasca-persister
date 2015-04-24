@@ -101,9 +101,9 @@ public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
   }
 
   @Override
-  public void flushRepository() {
+  public int flushRepository() throws Exception {
 
-    metricRepo.flush(this.threadId);
+    return metricRepo.flush(this.threadId);
   }
 
 }

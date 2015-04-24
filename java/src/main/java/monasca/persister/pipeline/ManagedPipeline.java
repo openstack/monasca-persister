@@ -42,12 +42,24 @@ public class ManagedPipeline<T> {
 
   }
 
-  public void shutdown() {
+  public boolean shutdown() {
 
     logger.info("[{}]: shutdown", this.threadId);
 
-    handler.flush();
+    try {
+
+      int msgFlushCnt = handler.flush();
+
+      return msgFlushCnt > 0 ? true : false;
+
+    } catch (Exception e) {
+
+      logger.error("[{}}: failed to flush repo on shutdown", this.threadId, e);
+
+      return false;
+    }
   }
+
 
   public boolean publishEvent(String msg) {
 
@@ -57,7 +69,7 @@ public class ManagedPipeline<T> {
 
       } catch (Exception e) {
 
-        logger.error("[{}]: failed to handle msg: {}", msg, e);
+        logger.error("[{}]: failed to handle msg: {}", this.threadId, msg, e);
 
         return false;
 

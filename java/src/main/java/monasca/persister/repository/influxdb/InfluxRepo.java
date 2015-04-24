@@ -38,47 +38,56 @@ public abstract class InfluxRepo<T> implements Repo<T> {
   }
 
   @Override
-  public void flush(String id) {
+  public int flush(String id) throws Exception {
+
+    if (isBufferEmpty()) {
+
+      logger.debug("[{}]: no msg to be written to influxdb", id);
+
+      logger.debug("[{}]: returning from flush without flushing", id);
+
+      return 0;
+
+    } else {
+
+      return writeToRepo(id);
+
+    }
+  }
+
+  private int writeToRepo(String id) throws Exception {
 
     try {
-
-      if (isBufferEmpty()) {
-
-        logger.debug("[{}]: no msg to be written to influxdb", id);
-
-        logger.debug("[{}]: returning from flush without flushing", id);
-
-        return;
-
-      }
 
       final long startTime = System.currentTimeMillis();
 
       final Timer.Context context = flushTimer.time();
 
-      write(id);
+      int msgWriteCnt = write(id);
 
       final long endTime = System.currentTimeMillis();
 
       context.stop();
 
-      logger.debug("[{}]: flushing batch took {} millis",
-                   id, endTime - startTime);
+      logger.debug("[{}]: flushing batch took {} millis", id, endTime - startTime);
+
+      clearBuffers();
+
+      return msgWriteCnt;
 
     } catch (Exception e) {
 
       logger.error("[{}]: failed to write msg to influxdb", id, e);
 
+      throw e;
+
     }
-
-    clearBuffers();
-
   }
 
 
   protected abstract boolean isBufferEmpty();
 
-  protected abstract void write(String id) throws Exception;
+  protected abstract int write(String id) throws Exception;
 
   protected abstract void clearBuffers();
 }

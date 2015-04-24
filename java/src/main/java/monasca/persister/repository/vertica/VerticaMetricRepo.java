@@ -406,7 +406,7 @@ public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelop
   }
 
   @Override
-  public void flush(String id) {
+  public int flush(String id) {
     try {
       long startTime = System.currentTimeMillis();
       Timer.Context context = flushTimer.time();
@@ -427,6 +427,9 @@ public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelop
       clearTempCaches();
       handle.begin();
     }
+
+    // Todo. implement cnt.
+    return 0;
   }
 
   private void executeBatches() {
