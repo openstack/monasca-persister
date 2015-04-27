@@ -17,6 +17,10 @@
 
 package monasca.persister.pipeline.event;
 
+import monasca.common.model.metric.MetricEnvelope;
+import monasca.persister.configuration.PipelineConfig;
+import monasca.persister.repository.Repo;
+
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
@@ -27,10 +31,9 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+
 import io.dropwizard.setup.Environment;
-import monasca.common.model.metric.MetricEnvelope;
-import monasca.persister.configuration.PipelineConfig;
-import monasca.persister.repository.Repo;
 
 public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
 
@@ -60,10 +63,10 @@ public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
   }
 
   @Override
-  public int process(String msg) throws Exception {
+  public int process(String msg) throws IOException {
 
     MetricEnvelope[] metricEnvelopesArry =
-        objectMapper.readValue(msg, MetricEnvelope[].class);
+        this.objectMapper.readValue(msg, MetricEnvelope[].class);
 
     for (final MetricEnvelope metricEnvelope : metricEnvelopesArry) {
 
@@ -103,7 +106,7 @@ public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
   @Override
   public int flushRepository() throws Exception {
 
-    return metricRepo.flush(this.threadId);
+    return this.metricRepo.flush(this.threadId);
   }
 
 }

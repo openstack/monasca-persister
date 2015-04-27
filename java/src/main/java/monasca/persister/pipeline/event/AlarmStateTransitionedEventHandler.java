@@ -32,6 +32,8 @@ import monasca.persister.repository.Repo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+
 public class AlarmStateTransitionedEventHandler extends
     FlushableHandler<AlarmStateTransitionedEvent> {
 
@@ -61,10 +63,10 @@ public class AlarmStateTransitionedEventHandler extends
   }
 
   @Override
-  protected int process(String msg) throws Exception {
+  protected int process(String msg) throws IOException {
 
     AlarmStateTransitionedEvent alarmStateTransitionedEvent =
-                  objectMapper.readValue(msg, AlarmStateTransitionedEvent.class);
+                  this.objectMapper.readValue(msg, AlarmStateTransitionedEvent.class);
 
     logger.debug("[{}]: [{}:{}] {}",
                  this.threadId,
@@ -72,7 +74,7 @@ public class AlarmStateTransitionedEventHandler extends
                  this.getMsgCount(),
                  alarmStateTransitionedEvent);
 
-    alarmRepo.addToBatch(alarmStateTransitionedEvent);
+    this.alarmRepo.addToBatch(alarmStateTransitionedEvent);
 
     this.alarmStateTransitionCounter.inc();
 
@@ -93,7 +95,7 @@ public class AlarmStateTransitionedEventHandler extends
   @Override
   protected int flushRepository() throws Exception {
 
-    return alarmRepo.flush(this.threadId);
+    return this.alarmRepo.flush(this.threadId);
 
   }
 }

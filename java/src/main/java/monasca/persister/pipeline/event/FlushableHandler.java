@@ -28,6 +28,8 @@ import io.dropwizard.setup.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+
 public abstract class FlushableHandler<T> {
 
   private static final Logger logger = LoggerFactory.getLogger(FlushableHandler.class);
@@ -88,7 +90,7 @@ public abstract class FlushableHandler<T> {
 
   protected abstract int flushRepository() throws Exception;
 
-  protected abstract int process(String msg) throws Exception;
+  protected abstract int process(String msg) throws IOException;
 
   public boolean onEvent(final String msg) throws Exception {
 
@@ -124,7 +126,7 @@ public abstract class FlushableHandler<T> {
     }
   }
 
-  private boolean isBatchSize() throws Exception {
+  private boolean isBatchSize() {
 
     logger.debug("[{}]: checking batch size", this.threadId);
 
@@ -136,19 +138,21 @@ public abstract class FlushableHandler<T> {
 
     } else {
 
+      logger.debug("[{}]: batch size now at {}, batch size {} not attained",
+                   this.threadId,
+                   this.msgCount,
+                   this.batchSize);
+
       return false;
 
     }
   }
 
-  private boolean isFlushTime() throws Exception {
+  private boolean isFlushTime() {
 
-    logger.debug("[{}}: checking flush time", this.threadId);
-
-    logger.debug(
-        "[{}]: got heartbeat message, flush every {} seconds.",
-        this.threadId,
-        this.secondsBetweenFlushes);
+    logger.debug("[{}}: got heartbeat message, checking flush time. flush every {} seconds.",
+                 this.threadId,
+                 this.secondsBetweenFlushes);
 
     long now = System.currentTimeMillis();
 

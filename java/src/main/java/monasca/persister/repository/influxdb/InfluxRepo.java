@@ -59,9 +59,9 @@ public abstract class InfluxRepo<T> implements Repo<T> {
 
     try {
 
-      final long startTime = System.currentTimeMillis();
-
       final Timer.Context context = flushTimer.time();
+
+      final long startTime = System.currentTimeMillis();
 
       int msgWriteCnt = write(id);
 
@@ -69,7 +69,7 @@ public abstract class InfluxRepo<T> implements Repo<T> {
 
       context.stop();
 
-      logger.debug("[{}]: flushing batch took {} millis", id, endTime - startTime);
+      logger.debug("[{}]: writing to influxdb took {} millis", id, endTime - startTime);
 
       clearBuffers();
 
@@ -77,7 +77,7 @@ public abstract class InfluxRepo<T> implements Repo<T> {
 
     } catch (Exception e) {
 
-      logger.error("[{}]: failed to write msg to influxdb", id, e);
+      logger.error("[{}]: failed to write to influxdb", id, e);
 
       throw e;
 
