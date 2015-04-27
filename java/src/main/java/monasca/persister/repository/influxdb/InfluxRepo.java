@@ -33,7 +33,7 @@ public abstract class InfluxRepo<T> implements Repo<T> {
   public InfluxRepo (final Environment env) {
 
     this.flushTimer =
-        env.metrics().timer(this.getClass().getName() + ".flush-timer");
+        env.metrics().timer(this.getClass().getName() + "." + "flush-timer");
 
   }
 
@@ -69,7 +69,7 @@ public abstract class InfluxRepo<T> implements Repo<T> {
 
       context.stop();
 
-      logger.debug("[{}]: writing to influxdb took {} millis", id, endTime - startTime);
+      logger.debug("[{}]: writing to influxdb took {} ms", id, endTime - startTime);
 
       clearBuffers();
 

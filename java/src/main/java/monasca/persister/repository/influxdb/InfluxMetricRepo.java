@@ -20,8 +20,6 @@ package monasca.persister.repository.influxdb;
 import monasca.common.model.metric.Metric;
 import monasca.common.model.metric.MetricEnvelope;
 
-import com.codahale.metrics.Meter;
-
 import java.util.Map;
 
 import io.dropwizard.setup.Environment;
@@ -30,19 +28,14 @@ public abstract class InfluxMetricRepo extends InfluxRepo<MetricEnvelope> {
 
   protected final MeasurementBuffer measurementBuffer = new MeasurementBuffer();
 
-  protected final Meter measurementMeter;
-
   public InfluxMetricRepo(final Environment env) {
 
     super(env);
 
-    this.measurementMeter =
-        env.metrics().meter(this.getClass().getName() + ".measurement-meter");
-
   }
 
   @Override
-  public void addToBatch(MetricEnvelope metricEnvelope) {
+  public void addToBatch(MetricEnvelope metricEnvelope, String id) {
 
     Metric metric = metricEnvelope.metric;
 
@@ -63,8 +56,6 @@ public abstract class InfluxMetricRepo extends InfluxRepo<MetricEnvelope> {
             metric.getValueMeta());
 
     this.measurementBuffer.put(definition, dimensions, measurement);
-
-    this.measurementMeter.mark();
 
   }
 

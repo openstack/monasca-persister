@@ -21,6 +21,7 @@ import monasca.common.model.event.AlarmStateTransitionedEvent;
 
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 
@@ -28,6 +29,8 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -37,6 +40,8 @@ import java.util.Map;
 import io.dropwizard.setup.Environment;
 
 public class InfluxV9AlarmRepo extends InfluxAlarmRepo {
+
+  private static final Logger logger = LoggerFactory.getLogger(InfluxV9AlarmRepo.class);
 
   private final InfluxV9RepoWriter influxV9RepoWriter;
 
@@ -60,11 +65,11 @@ public class InfluxV9AlarmRepo extends InfluxAlarmRepo {
   @Override
   protected int write(String id) throws Exception {
 
-    return this.influxV9RepoWriter.write(getInfluxPointArry(), id);
+    return this.influxV9RepoWriter.write(getInfluxPointArry(id), id);
 
   }
 
-  private InfluxPoint[] getInfluxPointArry() throws Exception {
+  private InfluxPoint[] getInfluxPointArry(String id) throws Exception {
 
     List<InfluxPoint> influxPointList = new LinkedList<>();
 
@@ -76,13 +81,33 @@ public class InfluxV9AlarmRepo extends InfluxAlarmRepo {
 
       valueMap.put("alarm_id", event.alarmId);
 
+      try {
+
       valueMap.put("metrics", this.objectMapper.writeValueAsString(event.metrics));
+
+      } catch (JsonProcessingException e) {
+
+        logger.error("[{}]: failed to serialize metrics {}", id, event.metrics, e);
+
+        valueMap.put("metrics", "");
+
+      }
 
       valueMap.put("old_state", event.oldState);
 
       valueMap.put("new_state", event.newState);
 
-      valueMap.put("sub_alarms", this.objectMapper.writeValueAsString(event.subAlarms));
+      try {
+
+        valueMap.put("sub_alarms", this.objectMapper.writeValueAsString(event.subAlarms));
+
+      } catch (JsonProcessingException e) {
+
+        logger.error("[{}]: failed to serialize sub alarms {}", id, event.subAlarms, e);
+
+        valueMap.put("sub_alarms", "");
+
+      }
 
       valueMap.put("reason", event.stateChangeReason);
 

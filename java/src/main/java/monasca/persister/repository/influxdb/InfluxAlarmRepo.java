@@ -24,7 +24,8 @@ import java.util.List;
 
 import io.dropwizard.setup.Environment;
 
-public abstract class InfluxAlarmRepo extends InfluxRepo<AlarmStateTransitionedEvent> {
+public abstract class InfluxAlarmRepo
+    extends InfluxRepo<AlarmStateTransitionedEvent> {
 
   protected static final String ALARM_STATE_HISTORY_NAME = "alarm_state_history";
 
@@ -42,7 +43,7 @@ public abstract class InfluxAlarmRepo extends InfluxRepo<AlarmStateTransitionedE
   }
 
   @Override
-  public void addToBatch(AlarmStateTransitionedEvent alarmStateTransitionedEvent) {
+  public void addToBatch(AlarmStateTransitionedEvent alarmStateTransitionedEvent, String id) {
 
     this.alarmStateTransitionedEventList.add(alarmStateTransitionedEvent);
 

@@ -19,8 +19,11 @@ package monasca.persister.repository.vertica;
 
 import monasca.common.model.event.AlarmStateTransitionedEvent;
 import monasca.persister.configuration.PersisterConfig;
+import monasca.persister.repository.Repo;
 
 import com.codahale.metrics.Timer;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.PreparedBatch;
@@ -36,7 +39,6 @@ import java.util.TimeZone;
 import javax.inject.Inject;
 
 import io.dropwizard.setup.Environment;
-import monasca.persister.repository.Repo;
 
 public class VerticaAlarmRepo extends VerticaRepo implements Repo<AlarmStateTransitionedEvent> {
 
@@ -44,59 +46,127 @@ public class VerticaAlarmRepo extends VerticaRepo implements Repo<AlarmStateTran
   private final Environment environment;
 
   private static final String SQL_INSERT_INTO_ALARM_HISTORY =
-      "insert into MonAlarms.StateHistory (tenant_id, alarm_id, old_state, new_state, reason, reason_data, time_stamp) values (:tenant_id, :alarm_id, :old_state, :new_state, :reason, :reason_data, :time_stamp)";
+      "insert into MonAlarms.StateHistory (tenant_id, alarm_id, metrics, old_state, new_state, sub_alarms, reason, reason_data, time_stamp) "
+      + "values (:tenant_id, :alarm_id, :metrics, :old_state, :new_state, :sub_alarms, :reason, :reason_data, :time_stamp)";
+
   private PreparedBatch batch;
   private final Timer commitTimer;
   private final SimpleDateFormat simpleDateFormat;
 
+  private int msgCnt = 0;
+
+  private ObjectMapper objectMapper = new ObjectMapper();
+
   @Inject
-  public VerticaAlarmRepo(DBI dbi, PersisterConfig configuration, Environment environment) throws NoSuchAlgorithmException, SQLException {
+  public VerticaAlarmRepo(
+      DBI dbi,
+      PersisterConfig configuration,
+      Environment environment) throws NoSuchAlgorithmException, SQLException {
+
     super(dbi);
-    logger.debug("Instantiating: " + this);
+
+    logger.debug("Instantiating " + this.getClass().getName());
 
     this.environment = environment;
+
     this.commitTimer =
-        this.environment.metrics().timer(this.getClass().getName() + "." + "commits-timer");
+        this.environment.metrics().timer(this.getClass().getName() + "." + "commit-timer");
+
+    logger.debug("preparing batches...");
 
     handle.getConnection().setAutoCommit(false);
+
     batch = handle.prepareBatch(SQL_INSERT_INTO_ALARM_HISTORY);
+
     handle.begin();
 
-    simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
     simpleDateFormat.setTimeZone(TimeZone.getTimeZone("GMT-0"));
+
+    logger.debug(this.getClass().getName() + " is fully instantiated");
+
   }
 
-  public void addToBatch(AlarmStateTransitionedEvent message) {
-    String timeStamp = simpleDateFormat.format(new Date(message.timestamp * 1000));
-    batch.add().bind(0, message.tenantId).bind(1, message.alarmId).bind(2, message.oldState.name())
-        .bind(3, message.newState.name()).bind(4, message.stateChangeReason).bind(5, "{}")
-        .bind(6, timeStamp);
+  public void addToBatch(AlarmStateTransitionedEvent message, String id) {
+
+    String metricsString = getSerializedString(message.metrics, id);
+
+    String subAlarmsString = getSerializedString(message.subAlarms, id);
+
+    String timeStamp = simpleDateFormat.format(new Date(message.timestamp));
+
+    batch.add()
+        .bind("tenant_id", message.tenantId)
+        .bind("alarm_id", message.alarmId)
+        .bind("metrics", metricsString)
+        .bind("old_state", message.oldState.name())
+        .bind("new_state", message.newState.name())
+        .bind("sub_alarms", subAlarmsString)
+        .bind("reason", message.stateChangeReason)
+        .bind("reason_data", "{}")
+        .bind("time_stamp", timeStamp);
+  }
+
+  private String getSerializedString(Object o, String id) {
+
+    try {
+
+      return this.objectMapper.writeValueAsString(o);
+
+    } catch (JsonProcessingException e) {
+
+      logger.error("[[}]: failed to serialize object {}", id, o, e);
+
+      return "";
+
+    }
   }
 
   public int flush(String id) {
+
     try {
-      commitBatch();
+
+      commitBatch(id);
+
+      int flushCnt = msgCnt;
+
+      this.msgCnt = 0;
+
+      return flushCnt;
+
     } catch (Exception e) {
-      logger.error("Failed to write alarms to database", e);
+
+      logger.error("[{}]: failed to write alarms to database", id, e);
+
       if (handle.isInTransaction()) {
+
         handle.rollback();
       }
+
       handle.begin();
+
+      return this.msgCnt = 0;
+
     }
-
-
-    // Todo. implement cnt.
-    return 0;
   }
 
-  private void commitBatch() {
+  private void commitBatch(String id) {
+
     long startTime = System.currentTimeMillis();
+
     Timer.Context context = commitTimer.time();
+
     batch.execute();
+
     handle.commit();
+
     handle.begin();
+
     context.stop();
+
     long endTime = System.currentTimeMillis();
-    logger.debug("Commiting batch took " + (endTime - startTime) / 1000 + " seconds");
+
+    logger.debug("[{}]: committing batch took {} ms", id, endTime - startTime);
+
   }
 }
