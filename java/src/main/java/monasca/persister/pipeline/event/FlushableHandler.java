@@ -28,8 +28,6 @@ import io.dropwizard.setup.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-
 public abstract class FlushableHandler<T> {
 
   private static final Logger logger = LoggerFactory.getLogger(FlushableHandler.class);
@@ -43,8 +41,8 @@ public abstract class FlushableHandler<T> {
   private long batchCount = 0;
 
   private final Meter processedMeter;
-  private final Meter commitMeter;
-  private final Timer commitTimer;
+  private final Meter flushMeter;
+  private final Timer flushTimer;
 
   protected final String threadId;
 
@@ -67,14 +65,13 @@ public abstract class FlushableHandler<T> {
             threadId);
 
     this.processedMeter =
-        environment.metrics()
-            .meter(handlerName + "." + "events-processed-processedMeter");
+        environment.metrics().meter(handlerName + "." + "events-processed-meter");
 
-    this.commitMeter =
-        environment.metrics().meter(handlerName + "." + "commits-executed-processedMeter");
+    this.flushMeter =
+        environment.metrics().meter(handlerName + "." + "flush-meter");
 
-    this.commitTimer =
-        environment.metrics().timer(handlerName + "." + "total-commit-and-flush-timer");
+    this.flushTimer =
+        environment.metrics().timer(handlerName + "." + "flush-timer");
 
     this.secondsBetweenFlushes = configuration.getMaxBatchTime();
 
@@ -90,7 +87,7 @@ public abstract class FlushableHandler<T> {
 
   protected abstract int flushRepository() throws Exception;
 
-  protected abstract int process(String msg) throws IOException;
+  protected abstract int process(String msg);
 
   public boolean onEvent(final String msg) throws Exception {
 
@@ -150,7 +147,7 @@ public abstract class FlushableHandler<T> {
 
   private boolean isFlushTime() {
 
-    logger.debug("[{}}: got heartbeat message, checking flush time. flush every {} seconds.",
+    logger.debug("[{}]: got heartbeat message, checking flush time. flush every {} seconds.",
                  this.threadId,
                  this.secondsBetweenFlushes);
 
@@ -159,7 +156,7 @@ public abstract class FlushableHandler<T> {
     if (this.flushTimeMillis <= now ) {
 
       logger.debug(
-          "[{}]: {} millis past flush time. flushing to repository now.",
+          "[{}]: {} ms past flush time. flushing to repository now.",
           this.threadId,
           now - this.flushTimeMillis);
 
@@ -168,7 +165,7 @@ public abstract class FlushableHandler<T> {
     } else {
 
       logger.debug(
-          "[{}]: {} millis to next flush time. no need to flush at this time.",
+          "[{}]: {} ms to next flush time. no need to flush at this time.",
           this.threadId,
           this.flushTimeMillis - now);
 
@@ -181,13 +178,13 @@ public abstract class FlushableHandler<T> {
 
     logger.debug("[{}]: flushing", this.threadId);
 
-    Timer.Context context = this.commitTimer.time();
+    Timer.Context context = this.flushTimer.time();
 
     int msgFlushCnt = flushRepository();
 
     context.stop();
 
-    this.commitMeter.mark();
+    this.flushMeter.mark();
 
     this.flushTimeMillis = System.currentTimeMillis() + this.millisBetweenFlushes;
 

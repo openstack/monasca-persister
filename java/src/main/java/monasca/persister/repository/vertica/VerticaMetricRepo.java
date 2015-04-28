@@ -17,17 +17,13 @@
 
 package monasca.persister.repository.vertica;
 
-import monasca.common.model.metric.Metric;
-import monasca.common.model.metric.MetricEnvelope;
-import monasca.persister.configuration.PersisterConfig;
-import monasca.persister.pipeline.event.MetricHandler;
-
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
-import com.codahale.metrics.Counter;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.skife.jdbi.v2.DBI;
@@ -41,7 +37,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeMap;
@@ -49,6 +44,9 @@ import java.util.TreeMap;
 import javax.inject.Inject;
 
 import io.dropwizard.setup.Environment;
+import monasca.common.model.metric.Metric;
+import monasca.common.model.metric.MetricEnvelope;
+import monasca.persister.configuration.PersisterConfig;
 import monasca.persister.repository.Repo;
 
 public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelope> {
@@ -72,8 +70,13 @@ public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelop
   private final Set<Sha1HashId> dimensionIdSet = new HashSet<>();
   private final Set<Sha1HashId> definitionDimensionsIdSet = new HashSet<>();
 
+  private int measurementCnt = 0;
+
+  private final ObjectMapper objectMapper = new ObjectMapper();
+
   private static final String SQL_INSERT_INTO_METRICS =
-      "insert into MonMetrics.measurements (definition_dimensions_id, time_stamp, value) values (:definition_dimension_id, :time_stamp, :value)";
+      "insert into MonMetrics.measurements (definition_dimensions_id, time_stamp, value, value_meta) "
+      + "values (:definition_dimension_id, :time_stamp, :value, :value_meta)";
 
   private static final String DEFINITIONS_TEMP_STAGING_TABLE = "(" + "   id BINARY(20) NOT NULL,"
       + "   name VARCHAR(255) NOT NULL," + "   tenant_id VARCHAR(255) NOT NULL,"
@@ -100,13 +103,8 @@ public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelop
   private final String dimensionsTempStagingTableInsertStmt;
   private final String definitionDimensionsTempStagingTableInsertStmt;
 
+  private final Timer commitTimer;
 
-  private final Counter metricCounter;
-  private final Counter definitionCounter;
-  private final Counter dimensionCounter;
-  private final Counter definitionDimensionsCounter;
-
-  private final Timer flushTimer;
   public final Meter measurementMeter;
   public final Meter definitionCacheMissMeter;
   public final Meter dimensionCacheMissMeter;
@@ -116,60 +114,62 @@ public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelop
   public final Meter definitionDimensionCacheHitMeter;
 
   @Inject
-  public VerticaMetricRepo(DBI dbi, PersisterConfig configuration,
-                           Environment environment) throws NoSuchAlgorithmException, SQLException {
+  public VerticaMetricRepo(
+      DBI dbi,
+      PersisterConfig configuration,
+      Environment environment) throws NoSuchAlgorithmException, SQLException {
+
     super(dbi);
-    logger.debug("Instantiating: " + this.getClass().getName());
+
+    logger.debug("Instantiating " + this.getClass().getName());
 
     simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
     simpleDateFormat.setTimeZone(TimeZone.getTimeZone("GMT-0"));
 
     this.environment = environment;
-    final String handlerName = String.format("%s[%d]", MetricHandler.class.getName(), new Random().nextInt());
 
-    this.metricCounter =
-        environment.metrics().counter(handlerName + "." + "metrics-added-to-batch-counter");
-    this.definitionCounter =
-        environment.metrics()
-            .counter(handlerName + "." + "metric-definitions-added-to-batch-counter");
-    this.dimensionCounter =
-        environment.metrics()
-            .counter(handlerName + "." + "metric-dimensions-added-to-batch-counter");
-    this.definitionDimensionsCounter =
-        environment.metrics()
-            .counter(handlerName + "." + "metric-definition-dimensions-added-to-batch-counter");
 
-    this.flushTimer =
-        this.environment.metrics().timer(this.getClass().getName() + "." + "flush-timer");
+    this.commitTimer =
+        this.environment.metrics().timer(this.getClass().getName() + "." + "commit-timer");
+
     this.measurementMeter =
-        this.environment.metrics().meter(this.getClass().getName() + "." + "measurement-meter");
+        this.environment.metrics()
+            .meter(this.getClass().getName() + "." + "measurement-meter");
+
     this.definitionCacheMissMeter =
-        this.environment.metrics().meter(
-            this.getClass().getName() + "." + "definition-cache-miss-meter");
+        this.environment.metrics()
+            .meter(this.getClass().getName() + "." + "definition-cache-miss-meter");
+
     this.dimensionCacheMissMeter =
-        this.environment.metrics().meter(
-            this.getClass().getName() + "." + "dimension-cache-miss-meter");
+        this.environment.metrics()
+            .meter(this.getClass().getName() + "." + "dimension-cache-miss-meter");
+
     this.definitionDimensionCacheMissMeter =
-        this.environment.metrics().meter(
-            this.getClass().getName() + "." + "definition-dimension-cache-miss-meter");
+        this.environment.metrics()
+            .meter(this.getClass().getName() + "." + "definition-dimension-cache-miss-meter");
+
     this.definitionCacheHitMeter =
-        this.environment.metrics().meter(
-            this.getClass().getName() + "." + "definition-cache-hit-meter");
+        this.environment.metrics()
+            .meter(this.getClass().getName() + "." + "definition-cache-hit-meter");
+
     this.dimensionCacheHitMeter =
-        this.environment.metrics().meter(
-            this.getClass().getName() + "." + "dimension-cache-hit-meter");
+        this.environment.metrics()
+            .meter(this.getClass().getName() + "." + "dimension-cache-hit-meter");
+
     this.definitionDimensionCacheHitMeter =
-        this.environment.metrics().meter(
-            this.getClass().getName() + "." + "definition-dimension-cache-hit-meter");
+        this.environment.metrics()
+            .meter(this.getClass().getName() + "." + "definition-dimension-cache-hit-meter");
 
     definitionsIdCache =
         CacheBuilder.newBuilder()
             .maximumSize(configuration.getVerticaMetricRepoConfig().getMaxCacheSize())
             .build();
+
     dimensionsIdCache =
         CacheBuilder.newBuilder()
             .maximumSize(configuration.getVerticaMetricRepoConfig().getMaxCacheSize())
             .build();
+
     definitionDimensionsIdCache =
         CacheBuilder.newBuilder()
             .maximumSize(configuration.getVerticaMetricRepoConfig().getMaxCacheSize())
@@ -239,97 +239,138 @@ public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelop
 
     logger.debug("completed database preparations");
 
-    logger.debug(this.getClass().getName() + "is fully instantiated");
+    logger.debug(this.getClass().getName() + " is fully instantiated");
   }
 
   @Override
-  public void addToBatch(MetricEnvelope metricEnvelope) {
+  public void addToBatch(MetricEnvelope metricEnvelope, String id) {
 
     Metric metric = metricEnvelope.metric;
     Map<String, Object> meta = metricEnvelope.meta;
 
-    logger.debug("metric: {}", metric);
-    logger.debug("meta: {}", meta);
+    String tenantId = getMeta(TENANT_ID, metric, meta, id);
 
-    String tenantId = "";
-    if (meta.containsKey(TENANT_ID)) {
-      tenantId = (String) meta.get(TENANT_ID);
-    } else {
-      logger.warn(
-          "Failed to find tenantId in message envelope meta data. Metric message may be malformed"
-          + ". Setting tenantId to empty string.");
-      logger.warn("metric: {}", metric.toString());
-      logger.warn("meta: {}", meta.toString());
-    }
-
-    String region = "";
-    if (meta.containsKey(REGION)) {
-      region = (String) meta.get(REGION);
-    } else {
-      logger.warn(
-          "Failed to find region in message envelope meta data. Metric message may be malformed. "
-          + "Setting region to empty string.");
-      logger.warn("metric: {}", metric.toString());
-      logger.warn("meta: {}", meta.toString());
-    }
+    String region = getMeta(REGION, metric, meta, id);
 
     // Add the definition to the batch.
-    StringBuilder
-        definitionIdStringToHash =
-        new StringBuilder(trunc(metric.getName(), MAX_COLUMN_LENGTH));
-    definitionIdStringToHash.append(trunc(tenantId, MAX_COLUMN_LENGTH));
-    definitionIdStringToHash.append(trunc(region, MAX_COLUMN_LENGTH));
+    StringBuilder definitionIdStringToHash =
+        new StringBuilder(trunc(metric.getName(), MAX_COLUMN_LENGTH, id));
+
+    definitionIdStringToHash.append(trunc(tenantId, MAX_COLUMN_LENGTH, id));
+
+    definitionIdStringToHash.append(trunc(region, MAX_COLUMN_LENGTH, id));
+
     byte[] definitionIdSha1Hash = DigestUtils.sha(definitionIdStringToHash.toString());
+
     Sha1HashId definitionSha1HashId = new Sha1HashId((definitionIdSha1Hash));
-    this.addDefinitionToBatch(definitionSha1HashId, trunc(metric.getName(), MAX_COLUMN_LENGTH),
-                              trunc(tenantId, MAX_COLUMN_LENGTH), trunc(region, MAX_COLUMN_LENGTH));
-    definitionCounter.inc();
+
+    addDefinitionToBatch(definitionSha1HashId, trunc(metric.getName(), MAX_COLUMN_LENGTH, id),
+                         trunc(tenantId, MAX_COLUMN_LENGTH, id),
+                         trunc(region, MAX_COLUMN_LENGTH, id), id);
 
     // Calculate dimensions sha1 hash id.
     StringBuilder dimensionIdStringToHash = new StringBuilder();
-    Map<String, String> preppedDimMap = prepDimensions(metric.getDimensions());
+
+    Map<String, String> preppedDimMap = prepDimensions(metric.getDimensions(), id);
+
     for (Map.Entry<String, String> entry : preppedDimMap.entrySet()) {
+
       dimensionIdStringToHash.append(entry.getKey());
+
       dimensionIdStringToHash.append(entry.getValue());
     }
+
     byte[] dimensionIdSha1Hash = DigestUtils.sha(dimensionIdStringToHash.toString());
+
     Sha1HashId dimensionsSha1HashId = new Sha1HashId(dimensionIdSha1Hash);
 
     // Add the dimension name/values to the batch.
-    this.addDimensionsToBatch(dimensionsSha1HashId, preppedDimMap);
+    addDimensionsToBatch(dimensionsSha1HashId, preppedDimMap, id);
 
     // Add the definition dimensions to the batch.
-    StringBuilder
-        definitionDimensionsIdStringToHash =
+    StringBuilder definitionDimensionsIdStringToHash =
         new StringBuilder(definitionSha1HashId.toHexString());
+
     definitionDimensionsIdStringToHash.append(dimensionsSha1HashId.toHexString());
-    byte[]
-        definitionDimensionsIdSha1Hash =
+
+    byte[] definitionDimensionsIdSha1Hash =
         DigestUtils.sha(definitionDimensionsIdStringToHash.toString());
+
     Sha1HashId definitionDimensionsSha1HashId = new Sha1HashId(definitionDimensionsIdSha1Hash);
+
     this.addDefinitionDimensionToBatch(definitionDimensionsSha1HashId, definitionSha1HashId,
-                                       dimensionsSha1HashId);
-    definitionDimensionsCounter.inc();
+                                       dimensionsSha1HashId, id);
 
     // Add the measurement to the batch.
     String timeStamp = simpleDateFormat.format(new Date(metric.getTimestamp()));
-    double value = metric.getValue();
-    this.addMetricToBatch(definitionDimensionsSha1HashId, timeStamp, value, metric.getValueMeta());
 
-    this.metricCounter.inc();
+    double value = metric.getValue();
+
+    addMetricToBatch(definitionDimensionsSha1HashId, timeStamp, value, metric.getValueMeta(), id);
+
+  }
+
+  private String getMeta(String name, Metric metric, Map<String, Object> meta, String id) {
+
+    if (meta.containsKey(name)) {
+
+      return (String) meta.get(name);
+
+    } else {
+
+      logger.warn(
+          "[{}]: failed to find {} in message envelope meta data. metric message may be malformed. "
+          + "setting {} to empty string.", id, name);
+
+      logger.warn("[{}]: metric: {}", id, metric.toString());
+
+      logger.warn("[{}]: meta: {}", id, meta.toString());
+
+      return "";
+    }
   }
 
   public void addMetricToBatch(Sha1HashId defDimsId, String timeStamp, double value,
-                               Map<String, String> valueMeta) {
-    // TODO: Actually handle valueMeta
-    logger.debug("Adding metric to batch: defDimsId: {}, time: {}, value: {}",
-                 defDimsId.toHexString(), timeStamp, value);
-    metricsBatch.add().bind("definition_dimension_id", defDimsId.getSha1Hash())
-        .bind("time_stamp", timeStamp).bind("value", value);
+                               Map<String, String> valueMeta, String id) {
+
+    String valueMetaString = getValueMetaString(valueMeta, id);
+
+    logger.debug("[{}]: adding metric to batch: defDimsId: {}, time: {}, value: {}, value meta {}",
+                 id, defDimsId.toHexString(), timeStamp, value, valueMetaString);
+
+    metricsBatch.add()
+        .bind("definition_dimension_id", defDimsId.getSha1Hash())
+        .bind("time_stamp", timeStamp)
+        .bind("value", value)
+        .bind("value_meta", valueMetaString);
+
+    this.measurementCnt++;
+
     measurementMeter.mark();
   }
 
-  private void addDefinitionToBatch(Sha1HashId defId, String name, String tenantId, String region) {
+  private String getValueMetaString(Map<String, String> valueMeta, String id) {
+
+    String valueMetaString = "";
+
+    if (valueMeta != null && !valueMeta.isEmpty()) {
+
+      try {
+
+        valueMetaString = this.objectMapper.writeValueAsString(valueMeta);
+
+      } catch (JsonProcessingException e) {
+
+        logger
+            .error("[{}]: Failed to serialize value meta {}, dropping value meta from measurement",
+                   id, valueMeta);
+      }
+    }
+
+    return valueMetaString;
+  }
+
+  private void addDefinitionToBatch(Sha1HashId defId, String name, String tenantId, String region, String id) {
 
     if (definitionsIdCache.getIfPresent(defId) == null) {
 
@@ -337,11 +378,17 @@ public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelop
 
       if (!definitionIdSet.contains(defId)) {
 
-        logger.debug("Adding definition to batch: defId: {}, name: {}, tenantId: {}, region: {}",
-                     defId.toHexString(), name, tenantId, region);
-        stagedDefinitionsBatch.add().bind("id", defId.getSha1Hash()).bind("name", name)
-            .bind("tenant_id", tenantId).bind("region", region);
+        logger.debug("[{}]: adding definition to batch: defId: {}, name: {}, tenantId: {}, region: {}",
+                     id, defId.toHexString(), name, tenantId, region);
+
+        stagedDefinitionsBatch.add()
+            .bind("id", defId.getSha1Hash())
+            .bind("name", name)
+            .bind("tenant_id", tenantId)
+            .bind("region", region);
+
         definitionIdSet.add(defId);
+
       }
 
     } else {
@@ -351,7 +398,7 @@ public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelop
     }
   }
 
-  private void addDimensionsToBatch(Sha1HashId dimSetId, Map<String, String> dimMap) {
+  private void addDimensionsToBatch(Sha1HashId dimSetId, Map<String, String> dimMap, String id) {
 
     if (dimensionsIdCache.getIfPresent(dimSetId) == null) {
 
@@ -364,10 +411,14 @@ public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelop
           String name = entry.getKey();
           String value = entry.getValue();
 
-          logger.debug("Adding dimension to batch: dimSetId: {}, name: {}, value: {}", dimSetId.toHexString(), name, value);
+          logger.debug(
+              "[{}]: adding dimension to batch: dimSetId: {}, name: {}, value: {}",
+              id, dimSetId.toHexString(), name, value);
 
-          stagedDimensionsBatch.add().bind("dimension_set_id", dimSetId.getSha1Hash())
-              .bind("name", name).bind("value", value);
+          stagedDimensionsBatch.add()
+              .bind("dimension_set_id", dimSetId.getSha1Hash())
+              .bind("name", name)
+              .bind("value", value);
         }
 
         dimensionIdSet.add(dimSetId);
@@ -381,7 +432,7 @@ public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelop
   }
 
   private void addDefinitionDimensionToBatch(Sha1HashId defDimsId, Sha1HashId defId,
-                                            Sha1HashId dimId) {
+                                            Sha1HashId dimId, String id) {
 
     if (definitionDimensionsIdCache.getIfPresent(defDimsId) == null) {
 
@@ -389,9 +440,11 @@ public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelop
 
       if (!definitionDimensionsIdSet.contains(defDimsId)) {
 
-        logger.debug("Adding definitionDimension to batch: defDimsId: {}, defId: {}, dimId: {}",
-                     defDimsId.toHexString(), defId, dimId);
-        stagedDefinitionDimensionsBatch.add().bind("id", defDimsId.getSha1Hash())
+        logger.debug("[{}]: adding definitionDimension to batch: defDimsId: {}, defId: {}, dimId: {}",
+                     defDimsId.toHexString(), defId, dimId, id);
+
+        stagedDefinitionDimensionsBatch.add()
+            .bind("id", defDimsId.getSha1Hash())
             .bind("definition_id", defId.getSha1Hash())
             .bind("dimension_set_id", dimId.getSha1Hash());
 
@@ -407,49 +460,82 @@ public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelop
 
   @Override
   public int flush(String id) {
-    try {
-      long startTime = System.currentTimeMillis();
-      Timer.Context context = flushTimer.time();
-      executeBatches();
-      writeRowsFromTempStagingTablesToPermTables();
-      handle.commit();
-      handle.begin();
-      long endTime = System.currentTimeMillis();
-      context.stop();
-      logger.debug("Writing measurements, definitions, and dimensions to database took "
-          + (endTime - startTime) / 1000 + " seconds");
-      updateIdCaches();
-    } catch (Exception e) {
-      logger.error("Failed to write measurements, definitions, or dimensions to database", e);
-      if (handle.isInTransaction()) {
-        handle.rollback();
-      }
-      clearTempCaches();
-      handle.begin();
-    }
 
-    // Todo. implement cnt.
-    return 0;
+    try {
+
+      long startTime = System.currentTimeMillis();
+
+      Timer.Context context = commitTimer.time();
+
+      executeBatches();
+
+      writeRowsFromTempStagingTablesToPermTables();
+
+      handle.commit();
+
+      handle.begin();
+
+      long endTime = System.currentTimeMillis();
+
+      context.stop();
+
+      logger.debug("[{}]: writing measurements, definitions, and dimensions to vertica took {} ms",
+                   id, endTime - startTime);
+
+      updateIdCaches();
+
+      int commitCnt = this.measurementCnt;
+
+      this.measurementCnt = 0;
+
+      return commitCnt;
+
+    } catch (Exception e) {
+
+      logger.error("[{}]: failed to write measurements, definitions, or dimensions to vertica",
+                   id, e);
+
+      if (handle.isInTransaction()) {
+
+        handle.rollback();
+
+      }
+
+      clearTempCaches();
+
+      handle.begin();
+
+      return this.measurementCnt = 0;
+
+    }
   }
 
   private void executeBatches() {
 
     metricsBatch.execute();
+
     stagedDefinitionsBatch.execute();
+
     stagedDimensionsBatch.execute();
+
     stagedDefinitionDimensionsBatch.execute();
+
   }
 
   private void updateIdCaches() {
+
     for (Sha1HashId defId : definitionIdSet) {
+
       definitionsIdCache.put(defId, defId);
     }
 
     for (Sha1HashId dimId : dimensionIdSet) {
+
       dimensionsIdCache.put(dimId, dimId);
     }
 
     for (Sha1HashId defDimsId : definitionDimensionsIdSet) {
+
       definitionDimensionsIdCache.put(defDimsId, defDimsId);
     }
 
@@ -457,6 +543,7 @@ public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelop
   }
 
   private void writeRowsFromTempStagingTablesToPermTables() {
+
     handle.execute(definitionsTempStagingTableInsertStmt);
     handle.execute("truncate table " + definitionsTempStagingTableName);
     handle.execute(dimensionsTempStagingTableInsertStmt);
@@ -466,40 +553,58 @@ public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelop
   }
 
   private void clearTempCaches() {
+
     definitionIdSet.clear();
     dimensionIdSet.clear();
     definitionDimensionsIdSet.clear();
+
   }
 
-  private Map<String, String> prepDimensions(Map<String, String> dimMap) {
+  private Map<String, String> prepDimensions(Map<String, String> dimMap, String id) {
 
     Map<String, String> newDimMap = new TreeMap<>();
 
     if (dimMap != null) {
+
       for (String dimName : dimMap.keySet()) {
+
         if (dimName != null && !dimName.isEmpty()) {
+
           String dimValue = dimMap.get(dimName);
+
           if (dimValue != null && !dimValue.isEmpty()) {
-            newDimMap.put(trunc(dimName, MAX_COLUMN_LENGTH), trunc(dimValue, MAX_COLUMN_LENGTH));
-            dimensionCounter.inc();
+
+            newDimMap.put(trunc(dimName, MAX_COLUMN_LENGTH, id),
+                          trunc(dimValue, MAX_COLUMN_LENGTH, id));
+
           }
         }
       }
     }
+
     return newDimMap;
+
   }
 
-  private String trunc(String s, int l) {
+  private String trunc(String s, int l, String id) {
 
     if (s == null) {
+
       return "";
+
     } else if (s.length() <= l) {
+
       return s;
+
     } else {
+
       String r = s.substring(0, l);
-      logger.warn("Input string exceeded max column length. Truncating input string {} to {} chars",
-                  s, l);
-      logger.warn("Resulting string {}", r);
+
+      logger.warn( "[{}]: input string exceeded max column length. truncating input string {} to {} chars",
+                   id, s, l);
+
+      logger.warn("[{}]: resulting string {}", id, r);
+
       return r;
     }
   }

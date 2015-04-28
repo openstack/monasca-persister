@@ -18,7 +18,7 @@ package monasca.persister.repository;
 
 public interface Repo<T> {
 
-  void addToBatch(final T msg);
+  void addToBatch(final T msg, String id);
 
   int flush(String id) throws Exception;
 

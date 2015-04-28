@@ -63,10 +63,20 @@ public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
   }
 
   @Override
-  public int process(String msg) throws IOException {
+  public int process(String msg) {
 
-    MetricEnvelope[] metricEnvelopesArry =
-        this.objectMapper.readValue(msg, MetricEnvelope[].class);
+    MetricEnvelope[] metricEnvelopesArry;
+
+    try {
+
+      metricEnvelopesArry = this.objectMapper.readValue(msg, MetricEnvelope[].class);
+
+    } catch (IOException e) {
+
+      logger.error("[{}]: failed to deserialize message {}", this.threadId, msg, e);
+
+      return 0;
+    }
 
     for (final MetricEnvelope metricEnvelope : metricEnvelopesArry) {
 
@@ -85,7 +95,7 @@ public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
                  this.getMsgCount(),
                  metricEnvelope);
 
-    this.metricRepo.addToBatch(metricEnvelope);
+    this.metricRepo.addToBatch(metricEnvelope, this.threadId);
 
     this.metricCounter.inc();
 

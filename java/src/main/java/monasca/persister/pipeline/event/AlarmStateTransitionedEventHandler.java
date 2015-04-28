@@ -63,10 +63,21 @@ public class AlarmStateTransitionedEventHandler extends
   }
 
   @Override
-  protected int process(String msg) throws IOException {
+  protected int process(String msg) {
 
-    AlarmStateTransitionedEvent alarmStateTransitionedEvent =
-                  this.objectMapper.readValue(msg, AlarmStateTransitionedEvent.class);
+    AlarmStateTransitionedEvent alarmStateTransitionedEvent;
+
+    try {
+
+      alarmStateTransitionedEvent =
+          this.objectMapper.readValue(msg, AlarmStateTransitionedEvent.class);
+
+    } catch (IOException e) {
+
+      logger.error("[{}]: failed to deserialize message {}", this.threadId, msg, e);
+
+      return 0;
+    }
 
     logger.debug("[{}]: [{}:{}] {}",
                  this.threadId,
@@ -74,7 +85,7 @@ public class AlarmStateTransitionedEventHandler extends
                  this.getMsgCount(),
                  alarmStateTransitionedEvent);
 
-    this.alarmRepo.addToBatch(alarmStateTransitionedEvent);
+    this.alarmRepo.addToBatch(alarmStateTransitionedEvent, this.threadId);
 
     this.alarmStateTransitionCounter.inc();
 
