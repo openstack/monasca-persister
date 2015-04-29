@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import io.dropwizard.setup.Environment;
 import monasca.persister.repository.Repo;
+import monasca.persister.repository.RepoException;
 
 public abstract class InfluxRepo<T> implements Repo<T> {
 
@@ -38,7 +39,7 @@ public abstract class InfluxRepo<T> implements Repo<T> {
   }
 
   @Override
-  public int flush(String id) throws Exception {
+  public int flush(String id) throws RepoException {
 
     if (isBufferEmpty()) {
 
@@ -55,7 +56,7 @@ public abstract class InfluxRepo<T> implements Repo<T> {
     }
   }
 
-  private int writeToRepo(String id) throws Exception {
+  private int writeToRepo(String id) throws RepoException {
 
     try {
 
@@ -87,7 +88,7 @@ public abstract class InfluxRepo<T> implements Repo<T> {
 
   protected abstract boolean isBufferEmpty();
 
-  protected abstract int write(String id) throws Exception;
+  protected abstract int write(String id) throws RepoException;
 
   protected abstract void clearBuffers();
 }

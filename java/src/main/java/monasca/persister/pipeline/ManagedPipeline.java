@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
 import monasca.persister.pipeline.event.FlushableHandler;
+import monasca.persister.repository.RepoException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +43,7 @@ public class ManagedPipeline<T> {
 
   }
 
-  public boolean shutdown() {
+  public boolean shutdown() throws RepoException {
 
     logger.info("[{}]: shutdown", this.threadId);
 
@@ -52,26 +53,31 @@ public class ManagedPipeline<T> {
 
       return msgFlushCnt > 0 ? true : false;
 
-    } catch (Exception e) {
+    } catch (RepoException e) {
 
       logger.error("[{}}: failed to flush repo on shutdown", this.threadId, e);
+      logger.error(
+          "[{}]: pipeline broken. repo unavailable. check that database is running. shutting pipeline down now!",
+          this.threadId);
 
-      return false;
+      throw e;
+
     }
   }
 
 
-  public boolean publishEvent(String msg) {
+  public boolean publishEvent(String msg) throws RepoException {
 
       try {
 
         return this.handler.onEvent(msg);
 
-      } catch (Exception e) {
+      } catch (RepoException e) {
 
         logger.error("[{}]: failed to handle msg: {}", this.threadId, msg, e);
+        logger.error("[{}]: pipeline broken. repo unavailable. check that database is running. shutting pipeline down now!", this.threadId);
 
-        return false;
+        throw e;
 
       }
   }

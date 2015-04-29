@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 
 import io.dropwizard.setup.Environment;
+import monasca.persister.repository.RepoException;
 
 public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
 
@@ -114,7 +115,7 @@ public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
   }
 
   @Override
-  public int flushRepository() throws Exception {
+  public int flushRepository() throws RepoException {
 
     return this.metricRepo.flush(this.threadId);
   }

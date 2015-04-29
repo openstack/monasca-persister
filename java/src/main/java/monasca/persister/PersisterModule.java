@@ -41,8 +41,8 @@ import monasca.persister.consumer.KafkaConsumerRunnableBasicFactory;
 import monasca.persister.dbi.DBIProvider;
 import monasca.persister.pipeline.ManagedPipeline;
 import monasca.persister.pipeline.ManagedPipelineFactory;
-import monasca.persister.pipeline.event.AlarmStateTransitionedEventHandler;
-import monasca.persister.pipeline.event.AlarmStateTransitionedEventHandlerFactory;
+import monasca.persister.pipeline.event.AlarmStateTransitionHandler;
+import monasca.persister.pipeline.event.AlarmStateTransitionHandlerFactory;
 import monasca.persister.pipeline.event.MetricHandler;
 import monasca.persister.pipeline.event.MetricHandlerFactory;
 import monasca.persister.repository.Repo;
@@ -81,9 +81,9 @@ public class PersisterModule extends AbstractModule {
 
     install(
         new FactoryModuleBuilder().implement(
-            AlarmStateTransitionedEventHandler.class,
-            AlarmStateTransitionedEventHandler.class)
-            .build(AlarmStateTransitionedEventHandlerFactory.class));
+            AlarmStateTransitionHandler.class,
+            AlarmStateTransitionHandler.class)
+            .build(AlarmStateTransitionHandlerFactory.class));
 
     install(
         new FactoryModuleBuilder().implement(

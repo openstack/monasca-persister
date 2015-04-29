@@ -28,29 +28,29 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 
 import io.dropwizard.setup.Environment;
 import monasca.persister.repository.Repo;
+import monasca.persister.repository.RepoException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class AlarmStateTransitionedEventHandler extends
+public class AlarmStateTransitionHandler extends
     FlushableHandler<AlarmStateTransitionedEvent> {
 
   private static final Logger logger =
-      LoggerFactory.getLogger(AlarmStateTransitionedEventHandler.class);
+      LoggerFactory.getLogger(AlarmStateTransitionHandler.class);
 
   private final Repo<AlarmStateTransitionedEvent> alarmRepo;
 
   private final Counter alarmStateTransitionCounter;
 
   @Inject
-  public AlarmStateTransitionedEventHandler(
-      Repo<AlarmStateTransitionedEvent> alarmRepo,
-      Environment environment,
-      @Assisted PipelineConfig configuration,
-      @Assisted("threadId") String threadId,
-      @Assisted("batchSize") int batchSize) {
+  public AlarmStateTransitionHandler(Repo<AlarmStateTransitionedEvent> alarmRepo,
+                                     Environment environment,
+                                     @Assisted PipelineConfig configuration,
+                                     @Assisted("threadId") String threadId,
+                                     @Assisted("batchSize") int batchSize) {
 
     super(configuration, environment, threadId, batchSize);
 
@@ -104,7 +104,7 @@ public class AlarmStateTransitionedEventHandler extends
   }
 
   @Override
-  protected int flushRepository() throws Exception {
+  protected int flushRepository() throws RepoException {
 
     return this.alarmRepo.flush(this.threadId);
 

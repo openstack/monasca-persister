@@ -24,6 +24,7 @@ import com.codahale.metrics.Timer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.dropwizard.setup.Environment;
+import monasca.persister.repository.RepoException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,11 +86,11 @@ public abstract class FlushableHandler<T> {
 
   protected abstract void initObjectMapper();
 
-  protected abstract int flushRepository() throws Exception;
+  protected abstract int flushRepository() throws RepoException;
 
   protected abstract int process(String msg);
 
-  public boolean onEvent(final String msg) throws Exception {
+  public boolean onEvent(final String msg) throws RepoException {
 
     if (msg == null) {
 
@@ -174,7 +175,7 @@ public abstract class FlushableHandler<T> {
     }
   }
 
-  public int flush() throws Exception {
+  public int flush() throws RepoException {
 
     logger.debug("[{}]: flushing", this.threadId);
 

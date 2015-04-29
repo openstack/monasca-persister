@@ -18,9 +18,11 @@
 package monasca.persister.repository.influxdb;
 
 import monasca.persister.configuration.PersisterConfig;
+import monasca.persister.repository.RepoException;
 
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.codec.binary.Base64;
@@ -123,7 +125,7 @@ public class InfluxV9RepoWriter {
     }
   }
 
-  protected int write(final InfluxPoint[] influxPointArry, String id) throws Exception {
+  protected int write(final InfluxPoint[] influxPointArry, String id) throws RepoException {
 
     HttpPost request = new HttpPost(this.influxUrl);
 
@@ -135,7 +137,7 @@ public class InfluxV9RepoWriter {
         new InfluxWrite(this.influxName, this.influxRetentionPolicy, influxPointArry,
                         new HashMap<String, String>());
 
-    String json = this.objectMapper.writeValueAsString(influxWrite);
+    String jsonBody = getJsonBody(influxWrite);
 
     if (this.gzip) {
 
@@ -145,7 +147,7 @@ public class InfluxV9RepoWriter {
           requestEntity =
           EntityBuilder
               .create()
-              .setText(json)
+              .setText(jsonBody)
               .setContentType(ContentType.APPLICATION_JSON)
               .setContentEncoding("UTF-8")
               .gzipCompress()
@@ -159,7 +161,7 @@ public class InfluxV9RepoWriter {
 
       logger.debug("[{}]: gzip set to false. sending non-gzip msg", id);
 
-      StringEntity stringEntity = new StringEntity(json, "UTF-8");
+      StringEntity stringEntity = new StringEntity(jsonBody, "UTF-8");
 
       request.setEntity(stringEntity);
 
@@ -170,34 +172,71 @@ public class InfluxV9RepoWriter {
       logger.debug("[{}]: sending {} points to influxdb {} at {}", id,
                    influxPointArry.length, this.influxName, this.influxUrl);
 
-      HttpResponse response = this.httpClient.execute(request);
+      HttpResponse response = null;
+
+      try {
+
+        response = this.httpClient.execute(request);
+
+      } catch (IOException e) {
+
+        throw new RepoException("failed to execute http request", e);
+      }
 
       int rc = response.getStatusLine().getStatusCode();
 
       if (rc != HttpStatus.SC_OK) {
 
-        HttpEntity responseEntity = response.getEntity();
-
-        String responseString = EntityUtils.toString(responseEntity, "UTF-8");
-
         logger.error("[{}]: failed to send data to influxdb {} at {}: {}", id,
                      this.influxName, this.influxUrl, String.valueOf(rc));
 
+        HttpEntity responseEntity = response.getEntity();
+
+        String responseString = null;
+
+        try {
+
+          responseString = EntityUtils.toString(responseEntity, "UTF-8");
+
+        } catch (IOException e) {
+
+         throw new RepoException("failed to read http response for non ok return code " + rc, e);
+
+        }
+
         logger.error("[{}]: http response: {}", id, responseString);
 
-        throw new Exception(rc + ":" + responseString);
+        throw new RepoException("failed to execute http request to influxdb " + rc + " - " + responseString);
+
+      } else {
+
+        logger.debug("[{}]: successfully sent {} points to influxdb {} at {}", id,
+                     influxPointArry.length, this.influxName, this.influxUrl);
+
+        return influxPointArry.length;
+
       }
-
-      logger
-          .debug("[{}]: successfully sent {} points to influxdb {} at {}", id,
-                 influxPointArry.length, this.influxName, this.influxUrl);
-
-      return influxPointArry.length;
 
     } finally {
 
       request.releaseConnection();
 
     }
+  }
+
+  private String getJsonBody(InfluxWrite influxWrite) throws RepoException {
+
+    String json = null;
+
+    try {
+
+      json = this.objectMapper.writeValueAsString(influxWrite);
+
+    } catch (JsonProcessingException e) {
+
+      throw new RepoException("failed to serialize json", e);
+    }
+
+    return json;
   }
 }

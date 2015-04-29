@@ -17,6 +17,7 @@
 
 package monasca.persister.consumer;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
@@ -25,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 public class KafkaConsumer<T> {
@@ -52,9 +54,14 @@ public class KafkaConsumer<T> {
 
     logger.info("[{}]: start", this.threadId);
 
-    executorService = Executors.newFixedThreadPool(1);
+    ThreadFactory threadFactory = new ThreadFactoryBuilder()
+        .setNameFormat(threadId + "-%d")
+        .setDaemon(true)
+        .build();
 
-    executorService.submit(kafkaConsumerRunnableBasic);
+    executorService = Executors.newSingleThreadExecutor(threadFactory);
+
+    executorService.submit(kafkaConsumerRunnableBasic.setExecutorService(executorService));
 
   }
 

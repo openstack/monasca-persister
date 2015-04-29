@@ -20,6 +20,6 @@ public interface Repo<T> {
 
   void addToBatch(final T msg, String id);
 
-  int flush(String id) throws Exception;
+  int flush(String id) throws RepoException;
 
 }

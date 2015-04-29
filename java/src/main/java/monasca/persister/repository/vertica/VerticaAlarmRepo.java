@@ -39,6 +39,7 @@ import java.util.TimeZone;
 import javax.inject.Inject;
 
 import io.dropwizard.setup.Environment;
+import monasca.persister.repository.RepoException;
 
 public class VerticaAlarmRepo extends VerticaRepo implements Repo<AlarmStateTransitionedEvent> {
 
@@ -105,6 +106,8 @@ public class VerticaAlarmRepo extends VerticaRepo implements Repo<AlarmStateTran
         .bind("reason", message.stateChangeReason)
         .bind("reason_data", "{}")
         .bind("time_stamp", timeStamp);
+
+    this.msgCnt++;
   }
 
   private String getSerializedString(Object o, String id) {
@@ -122,30 +125,23 @@ public class VerticaAlarmRepo extends VerticaRepo implements Repo<AlarmStateTran
     }
   }
 
-  public int flush(String id) {
+  public int flush(String id) throws RepoException {
 
     try {
 
       commitBatch(id);
 
-      int flushCnt = msgCnt;
+      int commitCnt = this.msgCnt;
 
       this.msgCnt = 0;
 
-      return flushCnt;
+      return commitCnt;
 
     } catch (Exception e) {
 
-      logger.error("[{}]: failed to write alarms to database", id, e);
+      logger.error("[{}]: failed to write alarms to vertica", id, e);
 
-      if (handle.isInTransaction()) {
-
-        handle.rollback();
-      }
-
-      handle.begin();
-
-      return this.msgCnt = 0;
+      throw new RepoException("failed to commit batch to vertica", e);
 
     }
   }

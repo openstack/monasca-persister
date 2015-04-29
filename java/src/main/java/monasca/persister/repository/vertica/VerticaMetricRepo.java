@@ -48,6 +48,7 @@ import monasca.common.model.metric.Metric;
 import monasca.common.model.metric.MetricEnvelope;
 import monasca.persister.configuration.PersisterConfig;
 import monasca.persister.repository.Repo;
+import monasca.persister.repository.RepoException;
 
 public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelope> {
 
@@ -246,11 +247,11 @@ public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelop
   public void addToBatch(MetricEnvelope metricEnvelope, String id) {
 
     Metric metric = metricEnvelope.metric;
-    Map<String, Object> meta = metricEnvelope.meta;
+    Map<String, Object> metaMap = metricEnvelope.meta;
 
-    String tenantId = getMeta(TENANT_ID, metric, meta, id);
+    String tenantId = getMeta(TENANT_ID, metric, metaMap, id);
 
-    String region = getMeta(REGION, metric, meta, id);
+    String region = getMeta(REGION, metric, metaMap, id);
 
     // Add the definition to the batch.
     StringBuilder definitionIdStringToHash =
@@ -298,8 +299,8 @@ public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelop
 
     Sha1HashId definitionDimensionsSha1HashId = new Sha1HashId(definitionDimensionsIdSha1Hash);
 
-    this.addDefinitionDimensionToBatch(definitionDimensionsSha1HashId, definitionSha1HashId,
-                                       dimensionsSha1HashId, id);
+    addDefinitionDimensionToBatch(definitionDimensionsSha1HashId, definitionSha1HashId,
+                                  dimensionsSha1HashId, id);
 
     // Add the measurement to the batch.
     String timeStamp = simpleDateFormat.format(new Date(metric.getTimestamp()));
@@ -459,7 +460,7 @@ public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelop
   }
 
   @Override
-  public int flush(String id) {
+  public int flush(String id) throws RepoException {
 
     try {
 
@@ -492,20 +493,10 @@ public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelop
 
     } catch (Exception e) {
 
-      logger.error("[{}]: failed to write measurements, definitions, or dimensions to vertica",
-                   id, e);
+      logger.error("[{}]: failed to write measurements, definitions, and dimensions to vertica", id,
+                   e);
 
-      if (handle.isInTransaction()) {
-
-        handle.rollback();
-
-      }
-
-      clearTempCaches();
-
-      handle.begin();
-
-      return this.measurementCnt = 0;
+      throw new RepoException("failed to commit batch to vertica", e);
 
     }
   }

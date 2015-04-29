@@ -42,7 +42,7 @@ import monasca.persister.consumer.KafkaConsumerRunnableBasicFactory;
 import monasca.persister.healthcheck.SimpleHealthCheck;
 import monasca.persister.pipeline.ManagedPipeline;
 import monasca.persister.pipeline.ManagedPipelineFactory;
-import monasca.persister.pipeline.event.AlarmStateTransitionedEventHandlerFactory;
+import monasca.persister.pipeline.event.AlarmStateTransitionHandlerFactory;
 import monasca.persister.pipeline.event.MetricHandlerFactory;
 import monasca.persister.resource.Resource;
 
@@ -203,8 +203,8 @@ public class PersisterApplication extends Application<PersisterConfig> {
     int batchSize = configuration.getAlarmHistoryConfiguration().getBatchSize();
     logger.debug("Batch size for each AlarmStateHistoryPipeline [{}]", batchSize);
 
-    AlarmStateTransitionedEventHandlerFactory alarmHistoryEventHandlerFactory =
-        injector.getInstance(AlarmStateTransitionedEventHandlerFactory.class);
+    AlarmStateTransitionHandlerFactory alarmHistoryEventHandlerFactory =
+        injector.getInstance(AlarmStateTransitionHandlerFactory.class);
 
     ManagedPipelineFactory<AlarmStateTransitionedEvent> alarmStateTransitionPipelineFactory =
         injector.getInstance(new Key<ManagedPipelineFactory<AlarmStateTransitionedEvent>>(){});

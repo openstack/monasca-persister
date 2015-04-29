@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.dropwizard.setup.Environment;
+import monasca.persister.repository.RepoException;
 
 public class InfluxV9MetricRepo extends InfluxMetricRepo {
 
@@ -43,13 +44,13 @@ public class InfluxV9MetricRepo extends InfluxMetricRepo {
   }
 
   @Override
-  protected int write(String id) throws Exception {
+  protected int write(String id) throws RepoException {
 
     return this.influxV9RepoWriter.write(getInfluxPointArry(), id);
 
   }
 
-  private InfluxPoint[] getInfluxPointArry() throws Exception {
+  private InfluxPoint[] getInfluxPointArry() {
 
     List<InfluxPoint> influxPointList = new LinkedList<>();
 

@@ -17,14 +17,18 @@
 
 package monasca.persister.consumer;
 
+import monasca.persister.pipeline.ManagedPipeline;
+
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
+import org.apache.log4j.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.ExecutorService;
+
 import kafka.consumer.ConsumerIterator;
-import monasca.persister.pipeline.ManagedPipeline;
 
 public class KafkaConsumerRunnableBasic<T> implements Runnable {
 
@@ -35,6 +39,7 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
   private final ManagedPipeline<T> pipeline;
   private volatile boolean stop = false;
 
+  private ExecutorService executorService;
 
   @Inject
   public KafkaConsumerRunnableBasic(
@@ -45,6 +50,14 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
     this.kafkaChannel = kafkaChannel;
     this.pipeline = pipeline;
     this.threadId = threadId;
+  }
+
+  public KafkaConsumerRunnableBasic<T> setExecutorService(ExecutorService executorService) {
+
+    this.executorService = executorService;
+
+    return this;
+
   }
 
   protected void publishHeartbeat() {
@@ -67,9 +80,17 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
 
     this.stop = true;
 
-    if (pipeline.shutdown()) {
+    try {
 
-      markRead();
+      if (pipeline.shutdown()) {
+
+        markRead();
+
+      }
+
+    } catch (Exception e) {
+
+      logger.error("caught fatal exception while shutting down", e);
 
     }
   }
@@ -82,37 +103,61 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
 
     logger.debug("[{}]: KafkaChannel has stream iterator", this.threadId);
 
-    while (!this.stop) {
+      while (!this.stop) {
 
-      try {
+        try {
 
-        if (it.hasNext()) {
+          if (it.hasNext()) {
 
-          final String msg = new String(it.next().message());
+            final String msg = new String(it.next().message());
 
-          logger.debug("[{}]: {}", this.threadId, msg);
+            logger.debug("[{}]: {}", this.threadId, msg);
 
-          publishEvent(msg);
+            publishEvent(msg);
+
+          }
+
+        } catch (kafka.consumer.ConsumerTimeoutException cte) {
+
+          publishHeartbeat();
 
         }
 
-      } catch (kafka.consumer.ConsumerTimeoutException cte) {
+        if (Thread.currentThread().isInterrupted()) {
 
-        publishHeartbeat();
+          logger.debug("[{}]: is interrupted. breaking out of run loop", this.threadId);
 
+          break;
+
+        }
       }
+
+      logger.info("[{}]: shutting down", this.threadId);
+
+      this.kafkaChannel.stop();
+
     }
 
-    logger.info("[{}]: shutting down", this.threadId);
-
-    this.kafkaChannel.stop();
-  }
 
   protected void publishEvent(final String msg) {
 
-    if (pipeline.publishEvent(msg)) {
+    try {
 
-      markRead();
+      if (pipeline.publishEvent(msg)) {
+
+        markRead();
+
+      }
+
+    } catch (Exception e) {
+
+      logger.error("caught fatal exception while publishing msg. Shutting entire persister down now!");
+
+      this.executorService.shutdownNow();
+
+      LogManager.shutdown();
+
+      System.exit(-1);
 
     }
   }
