@@ -17,6 +17,7 @@
 
 package monasca.persister.repository.vertica;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
@@ -129,7 +130,6 @@ public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelop
 
     this.environment = environment;
 
-
     this.commitTimer =
         this.environment.metrics().timer(this.getClass().getName() + "." + "commit-timer");
 
@@ -190,21 +190,29 @@ public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelop
         + definitionDimensionsTempStagingTableName);
 
     this.definitionsTempStagingTableInsertStmt =
-        "insert into  MonMetrics.Definitions select distinct * from "
-            + definitionsTempStagingTableName
-            + " where id not in (select id from MonMetrics.Definitions)";
+        "merge into MonMetrics.Definitions tgt"
+        + " using " + this.definitionsTempStagingTableName + " src"
+        + " on src.id = tgt.id"
+        + " when not matched then insert values(src.id, src.name, src.tenant_id, src.region)";
+
     logger.debug("definitions insert stmt: " + definitionsTempStagingTableInsertStmt);
 
     this.dimensionsTempStagingTableInsertStmt =
-        "insert into MonMetrics.Dimensions select distinct * from "
-            + dimensionsTempStagingTableName
-            + " where dimension_set_id not in (select dimension_set_id from MonMetrics.Dimensions)";
+        "merge into MonMetrics.Dimensions tgt "
+        + " using " + this.dimensionsTempStagingTableName + " src"
+        + " on src.dimension_set_id = tgt.dimension_set_id"
+        + " and src.name = tgt.name"
+        + " and src.value = tgt.value"
+        + " when not matched then insert values(src.dimension_set_id, src.name, src.value)";
+
     logger.debug("dimensions insert stmt: " + definitionsTempStagingTableInsertStmt);
 
     this.definitionDimensionsTempStagingTableInsertStmt =
-        "insert into MonMetrics.definitionDimensions select distinct * from "
-            + definitionDimensionsTempStagingTableName
-            + " where id not in (select id from MonMetrics.definitionDimensions)";
+        "merge into MonMetrics.definitionDimensions tgt"
+        + " using " + this.definitionDimensionsTempStagingTableName + " src"
+        + " on src.id = tgt.id"
+        + " when not matched then insert values(src.id, src.definition_id, src.dimension_set_id)";
+
     logger.debug("definitionDimensions insert stmt: "
         + definitionDimensionsTempStagingTableInsertStmt);
 
@@ -464,26 +472,36 @@ public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelop
 
     try {
 
-      long startTime = System.currentTimeMillis();
+      Stopwatch swOuter = Stopwatch.createStarted();
 
       Timer.Context context = commitTimer.time();
 
-      executeBatches();
+      executeBatches(id);
 
-      writeRowsFromTempStagingTablesToPermTables();
+      writeRowsFromTempStagingTablesToPermTables(id);
+
+      Stopwatch swInner = Stopwatch.createStarted();
 
       handle.commit();
+      swInner.stop();
 
+      logger.debug("[{}]: committing transaction took: {}", id, swInner);
+
+
+      swInner.reset().start();
       handle.begin();
+      swInner.stop();
 
-      long endTime = System.currentTimeMillis();
+      logger.debug("[{}]: beginning new transaction took: {}", id, swInner);
 
       context.stop();
 
-      logger.debug("[{}]: writing measurements, definitions, and dimensions to vertica took {} ms",
-                   id, endTime - startTime);
+      swOuter.stop();
 
-      updateIdCaches();
+      logger.debug("[{}]: total time for writing measurements, definitions, and dimensions to vertica took {}",
+                   id, swOuter);
+
+      updateIdCaches(id);
 
       int commitCnt = this.measurementCnt;
 
@@ -501,7 +519,9 @@ public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelop
     }
   }
 
-  private void executeBatches() {
+  private void executeBatches(String id) {
+
+    Stopwatch sw = Stopwatch.createStarted();
 
     metricsBatch.execute();
 
@@ -511,9 +531,15 @@ public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelop
 
     stagedDefinitionDimensionsBatch.execute();
 
+    sw.stop();
+
+    logger.debug("[{}]: executing batches took {}: ", id, sw);
+
   }
 
-  private void updateIdCaches() {
+  private void updateIdCaches(String id) {
+
+    Stopwatch sw = Stopwatch.createStarted();
 
     for (Sha1HashId defId : definitionIdSet) {
 
@@ -531,16 +557,36 @@ public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelop
     }
 
     clearTempCaches();
+
+    sw.stop();
+
+    logger.debug("[{}]: clearing temp caches took: {}", id, sw);
+
   }
 
-  private void writeRowsFromTempStagingTablesToPermTables() {
+  private void writeRowsFromTempStagingTablesToPermTables(String id) {
+
+    Stopwatch sw = Stopwatch.createStarted();
 
     handle.execute(definitionsTempStagingTableInsertStmt);
     handle.execute("truncate table " + definitionsTempStagingTableName);
+    sw.stop();
+
+    logger.debug("[{}]: flushing definitions temp staging table took: {}", id, sw);
+
+    sw.reset().start();
     handle.execute(dimensionsTempStagingTableInsertStmt);
     handle.execute("truncate table " + dimensionsTempStagingTableName);
+    sw.stop();
+
+    logger.debug("[{}]: flushing dimensions temp staging table took: {}", id, sw);
+
+    sw.reset().start();
     handle.execute(definitionDimensionsTempStagingTableInsertStmt);
     handle.execute("truncate table " + definitionDimensionsTempStagingTableName);
+    sw.stop();
+
+    logger.debug("[{}]: flushing definition dimensions temp staging table took: {}", id, sw);
   }
 
   private void clearTempCaches() {
