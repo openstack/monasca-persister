@@ -498,8 +498,8 @@ class MetricPersister(AbstractPersister):
         dimensions = {}
         if 'dimensions' in metric:
             for dimension_name in metric['dimensions']:
-                dimensions[dimension_name] = (
-                    metric['dimensions'][dimension_name])
+                dimensions[dimension_name.encode('utf8')] = (
+                    metric['dimensions'][dimension_name].encode('utf8'))
                 LOG.debug('dimension: %s : %s', dimension_name,
                           dimensions[dimension_name])
 
@@ -519,6 +519,10 @@ class MetricPersister(AbstractPersister):
 
         LOG.debug('value_meta: %s', value_meta)
 
+        tags = dimensions
+        tags['_tenant_id'] = tenant_id.encode('utf8')
+        tags['_region'] = region.encode('utf8')
+
         ts = time_stamp / 1000.0
 
         data = {"name": metric_name.encode('utf8'),
@@ -528,10 +532,7 @@ class MetricPersister(AbstractPersister):
                     "value": value,
                     "value_meta": json.dumps(value_meta, ensure_ascii=False).encode('utf8')
                 },
-                "tags": {
-                    "_tenant_id": tenant_id.encode('utf8'),
-                    "_region": region.encode('utf8')
-                }}
+                "tags": tags}
 
         LOG.debug(data)
 
