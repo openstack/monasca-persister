@@ -24,6 +24,7 @@ import monasca.persister.repository.Repo;
 import com.codahale.metrics.Timer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.PreparedBatch;
@@ -72,6 +73,9 @@ public class VerticaAlarmRepo extends VerticaRepo implements Repo<AlarmStateTran
 
     this.commitTimer =
         this.environment.metrics().timer(this.getClass().getName() + "." + "commit-timer");
+
+    this.objectMapper.setPropertyNamingStrategy(
+        PropertyNamingStrategy.CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES);
 
     logger.debug("preparing batches...");
 
