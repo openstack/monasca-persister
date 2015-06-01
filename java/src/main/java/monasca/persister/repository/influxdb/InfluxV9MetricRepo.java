@@ -95,7 +95,11 @@ public class InfluxV9MetricRepo extends InfluxMetricRepo {
 
     String valueMetaJSONString = measurement.getValueMetaJSONString();
 
-    if (valueMetaJSONString != null) {
+    if (valueMetaJSONString == null) {
+
+      valueMap.put("value_meta", "");
+
+    } else {
 
       valueMap.put("value_meta", valueMetaJSONString);
 
