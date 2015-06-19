@@ -525,12 +525,14 @@ class MetricPersister(AbstractPersister):
 
         ts = time_stamp / 1000.0
 
-        data = {"name": metric_name.encode('utf8'),
-                "timestamp": datetime.fromtimestamp(ts, tz=pytz.utc).strftime(
+        data = {"measurement": metric_name.encode('utf8'),
+                "time": datetime.fromtimestamp(ts, tz=pytz.utc).strftime(
                     '%Y-%m-%dT%H:%M:%S.%fZ'),
                 "fields": {
                     "value": value,
-                    "value_meta": json.dumps(value_meta, ensure_ascii=False).encode('utf8')
+                    "value_meta": json.dumps(value_meta,
+                                             ensure_ascii=False).encode(
+                        'utf8') if value_meta else ''
                 },
                 "tags": tags}
 
