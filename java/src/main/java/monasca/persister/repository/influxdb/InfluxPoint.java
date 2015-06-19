@@ -21,37 +21,42 @@ import java.util.Map;
 
 public class InfluxPoint {
 
-  private final String name;
+  private final String measurement;
   private final Map<String, String> tags;
-  private final String timestamp;
+  private final String time;
   private final Map<String, Object> fields;
+  private final String Precision = "ms";
 
   public InfluxPoint(
-      final String name,
+      final String measurement,
       final Map<String, String> tags,
-      final String timestamp,
+      final String time,
       final Map<String, Object> fields) {
 
-    this.name = name;
+    this.measurement = measurement;
     this.tags = tags;
-    this.timestamp = timestamp;
+    this.time = time;
     this.fields = fields;
   }
 
-  public String getName() {
-    return name;
+  public String getMeasurement() {
+    return measurement;
   }
 
   public Map<String, String> getTags() {
     return this.tags;
   }
 
-  public String getTimestamp() {
-    return this.timestamp;
+  public String getTime() {
+    return this.time;
   }
 
   public Map<String, Object> getFields() {
     return this.fields;
+  }
+
+  public String getPrecision() {
+    return Precision;
   }
 
 }
