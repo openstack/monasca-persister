@@ -185,7 +185,7 @@ public class InfluxV9RepoWriter {
 
       int rc = response.getStatusLine().getStatusCode();
 
-      if (rc != HttpStatus.SC_OK && rc != HttpStatus.SC_NO_CONTENT) {
+      if (rc != HttpStatus.SC_OK) {
 
         logger.error("[{}]: failed to send data to influxdb {} at {}: {}", id,
                      this.influxName, this.influxUrl, String.valueOf(rc));
