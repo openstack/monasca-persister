@@ -78,39 +78,107 @@ public class InfluxV9AlarmRepo extends InfluxAlarmRepo {
 
       Map<String, Object> valueMap = new HashMap<>();
 
-      valueMap.put("tenant_id", event.tenantId);
+      if (event.tenantId == null) {
 
-      valueMap.put("alarm_id", event.alarmId);
+        logger.error("[{}]: tenant id cannot be null. Dropping alarm state history event.", id);
 
-      try {
+        continue;
 
-      valueMap.put("metrics", this.objectMapper.writeValueAsString(event.metrics));
+      } else {
 
-      } catch (JsonProcessingException e) {
+        valueMap.put("tenant_id", event.tenantId);
+      }
 
-        logger.error("[{}]: failed to serialize metrics {}", id, event.metrics, e);
+      if (event.alarmId == null) {
 
-        valueMap.put("metrics", "");
+        logger.error("[{}]: alarm id cannot be null. Dropping alarm state history event.", id);
+
+        continue;
+
+      } else {
+
+        valueMap.put("alarm_id", event.alarmId);
+      }
+
+      if (event.metrics == null) {
+
+        logger.error("[{}]: metrics cannot be null. Settings metrics to empty JSON", id);
+
+        valueMap.put("metrics", "{}");
+
+      } else {
+
+        try {
+
+          valueMap.put("metrics", this.objectMapper.writeValueAsString(event.metrics));
+
+        } catch (JsonProcessingException e) {
+
+          logger.error("[{}]: failed to serialize metrics {}", id, event.metrics, e);
+          logger.error("[{}]: setting metrics to empty JSON", id);
+
+          valueMap.put("metrics", "{}");
+
+        }
+      }
+
+      if (event.oldState == null) {
+
+        logger.error("[{}]: old state cannot be null. Setting old state to empty string.", id);
+
+        valueMap.put("old_state", "");
+
+      } else {
+
+        valueMap.put("old_state", event.oldState);
 
       }
 
-      valueMap.put("old_state", event.oldState);
+      if (event.newState == null) {
 
-      valueMap.put("new_state", event.newState);
+        logger.error("[{}]: new state cannot be null. Setting new state to empty string.", id);
 
-      try {
+        valueMap.put("new_state", "");
 
-        valueMap.put("sub_alarms", this.objectMapper.writeValueAsString(event.subAlarms));
+      } else {
 
-      } catch (JsonProcessingException e) {
-
-        logger.error("[{}]: failed to serialize sub alarms {}", id, event.subAlarms, e);
-
-        valueMap.put("sub_alarms", "");
+        valueMap.put("new_state", event.newState);
 
       }
 
-      valueMap.put("reason", event.stateChangeReason);
+      if (event.subAlarms == null) {
+
+        logger.debug("[{}]: sub alarms is null. Setting sub alarms to empty JSON", id);
+
+        valueMap.put("sub_alarms", "[]");
+
+      } else {
+
+        try {
+
+          valueMap.put("sub_alarms", this.objectMapper.writeValueAsString(event.subAlarms));
+
+        } catch (JsonProcessingException e) {
+
+          logger.error("[{}]: failed to serialize sub alarms {}", id, event.subAlarms, e);
+          logger.error("[{}]: Setting sub_alarms to empty JSON", id);
+
+          valueMap.put("sub_alarms", "[]");
+
+        }
+
+      }
+
+      if (event.stateChangeReason == null) {
+
+        logger.error("[{}]: reason cannot be null. Setting reason to empty string.", id);
+
+        valueMap.put("reason", "");
+
+      } else {
+
+        valueMap.put("reason", event.stateChangeReason);
+      }
 
       valueMap.put("reason_data", "{}");
 
