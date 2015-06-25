@@ -442,7 +442,7 @@ class AlarmPersister(AbstractPersister):
 
         ts = time_stamp / 1000.0
 
-        data = {"name": 'alarm_state_history',
+        data = {"measurement": 'alarm_state_history',
                 "timestamp": datetime.fromtimestamp(ts, tz=pytz.utc).strftime(
                     '%Y-%m-%dT%H:%M:%S.%fZ'),
                 "fields": {
@@ -452,8 +452,10 @@ class AlarmPersister(AbstractPersister):
                     "new_state": new_state.encode('utf8'),
                     "old_state": old_state.encode('utf8'),
                     "reason": state_change_reason.encode('utf8'),
-                    "reason_data": state_change_reason.encode('utf8'),
-                    "sub_alarms": json.dumps(sub_alarms, ensure_ascii=False).encode('utf8')
+                    "reason_data": "{}".encode('utf8'),
+                    "sub_alarms": json.dumps(sub_alarms,
+                                             ensure_ascii=False).encode(
+                        'utf8') if sub_alarms else "[]".encode('utf8')
                 },
                 "tags": {
                     "tenant_id": tenant_id.encode('utf8')
@@ -532,7 +534,7 @@ class MetricPersister(AbstractPersister):
                     "value": value,
                     "value_meta": json.dumps(value_meta,
                                              ensure_ascii=False).encode(
-                        'utf8') if value_meta else ''
+                        'utf8') if value_meta else value_meta.encode('utf8')
                 },
                 "tags": tags}
 
