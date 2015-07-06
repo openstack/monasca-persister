@@ -85,7 +85,6 @@ public abstract class InfluxRepo<T> implements Repo<T> {
     }
   }
 
-
   protected abstract boolean isBufferEmpty();
 
   protected abstract int write(String id) throws RepoException;
