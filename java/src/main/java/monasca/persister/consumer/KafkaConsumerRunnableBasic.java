@@ -27,8 +27,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import kafka.consumer.ConsumerIterator;
+import monasca.persister.repository.RepoException;
 
 public class KafkaConsumerRunnableBasic<T> implements Runnable {
 
@@ -38,6 +40,7 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
   private final String threadId;
   private final ManagedPipeline<T> pipeline;
   private volatile boolean stop = false;
+  private boolean fatalErrorDetected = false;
 
   private ExecutorService executorService;
 
@@ -60,7 +63,7 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
 
   }
 
-  protected void publishHeartbeat() {
+  protected void publishHeartbeat() throws RepoException {
 
     publishEvent(null);
 
@@ -82,9 +85,19 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
 
     try {
 
-      if (pipeline.shutdown()) {
+      if (!this.fatalErrorDetected) {
 
-        markRead();
+        logger.info("[{}}: shutting pipeline down", this.threadId);
+
+        if (pipeline.shutdown()) {
+
+          markRead();
+
+        }
+
+      } else {
+
+        logger.info("[{}]: fatal error detected. Exiting immediately without flush", this.threadId);
 
       }
 
@@ -93,6 +106,7 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
       logger.error("caught fatal exception while shutting down", e);
 
     }
+
   }
 
   public void run() {
@@ -103,11 +117,27 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
 
     logger.debug("[{}]: KafkaChannel has stream iterator", this.threadId);
 
-      while (!this.stop) {
+    while (!this.stop) {
+
+      try {
 
         try {
 
+          if (isInterrupted()) {
+
+            this.fatalErrorDetected = true;
+            break;
+
+          }
+
           if (it.hasNext()) {
+
+            if (isInterrupted()) {
+
+              this.fatalErrorDetected = true;
+              break;
+
+            }
 
             final String msg = new String(it.next().message());
 
@@ -119,45 +149,73 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
 
         } catch (kafka.consumer.ConsumerTimeoutException cte) {
 
+          if (isInterrupted()) {
+
+            this.fatalErrorDetected = true;
+            break;
+
+          }
+
           publishHeartbeat();
 
         }
 
-        if (Thread.currentThread().isInterrupted()) {
+      } catch (Throwable e) {
 
-          logger.debug("[{}]: is interrupted. breaking out of run loop", this.threadId);
+        logger.error(
+            "[{}]: caught fatal exception while publishing msg. Shutting entire persister down now!",
+            this.threadId, e);
 
-          break;
+        this.stop = true;
+        this.fatalErrorDetected = true;
+
+        this.executorService.shutdownNow();
+
+        try {
+
+          this.executorService.awaitTermination(5, TimeUnit.SECONDS);
+
+        } catch (InterruptedException e1) {
+
+          logger.info("[{}]:  interrupted while awaiting termination", this.threadId, e1);
 
         }
+
+        LogManager.shutdown();
+
+        System.exit(1);
+
       }
-
-      logger.info("[{}]: shutting down", this.threadId);
-
-      this.kafkaChannel.stop();
 
     }
 
+    logger.info("[{}]: shutting down", this.threadId);
 
-  protected void publishEvent(final String msg) {
+    this.kafkaChannel.stop();
 
-    try {
+  }
 
-      if (pipeline.publishEvent(msg)) {
+  protected void publishEvent(final String msg) throws RepoException {
 
-        markRead();
+    if (pipeline.publishEvent(msg)) {
 
-      }
+      markRead();
 
-    } catch (Exception e) {
+    }
 
-      logger.error("caught fatal exception while publishing msg. Shutting entire persister down now!");
+  }
 
-      this.executorService.shutdownNow();
+  private boolean isInterrupted() {
 
-      LogManager.shutdown();
+    if (Thread.currentThread().interrupted()) {
 
-      System.exit(-1);
+      logger.debug("[{}]: is interrupted. breaking out of run loop", this.threadId);
+
+      return true;
+
+    } else {
+
+      return false;
 
     }
   }

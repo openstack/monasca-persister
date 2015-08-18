@@ -17,10 +17,13 @@
 package monasca.persister.consumer;
 
 
+import java.util.concurrent.ExecutorService;
+
 public interface KafkaConsumerFactory<T> {
 
   KafkaConsumer<T> create(
       KafkaConsumerRunnableBasic<T> kafkaConsumerRunnableBasic,
-      String threadId);
+      String threadId,
+      ExecutorService executorService);
 
 }

@@ -33,7 +33,7 @@ public class KafkaConsumer<T> {
 
   private static final Logger logger = LoggerFactory.getLogger(KafkaConsumer.class);
 
-  private static final int WAIT_TIME = 10;
+  private static final int WAIT_TIME = 5;
 
   private ExecutorService executorService;
 
@@ -43,23 +43,18 @@ public class KafkaConsumer<T> {
   @Inject
   public KafkaConsumer(
       @Assisted KafkaConsumerRunnableBasic<T> kafkaConsumerRunnableBasic,
-      @Assisted String threadId) {
+      @Assisted String threadId,
+      @Assisted ExecutorService executorService) {
 
     this.kafkaConsumerRunnableBasic = kafkaConsumerRunnableBasic;
     this.threadId = threadId;
+    this.executorService = executorService;
 
   }
 
   public void start() {
 
     logger.info("[{}]: start", this.threadId);
-
-    ThreadFactory threadFactory = new ThreadFactoryBuilder()
-        .setNameFormat(threadId + "-%d")
-        .setDaemon(true)
-        .build();
-
-    executorService = Executors.newSingleThreadExecutor(threadFactory);
 
     executorService.submit(kafkaConsumerRunnableBasic.setExecutorService(executorService));
 
@@ -74,8 +69,6 @@ public class KafkaConsumer<T> {
     if (executorService != null) {
 
       logger.info("[{}]: shutting down executor service", this.threadId);
-
-      executorService.shutdown();
 
       try {
 

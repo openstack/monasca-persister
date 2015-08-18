@@ -450,7 +450,7 @@ public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelop
       if (!definitionDimensionsIdSet.contains(defDimsId)) {
 
         logger.debug("[{}]: adding definitionDimension to batch: defDimsId: {}, defId: {}, dimId: {}",
-                     defDimsId.toHexString(), defId, dimId, id);
+                     id, defDimsId.toHexString(), defId, dimId);
 
         stagedDefinitionDimensionsBatch.add()
             .bind("id", defDimsId.getSha1Hash())

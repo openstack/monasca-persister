@@ -17,6 +17,7 @@
 
 package monasca.persister;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -24,6 +25,10 @@ import com.google.inject.TypeLiteral;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
@@ -105,8 +110,18 @@ public class PersisterApplication extends Application<PersisterConfig> {
         injector.getInstance(Key.get(new TypeLiteral<KafkaConsumerFactory<MetricEnvelope[]>>(){}));
 
     final KafkaConsumerRunnableBasicFactory<MetricEnvelope[]> kafkaMetricConsumerRunnableBasicFactory =
-        injector.getInstance(Key.get(new TypeLiteral<KafkaConsumerRunnableBasicFactory
-            <MetricEnvelope[]>>(){}));
+        injector.getInstance(
+            Key.get(new TypeLiteral<KafkaConsumerRunnableBasicFactory<MetricEnvelope[]>>() {
+            }));
+
+    ThreadFactory threadFactory = new ThreadFactoryBuilder()
+        .setDaemon(true)
+        .build();
+
+    int totalNumberOfThreads = configuration.getMetricConfiguration().getNumThreads()
+                               + configuration.getAlarmHistoryConfiguration().getNumThreads();
+
+    ExecutorService executorService = Executors.newFixedThreadPool(totalNumberOfThreads, threadFactory);
 
     for (int i = 0; i < configuration.getMetricConfiguration().getNumThreads(); i++) {
 
@@ -122,7 +137,7 @@ public class PersisterApplication extends Application<PersisterConfig> {
           kafkaMetricConsumerRunnableBasicFactory.create(managedMetricPipeline, kafkaMetricChannel, threadId);
 
       final KafkaConsumer<MetricEnvelope[]> kafkaMetricConsumer =
-          kafkaMetricConsumerFactory.create(kafkaMetricConsumerRunnableBasic, threadId);
+          kafkaMetricConsumerFactory.create(kafkaMetricConsumerRunnableBasic, threadId, executorService);
 
       ManagedConsumer<MetricEnvelope[]> managedMetricConsumer =
           metricManagedConsumerFactory.create(kafkaMetricConsumer, threadId);
@@ -158,7 +173,8 @@ public class PersisterApplication extends Application<PersisterConfig> {
           kafkaAlarmStateTransitionConsumerRunnableBasicFactory.create(managedAlarmStateTransitionPipeline, kafkaAlarmStateTransitionChannel, threadId);
 
       final KafkaConsumer<AlarmStateTransitionedEvent> kafkaAlarmStateTransitionConsumer =
-          kafkaAlarmStateTransitionConsumerFactory.create(kafkaAlarmStateTransitionConsumerRunnableBasic, threadId);
+          kafkaAlarmStateTransitionConsumerFactory.create(kafkaAlarmStateTransitionConsumerRunnableBasic, threadId,
+                                                          executorService);
 
       ManagedConsumer<AlarmStateTransitionedEvent> managedAlarmStateTransitionConsumer =
           alarmStateTransitionsManagedConsumerFactory.create(kafkaAlarmStateTransitionConsumer, threadId);
