@@ -42,7 +42,9 @@ RC=$?
 
 # Copy the jars where the publisher will find them
 if [ $RUN_BUILD = "true" ]; then
-   ln -sf java/target target
+   if [ ! -L target ]; then
+      ln -sf java/target target
+   fi
 fi
 
 rm -fr apache-maven-3.2.1*
