@@ -6,3 +6,4 @@ debs/
 logs/
 .idea/
 **/*.pyc
+virtenv/*
