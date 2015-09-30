@@ -4,25 +4,25 @@ alarmHistoryConfiguration:
   batchSize: 100
   numThreads: 2
   maxBatchTime: 15
-# See http://kafka.apache.org/documentation.html#api for semantics and defaults.
+  # See http://kafka.apache.org/documentation.html#api for semantics and defaults.
   topic: alarm-state-transitions
   groupId: 1_alarm-state-transitions
   consumerId: mini-mon
-  clientId : 1
+  clientId: 1
 
 metricConfiguration:
   batchSize: 10000
   numThreads: 4
   maxBatchTime: 15
-# See http://kafka.apache.org/documentation.html#api for semantics and defaults.
+  # See http://kafka.apache.org/documentation.html#api for semantics and defaults.
   topic: metrics
   groupId: 1_metrics
   consumerId: mini-mon
-  clientId : 1
+  clientId: 1
 
 #Kafka settings.
 kafkaConfig:
-# See http://kafka.apache.org/documentation.html#api for semantics and defaults.
+  # See http://kafka.apache.org/documentation.html#api for semantics and defaults.
   zookeeperConnect: localhost:2181
   socketTimeoutMs: 30000
   socketReceiveBufferBytes : 65536
@@ -43,15 +43,17 @@ verticaMetricRepoConfig:
   maxCacheSize: 2000000
 
 databaseConfiguration:
-# vertica | influxdb
+  # databaseType can be (vertica | influxdb)
   databaseType: influxdb
 
 # Uncomment if databaseType is influxdb
 influxDbConfiguration:
   # Retention policy may be left blank to indicate default policy.
   retentionPolicy:
+  # Used only if version is V9.
   maxHttpConnections: 100
   name: mon
+  replicationFactor: 1
   url: http://localhost:8086
   user: mon_persister
   password: password
@@ -63,23 +65,27 @@ influxDbConfiguration:
 #  user: dbadmin
 #  password: password
 #  properties:
-#      ssl: false
+#    ssl: false
 #  # the maximum amount of time to wait on an empty pool before throwing an exception
 #  maxWaitForConnection: 1s
+#
 #  # the SQL query to run when validating a connection's liveness
 #  validationQuery: "/* MyService Health Check */ SELECT 1"
+#
 #  # the minimum number of connections to keep open
 #  minSize: 8
+#
 #  # the maximum number of connections to keep open
 #  maxSize: 41
+#
 #  # whether or not idle connections should be validated
 #  checkConnectionWhileIdle: false
+#
 #  # the maximum lifetime of an idle connection
 #  maxConnectionAge: 1 minute
 
 metrics:
   frequency: 1 second
-
 
 # Logging settings.
 logging:
@@ -90,22 +96,37 @@ logging:
 
   # Logger-specific levels.
   loggers:
-
-    # Sets the level for 'com.example.app' to DEBUG.
-      com.example.app: DEBUG
-    # com.hpcloud: debug
-    # com.hpcloud.mon.persister.repository: DEBUG
+    monasca: DEBUG
 
   appenders:
+    # Uncomment to enable logging to the console:
+    #- type: console
+    #  threshold: DEBUG
+    #  timeZone: UTC
+    #  target: stdout
 
     - type: file
       threshold: INFO
       archive: true
+      # The file to which current statements will be logged.
       currentLogFilename: /var/log/monasca/persister/monasca-persister.log
+
+      # When the log file rotates, the archived log will be renamed to this and gzipped. The
+      # %d is replaced with the previous day (yyyy-MM-dd). Custom rolling windows can be created
+      # by passing a SimpleDateFormat-compatible format as an argument: "%d{yyyy-MM-dd-hh}".
       archivedLogFilenamePattern: /var/log/monasca/persister/monasca-persister.log-%d.log.gz
+
+      # The number of archived files to keep.
       archivedFileCount: 5
+
       # The timezone used to format dates. HINT: USE THE DEFAULT, UTC.
       timeZone: UTC
+
+      # Uncomment to approximately match the default log format of the python
+      # Openstack components. %pid is unavoidably formatted with [brackets],
+      # which are hard-coded in dropwizard's logging module.
+      # See http://logback.qos.ch/manual/layouts.html#conversionWord for details of the format string
+      # logFormat: "%app%pid: %d{YYYY-MM-dd HH:mm:ss.SSS} %pid %level %logger [-] [%thread] %msg %ex{1}"
 
 # Set the persister ports to 8090/8091 to avoid conflict with the api
 server:
