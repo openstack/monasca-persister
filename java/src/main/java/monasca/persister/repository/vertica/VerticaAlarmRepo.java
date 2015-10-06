@@ -50,6 +50,8 @@ public class VerticaAlarmRepo extends VerticaRepo implements Repo<AlarmStateTran
   private static final String SQL_INSERT_INTO_ALARM_HISTORY =
       "insert into MonAlarms.StateHistory (tenant_id, alarm_id, metrics, old_state, new_state, sub_alarms, reason, reason_data, time_stamp) "
       + "values (:tenant_id, :alarm_id, :metrics, :old_state, :new_state, :sub_alarms, :reason, :reason_data, :time_stamp)";
+  private static final int MAX_BYTES_PER_CHAR = 4;
+  private static final int MAX_LENGTH_VARCHAR = 65000;
 
   private PreparedBatch batch;
   private final Timer commitTimer;
@@ -96,7 +98,19 @@ public class VerticaAlarmRepo extends VerticaRepo implements Repo<AlarmStateTran
 
     String metricsString = getSerializedString(message.metrics, id);
 
+    // Validate metricsString does not exceed a sufficient maximum upper bound
+    if (metricsString.length()*MAX_BYTES_PER_CHAR >= MAX_LENGTH_VARCHAR) {
+      metricsString = "[]";
+      logger.warn("length of metricsString for alarm ID {} exceeds max length of {}", message.alarmId, MAX_LENGTH_VARCHAR);
+    }
+
     String subAlarmsString = getSerializedString(message.subAlarms, id);
+
+    // Validate subAlarmsString does not exceed a sufficient maximum upper bound
+    if (subAlarmsString.length()*MAX_BYTES_PER_CHAR >= MAX_LENGTH_VARCHAR) {
+      subAlarmsString = "[]";
+      logger.warn("length of subAlarmsString for alarm ID {} exceeds max length of {}", message.alarmId, MAX_LENGTH_VARCHAR);
+    }
 
     String timeStamp = simpleDateFormat.format(new Date(message.timestamp));
 
