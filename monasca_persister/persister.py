@@ -511,7 +511,7 @@ class MetricPersister(AbstractPersister):
         value = metric['value']
         LOG.debug('value: %s', value)
 
-        if 'value_meta' in metric:
+        if 'value_meta' in metric and metric['value_meta']:
 
             value_meta = metric['value_meta']
 
