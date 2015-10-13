@@ -95,9 +95,9 @@ public class InfluxV9MetricRepo extends InfluxMetricRepo {
 
     String valueMetaJSONString = measurement.getValueMetaJSONString();
 
-    if (valueMetaJSONString == null) {
+    if (valueMetaJSONString == null || valueMetaJSONString.isEmpty()) {
 
-      valueMap.put("value_meta", "");
+      valueMap.put("value_meta", "{}");
 
     } else {
 
