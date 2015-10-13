@@ -440,6 +440,26 @@ class AlarmPersister(AbstractPersister):
 
         sub_alarms = alarm_transitioned['subAlarms']
 
+        if sub_alarms:
+
+            sub_alarms_json = json.dumps(sub_alarms, ensure_ascii=False)
+
+            sub_alarms_json_snake_case = sub_alarms_json.replace(
+                '"subAlarmExpression":',
+                '"sub_alarm_expression":')
+
+            sub_alarms_json_snake_case = sub_alarms_json_snake_case.replace(
+                '"metricDefinition":',
+                '"metric_definition":')
+
+            sub_alarms_json_snake_case = sub_alarms_json_snake_case.replace(
+                '"subAlarmState":',
+                '"sub_alarm_state":')
+
+        else:
+
+            sub_alarms_json_snake_case = "[]"
+
         ts = time_stamp / 1000.0
 
         data = {"measurement": 'alarm_state_history',
@@ -453,9 +473,7 @@ class AlarmPersister(AbstractPersister):
                     "old_state": old_state.encode('utf8'),
                     "reason": state_change_reason.encode('utf8'),
                     "reason_data": "{}".encode('utf8'),
-                    "sub_alarms": json.dumps(sub_alarms,
-                                             ensure_ascii=False).encode(
-                        'utf8') if sub_alarms else "[]".encode('utf8')
+                    "sub_alarms": sub_alarms_json_snake_case.encode('utf8')
                 },
                 "tags": {
                     "tenant_id": tenant_id.encode('utf8')
