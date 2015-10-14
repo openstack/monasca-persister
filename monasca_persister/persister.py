@@ -535,7 +535,7 @@ class MetricPersister(AbstractPersister):
 
         else:
 
-            value_meta = ''
+            value_meta = {}
 
         LOG.debug('value_meta: %s', value_meta)
 
@@ -551,8 +551,7 @@ class MetricPersister(AbstractPersister):
                 "fields": {
                     "value": value,
                     "value_meta": json.dumps(value_meta,
-                                             ensure_ascii=False).encode(
-                        'utf8') if value_meta else value_meta.encode('utf8')
+                                             ensure_ascii=False).encode('utf8')
                 },
                 "tags": tags}
 
