@@ -11,7 +11,7 @@ The number of output processors/threads in the Persister can be specified to sca
 
 # Build
 
-Requires monasca-common from https://github.com/stackforge/monasca-common. Download and build following instructions in its README.md. Then build monasca-persister by:
+Requires monasca-common from https://github.com/openstack/monasca-common. Download and build following instructions in its README.md. Then build monasca-persister by:
 
 ```
 mvn clean package
@@ -21,7 +21,7 @@ mvn clean package
 
 A sample configuration file is available in java/src/deb/etc/persister-config.yml-sample.
 
-A second configuration file is provided in java/src/main/resources/persister-config.yml for use with the [vagrant "mini-mon" development environment](https://github.com/stackforge/monasca-vagrant/).
+A second configuration file is provided in java/src/main/resources/persister-config.yml for use with the [vagrant "mini-mon" development environment](https://github.com/openstack/monasca-vagrant/).
 
 # TODO
 
