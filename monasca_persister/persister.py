@@ -526,7 +526,7 @@ class MetricPersister(AbstractPersister):
         time_stamp = metric['timestamp']
         LOG.debug('timestamp %s', time_stamp)
 
-        value = metric['value']
+        value = float(metric['value'])
         LOG.debug('value: %s', value)
 
         if 'value_meta' in metric and metric['value_meta']:
