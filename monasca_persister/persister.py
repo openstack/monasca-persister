@@ -179,8 +179,8 @@ class AbstractPersister(threading.Thread):
                                        kafka_conf.group_id,
                                        kafka_conf.topic,
                                        repartition_callback=self._flush,
-                                       periodic_callback=self._flush,
-                                       periodic_callback_rate=kafka_conf.max_wait_time_seconds)
+                                       commit_callback=self._flush,
+                                       commit_timeout=kafka_conf.max_wait_time_seconds)
 
         self._influxdb_client = InfluxDBClient(influxdb_conf.ip_address,
                                                influxdb_conf.port,
