@@ -308,7 +308,7 @@ class AlarmPersister(AbstractPersister):
         ts = time_stamp / 1000.0
 
         data = {"measurement": 'alarm_state_history',
-                "timestamp": datetime.fromtimestamp(ts, tz=pytz.utc).strftime(
+                "time": datetime.fromtimestamp(ts, tz=pytz.utc).strftime(
                     '%Y-%m-%dT%H:%M:%S.%fZ'),
                 "fields": {
                     "tenant_id": tenant_id.encode('utf8'),
