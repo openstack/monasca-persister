@@ -36,16 +36,19 @@ import threading
 
 from influxdb import InfluxDBClient
 import pytz
-from oslo.config import cfg
 
-from openstack.common import log
-from openstack.common import service as os_service
+from oslo_config import cfg
+from oslo_log import log
+from oslo_service import service as os_service
+
 import service
 
 from monasca_common.kafka.consumer import KafkaConsumer
 
 
 LOG = log.getLogger(__name__)
+log.register_options(cfg.CONF)
+log.set_defaults()
 
 zookeeper_opts = [cfg.StrOpt('uri'),
                   cfg.IntOpt('partition_interval_recheck_seconds')]
@@ -89,9 +92,7 @@ cfg.CONF.register_group(influxdb_group)
 cfg.CONF.register_opts(influxdb_opts, influxdb_group)
 
 cfg.CONF(sys.argv[1:], project='monasca', prog='persister')
-log_levels = (cfg.CONF.default_log_levels)
-cfg.set_defaults(log.log_opts, default_log_levels=log_levels)
-log.setup("monasca-persister")
+log.setup(cfg.CONF, "monasca-persister")
 
 def main():
     """Start persister.

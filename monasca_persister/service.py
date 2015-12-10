@@ -13,22 +13,16 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from oslo.config import cfg
 import sys
-from openstack.common import gettextutils
-from openstack.common import log
 
-cfg.CONF.import_opt('default_log_levels', 'openstack.common.log')
+from oslo_config import cfg
+from oslo_log import log
 
 LOG = log.getLogger(__name__)
 
 def prepare_service(argv=None):
-    gettextutils.install('openstack')
-    gettextutils.enable_lazy()
-    log_levels = (cfg.CONF.default_log_levels)
-    cfg.set_defaults(log.log_opts, default_log_levels=log_levels)
     if argv is None:
         argv = sys.argv
     cfg.CONF(argv[1:], project='persister')
-    log.setup('persister')
+    log.setup(cfg.CONF, 'persister')
     LOG.info('Service has started!')
