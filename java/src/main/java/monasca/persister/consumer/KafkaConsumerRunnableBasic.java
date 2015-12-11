@@ -22,12 +22,10 @@ import monasca.persister.pipeline.ManagedPipeline;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
-import org.apache.log4j.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import kafka.consumer.ConsumerIterator;
 import monasca.persister.repository.RepoException;
@@ -40,7 +38,6 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
   private final String threadId;
   private final ManagedPipeline<T> pipeline;
   private volatile boolean stop = false;
-  private boolean fatalErrorDetected = false;
 
   private ExecutorService executorService;
 
@@ -83,30 +80,6 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
 
     this.stop = true;
 
-    try {
-
-      if (!this.fatalErrorDetected) {
-
-        logger.info("[{}}: shutting pipeline down", this.threadId);
-
-        if (pipeline.shutdown()) {
-
-          markRead();
-
-        }
-
-      } else {
-
-        logger.info("[{}]: fatal error detected. Exiting immediately without flush", this.threadId);
-
-      }
-
-    } catch (Exception e) {
-
-      logger.error("caught fatal exception while shutting down", e);
-
-    }
-
   }
 
   public void run() {
@@ -125,7 +98,7 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
 
           if (isInterrupted()) {
 
-            this.fatalErrorDetected = true;
+            logger.debug("[{}]: is interrupted", this.threadId);
             break;
 
           }
@@ -134,7 +107,14 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
 
             if (isInterrupted()) {
 
-              this.fatalErrorDetected = true;
+              logger.debug("[{}]: is interrupted", this.threadId);
+              break;
+
+            }
+
+            if (this.stop) {
+
+              logger.debug("[{}]: is stopped", this.threadId);
               break;
 
             }
@@ -151,7 +131,14 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
 
           if (isInterrupted()) {
 
-            this.fatalErrorDetected = true;
+            logger.debug("[{}]: is interrupted", this.threadId);
+            break;
+
+          }
+
+          if (this.stop) {
+
+            logger.debug("[{}]: is stopped", this.threadId);
             break;
 
           }
@@ -163,35 +150,24 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
       } catch (Throwable e) {
 
         logger.error(
-            "[{}]: caught fatal exception while publishing msg. Shutting entire persister down now!",
-            this.threadId, e);
+            "[{}]: caught fatal exception while publishing msg. Shutting entire persister down "
+            + "now!", this.threadId, e);
 
-        this.stop = true;
-        this.fatalErrorDetected = true;
+          logger.error("[{}]: calling shutdown on executor service", this.threadId);
+          this.executorService.shutdownNow();
 
-        this.executorService.shutdownNow();
-
-        try {
-
-          this.executorService.awaitTermination(5, TimeUnit.SECONDS);
-
-        } catch (InterruptedException e1) {
-
-          logger.info("[{}]:  interrupted while awaiting termination", this.threadId, e1);
+          logger.error("[{}]: shutting down system. calling system.exit(1)", this.threadId);
+          System.exit(1);
 
         }
 
-        LogManager.shutdown();
-
-        System.exit(1);
-
-      }
-
     }
 
-    logger.info("[{}]: shutting down", this.threadId);
+    logger.info("[{}]: calling stop on kafka channel", this.threadId);
 
     this.kafkaChannel.stop();
+
+    logger.debug("[{}]: exiting main run loop", this.threadId);
 
   }
 

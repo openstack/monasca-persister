@@ -17,7 +17,6 @@
 
 package monasca.persister.consumer;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
@@ -25,15 +24,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 
 public class KafkaConsumer<T> {
 
   private static final Logger logger = LoggerFactory.getLogger(KafkaConsumer.class);
-
-  private static final int WAIT_TIME = 5;
 
   private ExecutorService executorService;
 
@@ -66,27 +60,5 @@ public class KafkaConsumer<T> {
 
     kafkaConsumerRunnableBasic.stop();
 
-    if (executorService != null) {
-
-      logger.info("[{}]: shutting down executor service", this.threadId);
-
-      try {
-
-        logger.info("[{}]: awaiting termination...", this.threadId);
-
-        if (!executorService.awaitTermination(WAIT_TIME, TimeUnit.SECONDS)) {
-
-          logger.warn("[{}]: did not shut down in {} seconds", this.threadId, WAIT_TIME);
-
-        }
-
-        logger.info("[{}]: terminated", this.threadId);
-
-      } catch (InterruptedException e) {
-
-        logger.info("[{}]: awaitTermination interrupted", this.threadId, e);
-
-      }
-    }
   }
 }

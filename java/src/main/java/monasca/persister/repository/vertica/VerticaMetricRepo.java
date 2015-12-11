@@ -487,7 +487,6 @@ public class VerticaMetricRepo extends VerticaRepo implements Repo<MetricEnvelop
 
       logger.debug("[{}]: committing transaction took: {}", id, swInner);
 
-
       swInner.reset().start();
       handle.begin();
       swInner.stop();
