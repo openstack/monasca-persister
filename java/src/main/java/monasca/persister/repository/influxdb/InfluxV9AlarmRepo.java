@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Hewlett-Packard Development Company, L.P.
+ * (C) Copyright 2014-2016 Hewlett Packard Enterprise Development Company LP
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -144,6 +144,24 @@ public class InfluxV9AlarmRepo extends InfluxAlarmRepo {
 
         valueMap.put("new_state", event.newState);
 
+      }
+
+      if (event.link == null) {
+
+        valueMap.put("link", "");
+
+      } else {
+
+        valueMap.put("link", event.link);
+      }
+
+      if (event.lifecycleState == null) {
+
+        valueMap.put("lifecycle_state", "");
+
+      } else {
+
+        valueMap.put("lifecycle_state", event.lifecycleState);
       }
 
       if (event.subAlarms == null) {

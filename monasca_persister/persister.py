@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (c) 2014 Hewlett-Packard Development Company, L.P.
+# (C) Copyright 2014-2016 Hewlett Packard Enterprise Development Company LP
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -484,7 +484,8 @@ class AlarmStateHistInfluxdbPersister(AbstractInfluxdbPersister):
 
     def process_message(self, message):
 
-        (alarm_id, metrics, new_state, old_state, state_change_reason,
+        (alarm_id, metrics, new_state, old_state, link,
+         lifecycle_state, state_change_reason,
          sub_alarms_json_snake_case, tenant_id,
          time_stamp) = parse_alarm_state_hist_message(
                 message)
@@ -501,6 +502,8 @@ class AlarmStateHistInfluxdbPersister(AbstractInfluxdbPersister):
                             'utf8'),
                     "new_state": new_state.encode('utf8'),
                     "old_state": old_state.encode('utf8'),
+                    "link": link.encode('utf8'),
+                    "lifecycle_state": lifecycle_state.encode('utf8'),
                     "reason": state_change_reason.encode('utf8'),
                     "reason_data": "{}".encode('utf8'),
                     "sub_alarms": sub_alarms_json_snake_case.encode('utf8')
@@ -630,6 +633,12 @@ def parse_alarm_state_hist_message(message):
     old_state = alarm_transitioned['oldState']
     LOG.debug('old state: %s', old_state)
 
+    link = alarm_transitioned['link'] or ""
+    LOG.debug('link: %s', link)
+
+    lifecycle_state = alarm_transitioned['lifecycleState'] or ""
+    LOG.debug('lifecycle_state: %s', lifecycle_state)
+
     state_change_reason = alarm_transitioned[
         'stateChangeReason']
     LOG.debug('state change reason: %s', state_change_reason)
@@ -661,7 +670,8 @@ def parse_alarm_state_hist_message(message):
 
         sub_alarms_json_snake_case = "[]"
 
-    return (alarm_id, metrics, new_state, old_state, state_change_reason,
+    return (alarm_id, metrics, new_state, old_state, link,
+            lifecycle_state, state_change_reason,
             sub_alarms_json_snake_case, tenant_id, time_stamp)
 
 def main_service():
