@@ -4,7 +4,6 @@ oslo.service
 
 six>=1.9.0
 babel
-eventlet
 influxdb==2.8.0
 cassandra-driver==3.0.0
 iso8601
