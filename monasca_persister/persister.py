@@ -633,10 +633,18 @@ def parse_alarm_state_hist_message(message):
     old_state = alarm_transitioned['oldState']
     LOG.debug('old state: %s', old_state)
 
-    link = alarm_transitioned['link'] if 'link' in alarm_transitioned else ""
+    # Key may not exist or value may be none, convert both to ""
+    if 'link' in alarm_transitioned and alarm_transitioned['link'] is not None:
+        link = alarm_transitioned['link']
+    else:
+        link = ""
     LOG.debug('link: %s', link)
 
-    lifecycle_state = alarm_transitioned['lifecycleState'] if 'lifecycleState' in alarm_transitioned else ""
+    # Key may not exist or value may be none, convert both to ""
+    if 'lifecycleState' in alarm_transitioned and alarm_transitioned['lifecycleState'] is not None:
+        lifecycle_state = alarm_transitioned['lifecycleState']
+    else:
+        lifecycle_state = ""
     LOG.debug('lifecycle_state: %s', lifecycle_state)
 
     state_change_reason = alarm_transitioned[
