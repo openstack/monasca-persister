@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# Copyright (c) 2014 Hewlett-Packard Development Company, L.P.
+# (C) Copyright 2016 Hewlett Packard Enterprise Development Company LP
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,16 +12,20 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import sys
+import abc
+import six
 
-from oslo_config import cfg
-from oslo_log import log
 
-LOG = log.getLogger(__name__)
+@six.add_metaclass(abc.ABCMeta)
+class AbstractRepository(object):
 
-def prepare_service(argv=None):
-    if argv is None:
-        argv = sys.argv
-    cfg.CONF(argv[1:], project='persister')
-    log.setup(cfg.CONF, 'persister')
-    LOG.info('Service has started!')
+    def __init__(self):
+        super(AbstractRepository, self).__init__()
+
+    @abc.abstractmethod
+    def process_message(self, message):
+        pass
+
+    @abc.abstractmethod
+    def write_batch(self, data_points):
+        pass

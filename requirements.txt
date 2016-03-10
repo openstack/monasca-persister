@@ -7,4 +7,5 @@ babel
 influxdb==2.8.0
 cassandra-driver==3.0.0
 iso8601
+simport
 monasca-common
