@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
-import threading
 
 from oslo_log import log
 
@@ -22,11 +21,9 @@ from monasca_common.kafka.consumer import KafkaConsumer
 LOG = log.getLogger(__name__)
 
 
-class Persister(threading.Thread):
+class Persister(object):
 
     def __init__(self, kafka_conf, zookeeper_conf, repository):
-
-        super(Persister, self).__init__()
 
         self._data_points = []
 
