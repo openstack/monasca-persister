@@ -1,6 +1,5 @@
 oslo.config
 oslo.log
-oslo.service
 
 six>=1.9.0
 influxdb==2.8.0
