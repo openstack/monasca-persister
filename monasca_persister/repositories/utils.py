@@ -88,6 +88,11 @@ def parse_alarm_state_hist_message(message):
                 '"sub_alarm_expression":')
 
         sub_alarms_json_snake_case = sub_alarms_json_snake_case.replace(
+                '"currentValues":',
+                '"current_values":')
+
+        # jobrs: I do not think that this shows up
+        sub_alarms_json_snake_case = sub_alarms_json_snake_case.replace(
                 '"metricDefinition":',
                 '"metric_definition":')
 
