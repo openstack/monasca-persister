@@ -1,5 +1,5 @@
 oslo.config
-oslo.log
+oslo.log==3.7.0
 oslo.service
 
 six>=1.9.0
