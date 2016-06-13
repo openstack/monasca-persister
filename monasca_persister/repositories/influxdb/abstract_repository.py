@@ -17,7 +17,7 @@ from influxdb import InfluxDBClient
 from oslo_config import cfg
 import six
 
-from repositories.abstract_repository import AbstractRepository
+from monasca_persister.repositories.abstract_repository import AbstractRepository
 
 
 @six.add_metaclass(abc.ABCMeta)
