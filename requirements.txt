@@ -3,5 +3,4 @@ oslo.log
 
 six>=1.9.0
 influxdb==2.8.0
-simport
 monasca-common
