@@ -16,7 +16,7 @@
 """Persister Module
 
    The Persister reads metrics and alarms from Kafka and then stores them
-   in into Influxdb
+   in into either Influxdb or Cassandra
 
    Start the perister as stand-alone process by running 'persister.py
    --config-file <config file>'
