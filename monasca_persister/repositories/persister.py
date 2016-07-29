@@ -73,7 +73,7 @@ class Persister(object):
 
                 if len(self._data_points) >= self._database_batch_size:
                     self._flush()
-        except:
+        except Exception:
             LOG.exception(
                     'Persister encountered fatal exception processing '
                     'messages. '
