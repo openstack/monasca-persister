@@ -7,3 +7,8 @@ logs/
 .idea/
 **/*.pyc
 virtenv/*
+.coverage
+cover/
+.tox/
+*egg-info/
+.testrepository/
