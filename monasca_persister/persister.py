@@ -31,7 +31,7 @@ from monasca_common.simport import simport
 from oslo_config import cfg
 from oslo_log import log
 
-from repositories.persister import Persister
+from monasca_persister.repositories import persister
 
 LOG = log.getLogger(__name__)
 
@@ -123,8 +123,9 @@ def clean_exit(signum, frame=None):
 
 def start_process(respository, kafka_config):
     LOG.info("start process: {}".format(respository))
-    persister = Persister(kafka_config, cfg.CONF.zookeeper, respository)
-    persister.run()
+    m_persister = persister.Persister(kafka_config, cfg.CONF.zookeeper,
+                                      respository)
+    m_persister.run()
 
 
 def main():

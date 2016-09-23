@@ -13,25 +13,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import abc
-from cassandra.cluster import Cluster
-from cassandra.query import BatchStatement
+from cassandra import cluster
+from cassandra import query
 from oslo_config import cfg
 import six
 
-from repositories.abstract_repository import AbstractRepository
+from monasca_persister.repositories import abstract_repository
 
 
 @six.add_metaclass(abc.ABCMeta)
-class AbstractCassandraRepository(AbstractRepository):
+class AbstractCassandraRepository(abstract_repository.AbstractRepository):
 
     def __init__(self):
         super(AbstractCassandraRepository, self).__init__()
         self.conf = cfg.CONF
 
-        self._cassandra_cluster = Cluster(
+        self._cassandra_cluster = cluster.Cluster(
                 self.conf.cassandra.cluster_ip_addresses.split(','))
 
         self.cassandra_session = self._cassandra_cluster.connect(
                 self.conf.cassandra.keyspace)
 
-        self._batch_stmt = BatchStatement()
+        self._batch_stmt = query.BatchStatement()

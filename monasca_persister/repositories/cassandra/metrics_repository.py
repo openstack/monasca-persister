@@ -15,17 +15,18 @@
 import hashlib
 import json
 
-from cassandra.query import BatchStatement
+from cassandra import query
 from oslo_log import log
 import urllib
 
-from repositories.cassandra.abstract_repository import AbstractCassandraRepository
-from repositories.utils import parse_measurement_message
+from monasca_persister.repositories.cassandra import abstract_repository
+from monasca_persister.repositories.utils import parse_measurement_message
 
 LOG = log.getLogger(__name__)
 
 
-class MetricCassandraRepository(AbstractCassandraRepository):
+class MetricCassandraRepository(
+    abstract_repository.AbstractCassandraRepository):
 
     def __init__(self):
 
@@ -84,7 +85,7 @@ class MetricCassandraRepository(AbstractCassandraRepository):
 
         self.cassandra_session.execute(self._batch_stmt)
 
-        self._batch_stmt = BatchStatement()
+        self._batch_stmt = query.BatchStatement()
 
 
 class MetricMeasurementInfo(object):

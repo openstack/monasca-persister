@@ -14,16 +14,17 @@
 # limitations under the License.
 import json
 
-from cassandra.query import BatchStatement
+from cassandra import query
 from oslo_log import log
 
-from repositories.cassandra.abstract_repository import AbstractCassandraRepository
-from repositories.utils import parse_alarm_state_hist_message
+from monasca_persister.repositories.cassandra import abstract_repository
+from monasca_persister.repositories.utils import parse_alarm_state_hist_message
 
 LOG = log.getLogger(__name__)
 
 
-class AlarmStateHistCassandraRepository(AbstractCassandraRepository):
+class AlarmStateHistCassandraRepository(
+    abstract_repository.AbstractCassandraRepository):
 
     def __init__(self):
 
@@ -68,4 +69,4 @@ class AlarmStateHistCassandraRepository(AbstractCassandraRepository):
 
         self.cassandra_session.execute(self._batch_stmt)
 
-        self._batch_stmt = BatchStatement()
+        self._batch_stmt = query.BatchStatement()

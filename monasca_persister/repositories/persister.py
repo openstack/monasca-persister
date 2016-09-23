@@ -16,7 +16,7 @@ import os
 
 from oslo_log import log
 
-from monasca_common.kafka.consumer import KafkaConsumer
+from monasca_common.kafka import consumer
 
 LOG = log.getLogger(__name__)
 
@@ -31,7 +31,7 @@ class Persister(object):
 
         self._database_batch_size = kafka_conf.database_batch_size
 
-        self._consumer = KafkaConsumer(
+        self._consumer = consumer.KafkaConsumer(
                 kafka_conf.uri,
                 zookeeper_conf.uri,
                 kafka_conf.zookeeper_path,

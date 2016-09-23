@@ -18,13 +18,14 @@ import json
 from oslo_log import log
 import pytz
 
-from repositories.influxdb.abstract_repository import AbstractInfluxdbRepository
-from repositories.utils import parse_alarm_state_hist_message
+from monasca_persister.repositories.influxdb import abstract_repository
+from monasca_persister.repositories.utils import parse_alarm_state_hist_message
 
 LOG = log.getLogger(__name__)
 
 
-class AlarmStateHistInfluxdbRepository(AbstractInfluxdbRepository):
+class AlarmStateHistInfluxdbRepository(
+    abstract_repository.AbstractInfluxdbRepository):
 
     def __init__(self):
 
