@@ -7,7 +7,7 @@ Although the Persister isn't primarily a Web service it uses DropWizard, https:/
 
 The basic design of the Persister is to have one Kafka consumer publish to a Disruptor, https://github.com/LMAX-Exchange/disruptor, that has output processors. The output processors use prepared batch statements to write to the Metrics and Alarms database.
 
-The number of output processors/threads in the Persister can be specified to scale to more messages. To horizontally scale and provide fault-tolerance any number of Persisters can be started as consumers from the the Message Queue.
+The number of output processors/threads in the Persister can be specified to scale to more messages. To horizontally scale and provide fault-tolerance any number of Persisters can be started as consumers from the Message Queue.
 
 # Build
 
