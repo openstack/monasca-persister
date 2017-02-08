@@ -1,4 +1,4 @@
-# (C) Copyright 2016 Hewlett Packard Enterprise Development Company LP
+# (C) Copyright 2016-2017 Hewlett Packard Enterprise Development LP
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ influxdb_opts = [cfg.StrOpt('database_name'),
                  cfg.StrOpt('ip_address'),
                  cfg.StrOpt('port'),
                  cfg.StrOpt('user'),
-                 cfg.StrOpt('password')]
+                 cfg.StrOpt('password', secret=True)]
 
 influxdb_group = cfg.OptGroup(name='influxdb', title='influxdb')
 cfg.CONF.register_group(influxdb_group)
