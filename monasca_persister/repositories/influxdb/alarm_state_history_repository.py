@@ -1,4 +1,4 @@
-# (C) Copyright 2016 Hewlett Packard Enterprise Development Company LP
+# (C) Copyright 2016-2017 Hewlett Packard Enterprise Development LP
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,13 +12,12 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from datetime import datetime
 import json
 
 from oslo_log import log
-import pytz
 
 from monasca_persister.repositories.influxdb import abstract_repository
+from monasca_persister.repositories.influxdb import line_utils
 from monasca_persister.repositories.utils import parse_alarm_state_hist_message
 
 LOG = log.getLogger(__name__)
@@ -39,28 +38,27 @@ class AlarmStateHistInfluxdbRepository(
          time_stamp) = parse_alarm_state_hist_message(
                 message)
 
-        ts = time_stamp / 1000.0
+        name = u'alarm_state_history'
+        fields = []
+        fields.append(u'tenant_id=' + line_utils.escape_value(tenant_id))
+        fields.append(u'alarm_id=' + line_utils.escape_value(alarm_id))
+        fields.append(u'metrics=' + line_utils.escape_value(
+            json.dumps(metrics, ensure_ascii=False)))
+        fields.append(u'new_state=' + line_utils.escape_value(new_state))
+        fields.append(u'old_state=' + line_utils.escape_value(old_state))
+        fields.append(u'link=' + line_utils.escape_value(link))
+        fields.append(u'lifecycle_state=' + line_utils.escape_value(
+            lifecycle_state))
+        fields.append(u'reason=' + line_utils.escape_value(
+            state_change_reason))
+        fields.append(u'reason_data=' + line_utils.escape_value("{}"))
+        fields.append(u'sub_alarms=' + line_utils.escape_value(
+            sub_alarms_json_snake_case))
 
-        data = {"measurement": 'alarm_state_history',
-                "time": datetime.fromtimestamp(ts, tz=pytz.utc).strftime(
-                        '%Y-%m-%dT%H:%M:%S.%fZ'),
-                "fields": {
-                    "tenant_id": tenant_id.encode('utf8'),
-                    "alarm_id": alarm_id.encode('utf8'),
-                    "metrics": json.dumps(metrics, ensure_ascii=False).encode(
-                            'utf8'),
-                    "new_state": new_state.encode('utf8'),
-                    "old_state": old_state.encode('utf8'),
-                    "link": link.encode('utf8'),
-                    "lifecycle_state": lifecycle_state.encode('utf8'),
-                    "reason": state_change_reason.encode('utf8'),
-                    "reason_data": "{}".encode('utf8'),
-                    "sub_alarms": sub_alarms_json_snake_case.encode('utf8')
-                },
-                "tags": {
-                    "tenant_id": tenant_id.encode('utf8')
-                }}
+        line = name + u',tenant_id=' + line_utils.escape_tag(tenant_id)
+        line += u' ' + u','.join(fields)
+        line += u' ' + str(int(time_stamp))
 
-        LOG.debug(data)
+        LOG.debug(line)
 
-        return data
+        return line

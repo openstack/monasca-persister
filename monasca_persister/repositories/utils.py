@@ -1,4 +1,4 @@
-# (C) Copyright 2016 Hewlett Packard Enterprise Development Company LP
+# (C) Copyright 2016-2017 Hewlett Packard Enterprise Development LP
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,24 +27,17 @@ def parse_measurement_message(message):
 
     tenant_id = decoded_message['meta']['tenantId']
 
-    dimensions = {}
-    if 'dimensions' in metric:
-        for dimension_name in metric['dimensions']:
-            dimensions[dimension_name.encode('utf8')] = (
-                metric['dimensions'][dimension_name].encode('utf8'))
-
     time_stamp = metric['timestamp']
 
     value = float(metric['value'])
 
-    if 'value_meta' in metric and metric['value_meta']:
-        value_meta = metric['value_meta']
-
-    else:
+    value_meta = metric.get('value_meta', {})
+    if 'value_meta' is None:
+        # Ensure value_meta is a dict
         value_meta = {}
 
-    return (dimensions, metric_name, region, tenant_id, time_stamp, value,
-            value_meta)
+    return (metric.get('dimensions', {}), metric_name, region, tenant_id,
+            time_stamp, value, value_meta)
 
 
 def parse_alarm_state_hist_message(message):

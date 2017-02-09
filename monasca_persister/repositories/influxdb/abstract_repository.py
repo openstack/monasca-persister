@@ -1,4 +1,4 @@
-# (C) Copyright 2016 Hewlett Packard Enterprise Development Company LP
+# (C) Copyright 2016-2017 Hewlett Packard Enterprise Development LP
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,4 +34,4 @@ class AbstractInfluxdbRepository(abstract_repository.AbstractRepository):
             self.conf.influxdb.database_name)
 
     def write_batch(self, data_points):
-        self._influxdb_client.write_points(data_points, 'ms')
+        self._influxdb_client.write_points(data_points, 'ms', protocol='line')
