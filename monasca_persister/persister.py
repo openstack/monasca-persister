@@ -32,6 +32,7 @@ from oslo_config import cfg
 from oslo_log import log
 
 from monasca_persister.repositories import persister
+from monasca_persister import version
 
 LOG = log.getLogger(__name__)
 
@@ -132,13 +133,20 @@ def start_process(respository, kafka_config):
     m_persister.run()
 
 
-def main():
+def _init_config():
     log.register_options(cfg.CONF)
     log.set_defaults()
-    cfg.CONF(sys.argv[1:], project='monasca', prog='persister')
-    log.setup(cfg.CONF, "monasca-persister")
+    cfg.CONF(prog='persister',
+             project='monasca',
+             version=version.version_str,
+             description='Persists metrics & alarm history in TSDB')
+    log.setup(cfg.CONF, 'monasca-persister', version=version.version_str)
 
+
+def main():
     """Start persister."""
+
+    _init_config()
 
     metric_repository = simport.load(cfg.CONF.repositories.metrics_driver)
     alarm_state_history_repository = simport.load(cfg.CONF.repositories.alarm_state_history_driver)
