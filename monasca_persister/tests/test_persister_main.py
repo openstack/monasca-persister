@@ -192,48 +192,6 @@ class TestPersister(base.BaseTestCase):
                 fake_kafka_config, 'zookeeper', fake_repository)
 
 
-class TestPersisterConfig(base.BaseTestCase):
-
-    def setUp(self):
-        super(TestPersisterConfig, self).setUp()
-
-        from monasca_persister import persister
-
-        self.assertIsNotNone(persister)
-
-    def _test_zookeeper_options(self):
-        str_opts = ['uri']
-        int_opts = ['partition_interval_recheck_seconds']
-
-        self._assert_cfg_registered('zookeeper', str_opts, int_opts)
-
-    def _assert_cfg_registered(self, group_name, str_opts, int_opts):
-        options = {group_name: str_opts + int_opts}
-
-        for key, values in options.items():
-            for v in values:
-                self.assertIsNone(CONF[key][v])
-
-    def _test_kafka_options(self):
-        str_opts = ['uri', 'group_id', 'topic', 'consumer_id', 'client_id', 'zookeeper_path']
-        int_opts = ['database_batch_size', 'max_wait_time_seconds', 'fetch_size_bytes',
-                    'buffer_size', 'max_buffer_size', 'num_processors']
-
-        self._assert_cfg_registered('kafka_metrics', str_opts, int_opts)
-        self._assert_cfg_registered('kafka_alarm_history', str_opts, int_opts)
-
-    def _test_repositories_options(self):
-        str_opts = ['metrics_driver', 'alarm_state_history_driver']
-        int_opts = []
-
-        self._assert_cfg_registered('repositories', str_opts, int_opts)
-
-    def test_correct_config_options_are_registered(self):
-        self._test_zookeeper_options()
-        self._test_kafka_options()
-        self._test_repositories_options()
-
-
 def _get_process(name, is_alive=True):
     return Mock(name=name, is_alive=Mock(return_value=is_alive))
 

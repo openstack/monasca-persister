@@ -1,4 +1,5 @@
 # (C) Copyright 2014-2017 Hewlett Packard Enterprise Development LP
+# Copyright 2017 FUJITSU LIMITED
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,50 +32,11 @@ from monasca_common.simport import simport
 from oslo_config import cfg
 from oslo_log import log
 
+from monasca_persister import config
 from monasca_persister.repositories import persister
-from monasca_persister import version
+
 
 LOG = log.getLogger(__name__)
-
-zookeeper_opts = [cfg.StrOpt('uri'),
-                  cfg.IntOpt('partition_interval_recheck_seconds')]
-
-zookeeper_group = cfg.OptGroup(name='zookeeper', title='zookeeper')
-cfg.CONF.register_group(zookeeper_group)
-cfg.CONF.register_opts(zookeeper_opts, zookeeper_group)
-
-kafka_common_opts = [cfg.StrOpt('uri'),
-                     cfg.StrOpt('group_id'),
-                     cfg.StrOpt('topic'),
-                     cfg.StrOpt('consumer_id'),
-                     cfg.StrOpt('client_id'),
-                     cfg.IntOpt('database_batch_size'),
-                     cfg.IntOpt('max_wait_time_seconds'),
-                     cfg.IntOpt('fetch_size_bytes'),
-                     cfg.IntOpt('buffer_size'),
-                     cfg.IntOpt('max_buffer_size'),
-                     cfg.StrOpt('zookeeper_path'),
-                     cfg.IntOpt('num_processors')]
-
-kafka_metrics_opts = kafka_common_opts
-kafka_alarm_history_opts = kafka_common_opts
-
-kafka_metrics_group = cfg.OptGroup(name='kafka_metrics', title='kafka_metrics')
-kafka_alarm_history_group = cfg.OptGroup(name='kafka_alarm_history',
-                                         title='kafka_alarm_history')
-
-cfg.CONF.register_group(kafka_metrics_group)
-cfg.CONF.register_group(kafka_alarm_history_group)
-cfg.CONF.register_opts(kafka_metrics_opts, kafka_metrics_group)
-cfg.CONF.register_opts(kafka_alarm_history_opts, kafka_alarm_history_group)
-
-repositories_opts = [
-    cfg.StrOpt('metrics_driver', help='The repository driver to use for metrics'),
-    cfg.StrOpt('alarm_state_history_driver', help='The repository driver to use for alarm state history')]
-
-repositories_group = cfg.OptGroup(name='repositories', title='repositories')
-cfg.CONF.register_group(repositories_group)
-cfg.CONF.register_opts(repositories_opts, repositories_group)
 
 processors = []  # global list to facilitate clean signal handling
 exiting = False
@@ -133,20 +95,10 @@ def start_process(respository, kafka_config):
     m_persister.run()
 
 
-def _init_config():
-    log.register_options(cfg.CONF)
-    log.set_defaults()
-    cfg.CONF(prog='persister',
-             project='monasca',
-             version=version.version_str,
-             description='Persists metrics & alarm history in TSDB')
-    log.setup(cfg.CONF, 'monasca-persister', version=version.version_str)
-
-
 def main():
     """Start persister."""
 
-    _init_config()
+    config.parse_args()
 
     metric_repository = simport.load(cfg.CONF.repositories.metrics_driver)
     alarm_state_history_repository = simport.load(cfg.CONF.repositories.alarm_state_history_driver)
