@@ -141,7 +141,7 @@ class TestPersister(base.BaseTestCase):
     def test_clean_exit_does_nothing_when_exiting_is_true(self):
         self.persister.exiting = True
 
-        self.assertEqual(None, self.persister.clean_exit(0))
+        self.assertIsNone(self.persister.clean_exit(0))
 
         self.assertFalse(self.mock_sys_exit.called)
 
