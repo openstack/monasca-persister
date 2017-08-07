@@ -95,23 +95,24 @@ def start_process(respository, kafka_config):
     m_persister.run()
 
 
+def prepare_processes(conf, repo_driver):
+    if conf.num_processors > 0:
+        repository = simport.load(repo_driver)
+        for proc in range(0, conf.num_processors):
+            processors.append(multiprocessing.Process(
+                target=start_process, args=(repository, conf)))
+
 def main():
     """Start persister."""
 
     config.parse_args()
 
-    metric_repository = simport.load(cfg.CONF.repositories.metrics_driver)
-    alarm_state_history_repository = simport.load(cfg.CONF.repositories.alarm_state_history_driver)
-
     # Add processors for metrics topic
-    for proc in range(0, cfg.CONF.kafka_metrics.num_processors):
-        processors.append(multiprocessing.Process(
-                target=start_process, args=(metric_repository, cfg.CONF.kafka_metrics)))
-
+    prepare_processes(cfg.CONF.kafka_metrics, cfg.CONF.repositories.metrics_driver)
     # Add processors for alarm history topic
-    for proc in range(0, cfg.CONF.kafka_alarm_history.num_processors):
-        processors.append(multiprocessing.Process(
-                target=start_process, args=(alarm_state_history_repository, cfg.CONF.kafka_alarm_history)))
+    prepare_processes(cfg.CONF.kafka_alarm_history, cfg.CONF.repositories.alarm_state_history_driver)
+    # Add processors for events topic
+    prepare_processes(cfg.CONF.kafka_events, cfg.CONF.repositories.events_driver)
 
     # Start
     try:

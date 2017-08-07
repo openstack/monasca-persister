@@ -22,7 +22,10 @@ repositories_opts = [
                default='monasca_persister.repositories.influxdb.metrics_repository:MetricInfluxdbRepository'),
     cfg.StrOpt(name='alarm_state_history_driver',
                help='The repository driver to use for alarm state history',
-               default='monasca_persister.repositories.influxdb.metrics_repository:MetricInfluxdbRepository')]
+               default='monasca_persister.repositories.influxdb.metrics_repository:MetricInfluxdbRepository'),
+    cfg.StrOpt(name='events_driver',
+               help='The repository driver to use for events',
+               default='monasca_persister.repositories.elasticsearch.events_repository:ElasticSearchEventsRepository')]
 
 repositories_group = cfg.OptGroup(name='repositories',
                                   title='repositories')
