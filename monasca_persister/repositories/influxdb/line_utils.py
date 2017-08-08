@@ -28,11 +28,16 @@ def escape_tag(tag):
         u"=", u"\\="
     )
 
+
 def get_unicode(data):
     if PY2:
-        return unicode(data)
+        if isinstance(data, unicode):
+            return data
+        else:
+            return data.decode('utf-8')
     else:
         return str(data)
+
 
 def escape_value(value):
     return u"\"{0}\"".format(
