@@ -41,6 +41,9 @@ kafka_metrics_opts = [
     cfg.StrOpt('zookeeper_path',
                help='Path in zookeeper for kafka consumer group partitioning algorithm',
                default='/persister_partitions/$kafka_metrics.topic'),
+    cfg.IntOpt('batch_size',
+               help='Maximum number of metrics to buffer before writing to database',
+               default=20000),
 ]
 
 # Replace Default OPt with reference to kafka group option

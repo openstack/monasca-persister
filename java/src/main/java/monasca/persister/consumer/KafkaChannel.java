@@ -1,6 +1,8 @@
 /*
  * Copyright (c) 2014 Hewlett-Packard Development Company, L.P.
  *
+ * Copyright (c) 2017 SUSE LLC
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,33 +46,50 @@ public class KafkaChannel {
   private final String topic;
   private final ConsumerConnector consumerConnector;
   private final String threadId;
+  private final int commitBatchtimeInMills;
+  private long nextCommitTime;
+  private boolean commitDirty = false;
 
   @Inject
-  public KafkaChannel(
-      PersisterConfig configuration,
-      @Assisted PipelineConfig pipelineConfig,
+  public KafkaChannel(PersisterConfig configuration, @Assisted PipelineConfig pipelineConfig,
       @Assisted String threadId) {
 
     this.topic = pipelineConfig.getTopic();
     this.threadId = threadId;
-    Properties kafkaProperties =
-        createKafkaProperties(configuration.getKafkaConfig(), pipelineConfig);
+    this.commitBatchtimeInMills = pipelineConfig.getCommitBatchTime();
+    nextCommitTime = System.currentTimeMillis() + commitBatchtimeInMills;
+    Properties kafkaProperties = createKafkaProperties(configuration.getKafkaConfig(), pipelineConfig);
     consumerConnector = Consumer.createJavaConsumerConnector(createConsumerConfig(kafkaProperties));
   }
 
   public final void markRead() {
-    this.consumerConnector.commitOffsets();
+    if (commitBatchtimeInMills <= 0) {
+      consumerConnector.commitOffsets();
+    } else if (nextCommitTime <= System.currentTimeMillis()) {
+      consumerConnector.commitOffsets();
+      nextCommitTime = System.currentTimeMillis() + commitBatchtimeInMills;
+      commitDirty = false;
+    } else {
+      commitDirty = true;
+    }
+  }
+
+  public final void markReadIfDirty() {
+    if (commitDirty) {
+      this.consumerConnector.commitOffsets();
+      commitDirty = false;
+    }
   }
 
   public KafkaStream<byte[], byte[]> getKafkaStream() {
     final Map<String, Integer> topicCountMap = new HashMap<>();
     topicCountMap.put(this.topic, 1);
-    Map<String, List<KafkaStream<byte[], byte[]>>> streamMap =
-        this.consumerConnector.createMessageStreams(topicCountMap);
+    Map<String, List<KafkaStream<byte[], byte[]>>> streamMap = this.consumerConnector
+        .createMessageStreams(topicCountMap);
     List<KafkaStream<byte[], byte[]>> streams = streamMap.values().iterator().next();
     if (streams.size() != 1) {
-      throw new IllegalStateException(String.format(
-          "Expected only one stream but instead there are %d", streams.size()));
+      throw new IllegalStateException(
+          String.format("Expected only one stream but instead there are %d", streams.size()));
     }
     return streams.get(0);
   }
@@ -92,32 +111,28 @@ public class KafkaChannel {
     properties.put("consumer.id",
         String.format("%s_%s", pipelineConfig.getConsumerId(), this.threadId));
     properties.put("socket.timeout.ms", kafkaConfig.getSocketTimeoutMs().toString());
-    properties.put("socket.receive.buffer.bytes", kafkaConfig.getSocketReceiveBufferBytes()
-        .toString());
-    properties.put("fetch.message.max.bytes", kafkaConfig.getFetchMessageMaxBytes()
-        .toString());
+    properties.put("socket.receive.buffer.bytes", kafkaConfig.getSocketReceiveBufferBytes().toString());
+    properties.put("fetch.message.max.bytes", kafkaConfig.getFetchMessageMaxBytes().toString());
     // Set auto commit to false because the persister is going to explicitly commit
     properties.put("auto.commit.enable", "false");
-    properties.put("queued.max.message.chunks", kafkaConfig.getQueuedMaxMessageChunks()
-        .toString());
+    properties.put("queued.max.message.chunks", kafkaConfig.getQueuedMaxMessageChunks().toString());
     properties.put("rebalance.max.retries", kafkaConfig.getRebalanceMaxRetries().toString());
     properties.put("fetch.min.bytes", kafkaConfig.getFetchMinBytes().toString());
     properties.put("fetch.wait.max.ms", kafkaConfig.getFetchWaitMaxMs().toString());
     properties.put("rebalance.backoff.ms", kafkaConfig.getRebalanceBackoffMs().toString());
-    properties.put("refresh.leader.backoff.ms", kafkaConfig.getRefreshLeaderBackoffMs()
-        .toString());
+    properties.put("refresh.leader.backoff.ms", kafkaConfig.getRefreshLeaderBackoffMs().toString());
     properties.put("auto.offset.reset", kafkaConfig.getAutoOffsetReset());
     properties.put("consumer.timeout.ms", kafkaConfig.getConsumerTimeoutMs().toString());
     properties.put("client.id", String.format("%s_%s", pipelineConfig.getClientId(), threadId));
-    properties.put("zookeeper.session.timeout.ms", kafkaConfig
-        .getZookeeperSessionTimeoutMs().toString());
-    properties.put("zookeeper.connection.timeout.ms", kafkaConfig
-        .getZookeeperConnectionTimeoutMs().toString());
-    properties
-        .put("zookeeper.sync.time.ms", kafkaConfig.getZookeeperSyncTimeMs().toString());
+    properties.put("zookeeper.session.timeout.ms",
+        kafkaConfig.getZookeeperSessionTimeoutMs().toString());
+    properties.put("zookeeper.connection.timeout.ms",
+        kafkaConfig.getZookeeperConnectionTimeoutMs().toString());
+    properties.put("zookeeper.sync.time.ms", kafkaConfig.getZookeeperSyncTimeMs().toString());
 
     for (String key : properties.stringPropertyNames()) {
-      logger.info("[{}]: " + KAFKA_CONFIGURATION + " " + key + " = " + properties.getProperty(key), threadId);
+      logger.info("[{}]: " + KAFKA_CONFIGURATION + " " + key + " = " + properties.getProperty(key),
+          threadId);
     }
 
     return properties;

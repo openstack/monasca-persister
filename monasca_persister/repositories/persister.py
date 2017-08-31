@@ -1,4 +1,5 @@
 # (C) Copyright 2016 Hewlett Packard Enterprise Development Company LP
+# (C) Copyright 2017 SUSE LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,7 +30,7 @@ class Persister(object):
 
         self._kafka_topic = kafka_conf.topic
 
-        self._database_batch_size = kafka_conf.database_batch_size
+        self._batch_size = kafka_conf.batch_size
 
         self._consumer = consumer.KafkaConsumer(
                 kafka_conf.uri,
@@ -71,7 +72,7 @@ class Persister(object):
                     LOG.exception('Error processing message. Message is '
                                   'being dropped. {}'.format(message))
 
-                if len(self._data_points) >= self._database_batch_size:
+                if len(self._data_points) >= self._batch_size:
                     self._flush()
         except Exception:
             LOG.exception(

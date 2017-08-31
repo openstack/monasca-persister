@@ -1,5 +1,6 @@
 # (C) Copyright 2016-2017 Hewlett Packard Enterprise Development LP
 # Copyright 2017 FUJITSU LIMITED
+# (C) Copyright 2017 SUSE LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,9 +27,6 @@ kafka_common_opts = [
                help='id of persister kafka client',
                advanced=True,
                default='monasca-persister'),
-    cfg.IntOpt('database_batch_size',
-               help='Maximum number of metric to buffer before writing to database',
-               default=1000),
     cfg.IntOpt('max_wait_time_seconds',
                help='Maximum wait time for write batch to database',
                default=30),

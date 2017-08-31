@@ -1,6 +1,8 @@
 /*
  * Copyright (c) 2014 Hewlett-Packard Development Company, L.P.
  *
+ * Copyright (c) 2017 SUSE LLC.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -46,6 +48,9 @@ import monasca.persister.pipeline.event.AlarmStateTransitionHandlerFactory;
 import monasca.persister.pipeline.event.MetricHandler;
 import monasca.persister.pipeline.event.MetricHandlerFactory;
 import monasca.persister.repository.Repo;
+import monasca.persister.repository.cassandra.CassandraAlarmRepo;
+import monasca.persister.repository.cassandra.CassandraCluster;
+import monasca.persister.repository.cassandra.CassandraMetricRepo;
 import monasca.persister.repository.influxdb.InfluxV9AlarmRepo;
 import monasca.persister.repository.influxdb.InfluxV9MetricRepo;
 import monasca.persister.repository.influxdb.InfluxV9RepoWriter;
@@ -56,7 +61,7 @@ public class PersisterModule extends AbstractModule {
 
   private static final String VERTICA = "vertica";
   private static final String INFLUXDB = "influxdb";
-
+  private static final String CASSANDRA = "cassandra";
   private static final String INFLUXDB_V9 = "v9";
 
   private final PersisterConfig config;
@@ -167,6 +172,13 @@ public class PersisterModule extends AbstractModule {
 
       bind(new TypeLiteral<Repo<AlarmStateTransitionedEvent>> () {})
           .to(InfluxV9AlarmRepo.class);
+
+    } else if (config.getDatabaseConfiguration().getDatabaseType().equalsIgnoreCase(CASSANDRA)) {
+      bind(CassandraCluster.class).in(Singleton.class);
+
+      bind(new TypeLiteral<Repo<MetricEnvelope>>() {}).to(CassandraMetricRepo.class);
+
+      bind(new TypeLiteral<Repo<AlarmStateTransitionedEvent>>() {}).to(CassandraAlarmRepo.class);
 
     } else {
 

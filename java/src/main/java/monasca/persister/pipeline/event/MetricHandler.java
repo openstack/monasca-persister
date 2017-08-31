@@ -1,6 +1,8 @@
 /*
  * Copyright (c) 2014 Hewlett-Packard Development Company, L.P.
- *
+ * 
+ * Copyright (c) 2017 SUSE LLC
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,28 +40,23 @@ import monasca.persister.repository.RepoException;
 
 public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
 
-  private static final Logger logger =
-      LoggerFactory.getLogger(MetricHandler.class);
+  private static final Logger logger = LoggerFactory.getLogger(MetricHandler.class);
 
   private final Repo<MetricEnvelope> metricRepo;
 
   private final Counter metricCounter;
 
   @Inject
-  public MetricHandler(
-      Repo<MetricEnvelope> metricRepo,
-      Environment environment,
-      @Assisted PipelineConfig configuration,
-      @Assisted("threadId") String threadId,
+  public MetricHandler(Repo<MetricEnvelope> metricRepo, Environment environment,
+      @Assisted PipelineConfig configuration, @Assisted("threadId") String threadId,
       @Assisted("batchSize") int batchSize) {
 
     super(configuration, environment, threadId, batchSize);
 
     this.metricRepo = metricRepo;
 
-    this.metricCounter =
-        environment.metrics()
-            .counter(this.handlerName + "." + "metrics-added-to-batch-counter");
+    this.metricCounter = environment.metrics()
+        .counter(this.handlerName + "." + "metrics-added-to-batch-counter");
 
   }
 
@@ -89,12 +86,10 @@ public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
   }
 
   private void processEnvelope(MetricEnvelope metricEnvelope) {
-
-    logger.debug("[{}]: [{}:{}] {}",
-                 this.threadId,
-                 this.getBatchCount(),
-                 this.getMsgCount(),
-                 metricEnvelope);
+    if (logger.isDebugEnabled()) {
+      logger.debug("[{}]: [{}:{}] {}", this.threadId, this.getBatchCount(), this.getMsgCount(),
+          metricEnvelope);
+    }
 
     this.metricRepo.addToBatch(metricEnvelope, this.threadId);
 
@@ -109,8 +104,8 @@ public class MetricHandler extends FlushableHandler<MetricEnvelope[]> {
 
     this.objectMapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 
-    this.objectMapper.setPropertyNamingStrategy(
-        PropertyNamingStrategy.CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES);
+    this.objectMapper
+        .setPropertyNamingStrategy(PropertyNamingStrategy.CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES);
 
   }
 

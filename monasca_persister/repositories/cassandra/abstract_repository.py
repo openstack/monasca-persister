@@ -1,4 +1,5 @@
 # (C) Copyright 2016 Hewlett Packard Enterprise Development Company LP
+# (C) Copyright 2017 SUSE LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,26 +13,23 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import abc
-from cassandra import cluster
-from cassandra import query
 from oslo_config import cfg
 import six
 
 from monasca_persister.repositories import abstract_repository
+from monasca_persister.repositories.cassandra import connection_util
 
+conf = cfg.CONF
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractCassandraRepository(abstract_repository.AbstractRepository):
-
     def __init__(self):
         super(AbstractCassandraRepository, self).__init__()
-        self.conf = cfg.CONF
 
-        self._cassandra_cluster = cluster.Cluster(
-                self.conf.cassandra.cluster_ip_addresses.split(','))
-
-        self.cassandra_session = self._cassandra_cluster.connect(
-                self.conf.cassandra.keyspace)
-
-        self._batch_stmt = query.BatchStatement()
+        self._cluster = connection_util.create_cluster()
+        self._session = connection_util.create_session(self._cluster)
+        self._retention = conf.cassandra.retention_policy * 24 * 3600
+        self._cache_size = conf.cassandra.max_definition_cache_size
+        self._max_batches = conf.cassandra.max_batches

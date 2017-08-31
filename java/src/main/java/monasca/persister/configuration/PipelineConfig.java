@@ -42,6 +42,17 @@ public class PipelineConfig {
   @JsonProperty
   Integer maxBatchTime;
 
+  @JsonProperty
+  Integer commitBatchTime;
+
+  public Integer getCommitBatchTime() {
+    return commitBatchTime;
+  }
+
+  public void setCommitBatchTime(Integer commitBatchTime) {
+    this.commitBatchTime = commitBatchTime;
+  }
+
   public String getTopic() {
     return topic;
   }

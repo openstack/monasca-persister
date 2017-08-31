@@ -1,6 +1,8 @@
 /*
  * Copyright (c) 2014 Hewlett-Packard Development Company, L.P.
  *
+ * Copyright (c) 2017 SUSE LLC.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,14 +40,13 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
   private final String threadId;
   private final ManagedPipeline<T> pipeline;
   private volatile boolean stop = false;
+  private boolean active = false;
 
   private ExecutorService executorService;
 
   @Inject
-  public KafkaConsumerRunnableBasic(
-      @Assisted KafkaChannel kafkaChannel,
-      @Assisted ManagedPipeline<T> pipeline,
-      @Assisted String threadId) {
+  public KafkaConsumerRunnableBasic(@Assisted KafkaChannel kafkaChannel,
+      @Assisted ManagedPipeline<T> pipeline, @Assisted String threadId) {
 
     this.kafkaChannel = kafkaChannel;
     this.pipeline = pipeline;
@@ -67,8 +68,9 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
   }
 
   private void markRead() {
-
-    logger.debug("[{}]: marking read", this.threadId);
+    if (logger.isDebugEnabled()) {
+      logger.debug("[{}]: marking read", this.threadId);
+    }
 
     this.kafkaChannel.markRead();
 
@@ -80,11 +82,29 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
 
     this.stop = true;
 
+    int count = 0;
+    while (active) {
+      if (count++ >= 20) {
+        break;
+      }
+      try {
+        Thread.sleep(100);
+      } catch (InterruptedException e) {
+        logger.error("interrupted while waiting for the run loop to stop", e);
+        break;
+      }
+    }
+
+    if (!active) {
+      this.kafkaChannel.markReadIfDirty();
+    }
   }
 
   public void run() {
 
     logger.info("[{}]: run", this.threadId);
+
+    active = true;
 
     final ConsumerIterator<byte[], byte[]> it = kafkaChannel.getKafkaStream().iterator();
 
@@ -121,7 +141,9 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
 
             final String msg = new String(it.next().message());
 
-            logger.debug("[{}]: {}", this.threadId, msg);
+            if (logger.isDebugEnabled()) {
+              logger.debug("[{}]: {}", this.threadId, msg);
+            }
 
             publishEvent(msg);
 
@@ -149,21 +171,23 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
 
       } catch (Throwable e) {
 
-        logger.error(
-            "[{}]: caught fatal exception while publishing msg. Shutting entire persister down "
-            + "now!", this.threadId, e);
+        logger
+            .error("[{}]: caught fatal exception while publishing msg. Shutting entire persister down "
+                + "now!", this.threadId, e);
 
-          logger.error("[{}]: calling shutdown on executor service", this.threadId);
-          this.executorService.shutdownNow();
+        logger.error("[{}]: calling shutdown on executor service", this.threadId);
+        this.executorService.shutdownNow();
 
-          logger.error("[{}]: shutting down system. calling system.exit(1)", this.threadId);
-          System.exit(1);
+        logger.error("[{}]: shutting down system. calling system.exit(1)", this.threadId);
+        System.exit(1);
 
-        }
+      }
 
     }
 
     logger.info("[{}]: calling stop on kafka channel", this.threadId);
+
+    active = false;
 
     this.kafkaChannel.stop();
 
@@ -183,9 +207,10 @@ public class KafkaConsumerRunnableBasic<T> implements Runnable {
 
   private boolean isInterrupted() {
 
-    if (Thread.currentThread().interrupted()) {
-
-      logger.debug("[{}]: is interrupted. breaking out of run loop", this.threadId);
+    if (Thread.interrupted()) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("[{}]: is interrupted. breaking out of run loop", this.threadId);
+      }
 
       return true;
 

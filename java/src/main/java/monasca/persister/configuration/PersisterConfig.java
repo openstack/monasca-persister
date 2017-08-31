@@ -1,6 +1,8 @@
 /*
  * Copyright (c) 2014 Hewlett-Packard Development Company, L.P.
  *
+ * Copyright (c) 2017 SUSE LLC.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,6 +21,7 @@ package monasca.persister.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import monasca.common.configuration.CassandraDbConfiguration;
 import monasca.common.configuration.DatabaseConfiguration;
 import monasca.common.configuration.InfluxDbConfiguration;
 import io.dropwizard.Configuration;
@@ -96,5 +99,13 @@ public class PersisterConfig extends Configuration {
 
   public InfluxDbConfiguration getInfluxDBConfiguration() {
     return influxDbConfiguration;
+  }
+
+  @Valid
+  @JsonProperty
+  private final CassandraDbConfiguration cassandraDbConfiguration = new CassandraDbConfiguration();
+
+  public CassandraDbConfiguration getCassandraDbConfiguration() {
+    return cassandraDbConfiguration;
   }
 }

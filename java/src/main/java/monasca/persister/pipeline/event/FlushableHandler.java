@@ -1,6 +1,8 @@
 /*
  * Copyright (c) 2014 Hewlett-Packard Development Company, L.P.
  *
+ * Copyright (c) 2017 SUSE LLC
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -51,28 +53,18 @@ public abstract class FlushableHandler<T> {
 
   protected final String handlerName;
 
-  protected FlushableHandler(
-      PipelineConfig configuration,
-      Environment environment,
-      String threadId,
+  protected FlushableHandler(PipelineConfig configuration, Environment environment, String threadId,
       int batchSize) {
 
     this.threadId = threadId;
 
-    this.handlerName =
-        String.format(
-            "%s[%s]",
-            this.getClass().getName(),
-            threadId);
+    this.handlerName = String.format("%s[%s]", this.getClass().getName(), threadId);
 
-    this.processedMeter =
-        environment.metrics().meter(handlerName + "." + "events-processed-meter");
+    this.processedMeter = environment.metrics().meter(handlerName + "." + "events-processed-meter");
 
-    this.flushMeter =
-        environment.metrics().meter(handlerName + "." + "flush-meter");
+    this.flushMeter = environment.metrics().meter(handlerName + "." + "flush-meter");
 
-    this.flushTimer =
-        environment.metrics().timer(handlerName + "." + "flush-timer");
+    this.flushTimer = environment.metrics().timer(handlerName + "." + "flush-timer");
 
     this.secondsBetweenFlushes = configuration.getMaxBatchTime();
 
@@ -102,7 +94,7 @@ public abstract class FlushableHandler<T> {
 
       } else {
 
-         return false;
+        return false;
 
       }
     }
@@ -126,20 +118,26 @@ public abstract class FlushableHandler<T> {
 
   private boolean isBatchSize() {
 
-    logger.debug("[{}]: checking batch size", this.threadId);
+    if (logger.isDebugEnabled()) {
+
+      logger.debug("[{}]: checking batch size", this.threadId);
+
+    }
 
     if (this.msgCount >= this.batchSize) {
 
-      logger.debug("[{}]: batch sized {} attained", this.threadId, this.batchSize);
+      if (logger.isDebugEnabled()) {
+        logger.debug("[{}]: batch sized {} attained", this.threadId, this.batchSize);
+      }
 
       return true;
 
     } else {
 
-      logger.debug("[{}]: batch size now at {}, batch size {} not attained",
-                   this.threadId,
-                   this.msgCount,
-                   this.batchSize);
+      if (logger.isDebugEnabled()) {
+        logger.debug("[{}]: batch size now at {}, batch size {} not attained", this.threadId,
+            this.msgCount, this.batchSize);
+      }
 
       return false;
 
@@ -147,28 +145,26 @@ public abstract class FlushableHandler<T> {
   }
 
   private boolean isFlushTime() {
-
-    logger.debug("[{}]: got heartbeat message, checking flush time. flush every {} seconds.",
-                 this.threadId,
-                 this.secondsBetweenFlushes);
+    if (logger.isDebugEnabled()) {
+      logger.debug("[{}]: got heartbeat message, checking flush time. flush every {} seconds.",
+          this.threadId, this.secondsBetweenFlushes);
+    }
 
     long now = System.currentTimeMillis();
 
-    if (this.flushTimeMillis <= now ) {
-
-      logger.debug(
-          "[{}]: {} ms past flush time. flushing to repository now.",
-          this.threadId,
-          now - this.flushTimeMillis);
+    if (this.flushTimeMillis <= now) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("[{}]: {} ms past flush time. flushing to repository now.", this.threadId,
+            now - this.flushTimeMillis);
+      }
 
       return true;
 
     } else {
-
-      logger.debug(
-          "[{}]: {} ms to next flush time. no need to flush at this time.",
-          this.threadId,
-          this.flushTimeMillis - now);
+      if (logger.isDebugEnabled()) {
+        logger.debug("[{}]: {} ms to next flush time. no need to flush at this time.", this.threadId,
+            this.flushTimeMillis - now);
+      }
 
       return false;
 
@@ -176,8 +172,9 @@ public abstract class FlushableHandler<T> {
   }
 
   public int flush() throws RepoException {
-
-    logger.debug("[{}]: flushing", this.threadId);
+    if (logger.isDebugEnabled()) {
+      logger.debug("[{}]: flushing", this.threadId);
+    }
 
     Timer.Context context = this.flushTimer.time();
 
@@ -185,13 +182,15 @@ public abstract class FlushableHandler<T> {
 
     context.stop();
 
-    this.flushMeter.mark();
+    this.flushMeter.mark(msgFlushCnt);
 
     this.flushTimeMillis = System.currentTimeMillis() + this.millisBetweenFlushes;
 
-    logger.debug("[{}]: flushed {} msg", this.threadId, msgFlushCnt);
+    if (logger.isDebugEnabled()) {
+      logger.debug("[{}]: flushed {} msg", this.threadId, msgFlushCnt);
+    }
 
-    this.msgCount = 0;
+    this.msgCount -= msgFlushCnt;
 
     this.batchCount++;
 
