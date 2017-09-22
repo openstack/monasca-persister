@@ -12,4 +12,5 @@ cover/
 .tox/
 *egg-info/
 .testrepository/
+.stestr/
 *.sample
