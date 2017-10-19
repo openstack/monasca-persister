@@ -20,8 +20,9 @@ influxdb_opts = [
     cfg.StrOpt('database_name',
                help='database name where metrics are stored',
                default='mon'),
-    cfg.IPOpt('ip_address',
-              help='ip address to influxdb'),
+    cfg.HostAddressOpt('ip_address',
+                       help='Valid IP address or hostname '
+                            'to InfluxDB instance'),
     cfg.PortOpt('port',
                 help='port to influxdb',
                 default=8086),
