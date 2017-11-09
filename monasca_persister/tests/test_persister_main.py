@@ -22,6 +22,7 @@ CONF = cfg.CONF
 
 NUMBER_OF_METRICS_PROCESSES = 2
 NUMBER_OF_ALARM_HIST_PROCESSES = 3
+NUMBER_OF_EVENTS_PROCESSES = 0
 
 
 class FakeException(Exception):
@@ -57,6 +58,8 @@ class TestPersister(base.BaseTestCase):
 
         self.mock_cfg.CONF.kafka_metrics.num_processors = NUMBER_OF_METRICS_PROCESSES
         self.mock_cfg.CONF.kafka_alarm_history.num_processors = NUMBER_OF_ALARM_HIST_PROCESSES
+        self.mock_cfg.CONF.kafka_events.num_processors = NUMBER_OF_EVENTS_PROCESSES
+
         self.mock_cfg.CONF.zookeeper = 'zookeeper'
 
         self.mock_sleep.side_effect = [FakeException, None]

@@ -1,4 +1,5 @@
 # (C) Copyright 2016-2017 Hewlett Packard Enterprise Development LP
+# Copyright 2017 FUJITSU LIMITED
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -98,3 +99,14 @@ def parse_alarm_state_hist_message(message):
     return (alarm_id, metrics, new_state, old_state, link,
             lifecycle_state, state_change_reason,
             sub_alarms_json_snake_case, tenant_id, time_stamp)
+
+
+def parse_events_message(message):
+
+    decoded_message = json.loads(message.message.value)
+    event_type = decoded_message['event_type']
+    timestamp = decoded_message['timestamp']
+    payload = decoded_message['payload']
+    tenant_id = payload['tenant_id']
+
+    return tenant_id, timestamp, event_type, payload
