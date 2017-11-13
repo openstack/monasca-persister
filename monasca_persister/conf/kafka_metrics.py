@@ -24,6 +24,9 @@ from monasca_persister.conf import types
 kafka_metrics_group = cfg.OptGroup(name='kafka_metrics',
                                    title='kafka_metrics')
 kafka_metrics_opts = [
+    cfg.BoolOpt('enabled',
+                help='Enable metrics persister',
+                default=True),
     # NOTE(czarneckia) default by reference does not work with ListOpt
     cfg.ListOpt('uri',
                 help='Comma separated list of Kafka broker host:port',

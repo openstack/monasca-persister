@@ -108,11 +108,17 @@ def main():
     config.parse_args()
 
     # Add processors for metrics topic
-    prepare_processes(cfg.CONF.kafka_metrics, cfg.CONF.repositories.metrics_driver)
+    if cfg.CONF.kafka_metrics.enabled:
+        prepare_processes(cfg.CONF.kafka_metrics,
+                          cfg.CONF.repositories.metrics_driver)
     # Add processors for alarm history topic
-    prepare_processes(cfg.CONF.kafka_alarm_history, cfg.CONF.repositories.alarm_state_history_driver)
+    if cfg.CONF.kafka_alarm_history.enabled:
+        prepare_processes(cfg.CONF.kafka_alarm_history,
+                          cfg.CONF.repositories.alarm_state_history_driver)
     # Add processors for events topic
-    prepare_processes(cfg.CONF.kafka_events, cfg.CONF.repositories.events_driver)
+    if cfg.CONF.kafka_events.enabled:
+        prepare_processes(cfg.CONF.kafka_events,
+                          cfg.CONF.repositories.events_driver)
 
     # Start
     try:

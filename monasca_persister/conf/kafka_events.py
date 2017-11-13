@@ -23,6 +23,9 @@ from monasca_persister.conf import types
 kafka_events_group = cfg.OptGroup(name='kafka_events',
                                   title='kafka_events')
 kafka_events_opts = [
+    cfg.BoolOpt('enabled',
+                help='Enable event persister',
+                default=False),
     cfg.ListOpt('uri',
                 help='Comma separated list of Kafka broker host:port',
                 default=['127.0.0.1:9092'],
