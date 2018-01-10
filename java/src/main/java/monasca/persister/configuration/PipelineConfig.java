@@ -17,35 +17,58 @@
 
 package monasca.persister.configuration;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@JsonIgnoreProperties(ignoreUnknown=true)
 public class PipelineConfig {
 
   @JsonProperty
   String topic;
+  String _topic; // No default: default provided by constructor
 
   @JsonProperty
   String groupId;
+  String _groupId; // No default: default provided by constructor
 
   @JsonProperty
   String consumerId;
+  String _consumerId = "monasca-persister";
 
   @JsonProperty
   String clientId;
+  String _clientId = "monasca-persister";
 
   @JsonProperty
   Integer batchSize;
+  Integer _batchSize; // No default: default provided by constructor
 
   @JsonProperty
   Integer numThreads;
+  Integer _numThreads = 1;
 
   @JsonProperty
   Integer maxBatchTime;
+  Integer _maxBatchTime = 10;
 
   @JsonProperty
   Integer commitBatchTime;
+  Integer _commitBatchTime = 0;
+
+  /** Used to set default values for properties that have different sensible
+   * defaults for metric and alarm configurations, respectively.
+   */
+  public void setDefaults(String defaultTopic, String defaultGroupId,
+                          Integer defaultBatchSize) {
+    _batchSize = defaultBatchSize;
+    _groupId = defaultGroupId;
+    _topic = defaultTopic;
+  }
 
   public Integer getCommitBatchTime() {
+    if ( commitBatchTime == null ) {
+      return _commitBatchTime;
+    }
     return commitBatchTime;
   }
 
@@ -54,10 +77,16 @@ public class PipelineConfig {
   }
 
   public String getTopic() {
+    if ( topic == null ) {
+      return _topic;
+    }
     return topic;
   }
 
   public String getGroupId() {
+    if ( groupId == null ) {
+      return _groupId;
+    }
     return groupId;
   }
 
@@ -66,6 +95,9 @@ public class PipelineConfig {
   }
 
   public String getConsumerId() {
+    if ( consumerId == null ) {
+      return _consumerId;
+    }
     return consumerId;
   }
 
@@ -74,6 +106,9 @@ public class PipelineConfig {
   }
 
   public String getClientId() {
+    if ( clientId == null ) {
+      return _clientId;
+    }
     return clientId;
   }
 
@@ -94,14 +129,23 @@ public class PipelineConfig {
   }
 
   public Integer getBatchSize() {
+    if ( batchSize == null ) {
+      return _batchSize;
+    }
     return batchSize;
   }
 
   public Integer getNumThreads() {
+    if ( numThreads == null ) {
+      return _numThreads;
+    }
     return numThreads;
   }
 
   public Integer getMaxBatchTime() {
+    if ( maxBatchTime == null ) {
+      return _maxBatchTime;
+    }
     return maxBatchTime;
   }
 }
