@@ -1,5 +1,4 @@
 - project:
-    name: openstack/monasca-persister
     check:
       jobs:
         - monasca-tempest-python-mysql
