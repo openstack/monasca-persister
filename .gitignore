@@ -14,3 +14,5 @@ cover/
 .testrepository/
 .stestr/
 *.sample
+perf/persister_perf_*/*.*
+perf/jmeter.log
