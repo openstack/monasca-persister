@@ -25,9 +25,10 @@ from monasca_persister.repositories.utils import parse_alarm_state_hist_message
 
 LOG = log.getLogger(__name__)
 
-UPSERT_CQL = ('update monasca.alarm_state_history USING TTL ? '
-              'set metric = ?, old_state = ?, new_state = ?, sub_alarms = ?, reason = ?, reason_data = ? '
-              'where tenant_id = ? and alarm_id = ? and time_stamp = ?')
+UPSERT_CQL = (
+    'update monasca.alarm_state_history USING TTL ? '
+    'set metric = ?, old_state = ?, new_state = ?, sub_alarms = ?, reason = ?, reason_data = ? '
+    'where tenant_id = ? and alarm_id = ? and time_stamp = ?')
 
 
 class AlarmStateHistCassandraRepository(abstract_repository.AbstractCassandraRepository):

@@ -42,9 +42,10 @@ kafka_alarm_history_opts = [
     cfg.StrOpt('zookeeper_path',
                help='Path in zookeeper for kafka consumer group partitioning algorithm',
                default='/persister_partitions/$kafka_alarm_history.topic'),
-    cfg.IntOpt('batch_size',
-               help='Maximum number of alarm state history messages to buffer before writing to database',
-               default=1),
+    cfg.IntOpt(
+        'batch_size',
+        help='Maximum number of alarm state history messages to buffer before writing to database',
+        default=1),
 ]
 
 

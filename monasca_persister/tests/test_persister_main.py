@@ -119,7 +119,7 @@ class TestPersister(base.BaseTestCase):
     def test_active_children_are_killed_during_exit(self):
 
         with patch.object(self.persister.multiprocessing, 'active_children') as active_children,\
-             patch.object(self.persister.os, 'kill') as mock_kill:
+                patch.object(self.persister.os, 'kill') as mock_kill:
 
             active_children.return_value = [Mock(name='child-1', pid=1),
                                             Mock(name='child-2', pid=2)]

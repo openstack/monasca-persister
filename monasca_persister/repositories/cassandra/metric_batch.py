@@ -68,7 +68,10 @@ class MetricBatch(object):
         self.batch_query_by_replicas(bound_stmt, self.measurement_queries)
 
     def batch_query_by_replicas(self, bound_stmt, query_map):
-        hosts = tuple(self.lb_policy.make_query_plan(working_keyspace=bound_stmt.keyspace, query=bound_stmt))
+        hosts = tuple(
+            self.lb_policy.make_query_plan(
+                working_keyspace=bound_stmt.keyspace,
+                query=bound_stmt))
 
         queue = query_map.get(hosts, None)
         if not queue:
@@ -96,18 +99,21 @@ class MetricBatch(object):
 
     @staticmethod
     def log_token_batch_map(name, query_map):
-        LOG.info('%s : Size: %s;  Tokens: |%s|' % (name, len(query_map),
-                                                   '|'.join(['%s: %s' % (
-                                                       token,
-                                                       ','.join([str(counter.value()) for (batch, counter) in queue]))
-                                                             for token, queue in query_map.items()])))
+        LOG.info('%s : Size: %s;  Tokens: |%s|' %
+                 (name, len(query_map),
+                  '|'.join(['%s: %s' % (
+                      token,
+                      ','.join([str(counter.value()) for (batch, counter) in queue]))
+                      for token, queue in query_map.items()])))
 
     @staticmethod
     def log_replica_batch_map(name, query_map):
-        LOG.info('%s : Size: %s;  Replicas: |%s|' % (name, len(query_map), '|'.join([
-            '%s: %s' % (
-                ','.join([h.address for h in hosts]), ','.join([str(counter.value()) for (batch, counter) in queue]))
-            for hosts, queue in query_map.items()])))
+        LOG.info('%s : Size: %s;  Replicas: |%s|' %
+                 (name, len(query_map), '|'.join([
+                     '%s: %s' % (
+                         ','.join([h.address for h in hosts]),
+                         ','.join([str(counter.value()) for (batch, counter) in queue]))
+                     for hosts, queue in query_map.items()])))
 
     def get_all_batches(self):
         self.log_token_batch_map("metric batches", self.metric_queries)

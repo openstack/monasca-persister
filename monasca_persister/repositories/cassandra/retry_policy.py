@@ -46,4 +46,8 @@ class MonascaRetryPolicy(RetryPolicy):
 
     def on_unavailable(self, query, consistency, required_replicas, alive_replicas, retry_num):
 
-        return (self.RETRY_NEXT_HOST, consistency) if retry_num < self.unavailable_attempts else (self.RETHROW, None)
+        return (
+            self.RETRY_NEXT_HOST,
+            consistency) if retry_num < self.unavailable_attempts else (
+            self.RETHROW,
+            None)

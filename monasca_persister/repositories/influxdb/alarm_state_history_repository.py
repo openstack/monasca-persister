@@ -24,7 +24,7 @@ LOG = log.getLogger(__name__)
 
 
 class AlarmStateHistInfluxdbRepository(
-    abstract_repository.AbstractInfluxdbRepository):
+        abstract_repository.AbstractInfluxdbRepository):
 
     def __init__(self):
 
@@ -36,7 +36,7 @@ class AlarmStateHistInfluxdbRepository(
          lifecycle_state, state_change_reason,
          sub_alarms_json_snake_case, tenant_id,
          time_stamp) = parse_alarm_state_hist_message(
-                message)
+            message)
 
         name = u'alarm_state_history'
         fields = []

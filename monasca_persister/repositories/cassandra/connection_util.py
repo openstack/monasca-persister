@@ -47,5 +47,6 @@ def create_cluster():
 def create_session(cluster):
     session = cluster.connect(conf.cassandra.keyspace)
     session.default_timeout = conf.cassandra.read_timeout
-    session.default_consistency_level = ConsistencyLevel.name_to_value[conf.cassandra.consistency_level]
+    session.default_consistency_level = \
+        ConsistencyLevel.name_to_value[conf.cassandra.consistency_level]
     return session

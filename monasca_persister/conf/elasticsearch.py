@@ -18,27 +18,32 @@ from oslo_config import cfg
 from monasca_persister.conf import types
 
 elasticsearch_opts = [
-    cfg.StrOpt('index_name',
-               help='Index name where events are stored',
-               default='monevents'),
-    cfg.ListOpt('hosts',
-                help='List of Elasticsearch nodes in format host[:port]',
-                default=['localhost:9200'],
-                item_type=types.HostAddressPortType()),
-    cfg.BoolOpt('sniff_on_start',
-                help='Flag indicating whether to obtain a list of nodes from the cluser at startup time',
-                default=False),
-    cfg.BoolOpt('sniff_on_connection_fail',
-                help='Flag controlling if connection failure triggers a sniff',
-                default=False),
-    cfg.IntOpt('sniffer_timeout',
-               help='Number of seconds between automatic sniffs',
-               default=None),
-    cfg.IntOpt('max_retries',
-               help='Maximum number of retries before an exception is propagated',
-               default=3,
-               min=1)
-]
+    cfg.StrOpt(
+        'index_name',
+        help='Index name where events are stored',
+        default='monevents'),
+    cfg.ListOpt(
+        'hosts',
+        help='List of Elasticsearch nodes in format host[:port]',
+        default=['localhost:9200'],
+        item_type=types.HostAddressPortType()),
+    cfg.BoolOpt(
+        'sniff_on_start',
+        help='Flag indicating whether to obtain a list of nodes from the cluser at startup time',
+        default=False),
+    cfg.BoolOpt(
+        'sniff_on_connection_fail',
+        help='Flag controlling if connection failure triggers a sniff',
+        default=False),
+    cfg.IntOpt(
+        'sniffer_timeout',
+        help='Number of seconds between automatic sniffs',
+        default=None),
+    cfg.IntOpt(
+        'max_retries',
+        help='Maximum number of retries before an exception is propagated',
+        default=3,
+        min=1)]
 
 elasticsearch_group = cfg.OptGroup(name='elasticsearch', title='elasticsearch')
 

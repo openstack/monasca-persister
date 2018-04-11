@@ -55,7 +55,8 @@ class MetricInfluxdbRepository(abstract_repository.AbstractInfluxdbRepository):
         value_field = u'value={}'.format(value)
         value_meta_field = u'value_meta=' + value_meta_str
 
-        data = key_values + u' ' + value_field + u',' + value_meta_field + u' ' + str(int(time_stamp))
+        data = key_values + u' ' + value_field + u',' + \
+            value_meta_field + u' ' + str(int(time_stamp))
 
         LOG.debug(data)
 

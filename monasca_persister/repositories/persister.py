@@ -33,14 +33,14 @@ class Persister(object):
         self._batch_size = kafka_conf.batch_size
 
         self._consumer = consumer.KafkaConsumer(
-                kafka_conf.uri,
-                zookeeper_conf.uri,
-                kafka_conf.zookeeper_path,
-                kafka_conf.group_id,
-                kafka_conf.topic,
-                repartition_callback=self._flush,
-                commit_callback=self._flush,
-                commit_timeout=kafka_conf.max_wait_time_seconds)
+            kafka_conf.uri,
+            zookeeper_conf.uri,
+            kafka_conf.zookeeper_path,
+            kafka_conf.group_id,
+            kafka_conf.topic,
+            repartition_callback=self._flush,
+            commit_callback=self._flush,
+            commit_timeout=kafka_conf.max_wait_time_seconds)
 
         self.repository = repository()
 
@@ -52,7 +52,7 @@ class Persister(object):
             self.repository.write_batch(self._data_points)
 
             LOG.info("Processed {} messages from topic '{}'".format(
-                    len(self._data_points), self._kafka_topic))
+                len(self._data_points), self._kafka_topic))
 
             self._data_points = []
             self._consumer.commit()
@@ -79,7 +79,7 @@ class Persister(object):
                     self._flush()
         except Exception:
             LOG.exception(
-                    'Persister encountered fatal exception processing '
-                    'messages. '
-                    'Shutting down all threads and exiting')
+                'Persister encountered fatal exception processing '
+                'messages. '
+                'Shutting down all threads and exiting')
             os._exit(1)
