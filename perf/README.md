@@ -6,7 +6,7 @@ monasca-persister performance benchmarking
 This tool benchmarkes the Monasca Persister performance and throughput.
 It uses JMeter and Kafka plugin to initiate Kafka metric messages and
 query the Dropwizard rest api to retrieve perister processing metrics.
-Becasue the Monasca persister python implementation does not have
+Because the Monasca persister python implementation does not have
 similar internal processing metric rest api availalbe, the support
 for python implementation performance benchmark will be added in a
 future release.
