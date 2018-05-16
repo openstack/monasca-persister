@@ -55,3 +55,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
 implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+
+Python
+======
+
+To install the Python monasca-persister modules, git clone the source and run the
+following command:
+
+    $ sudo python setup.py install
+
+To run the unit tests use:
+
+    $ tox -e py27,py35
