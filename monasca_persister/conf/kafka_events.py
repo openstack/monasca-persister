@@ -54,4 +54,4 @@ def register_opts(conf):
 
 
 def list_opts():
-    return kafka_events_group, kafka_events_opts
+    return kafka_events_group, kafka_events_opts + kafka_common_opts

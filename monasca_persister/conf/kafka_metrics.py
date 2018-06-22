@@ -59,4 +59,4 @@ def register_opts(conf):
 
 
 def list_opts():
-    return kafka_metrics_group, kafka_metrics_opts
+    return kafka_metrics_group, kafka_metrics_opts + kafka_common_opts

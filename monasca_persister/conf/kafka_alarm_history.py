@@ -62,4 +62,4 @@ def register_opts(conf):
 
 
 def list_opts():
-    return kafka_alarm_history_group, kafka_alarm_history_opts
+    return kafka_alarm_history_group, kafka_alarm_history_opts + kafka_common_opts
