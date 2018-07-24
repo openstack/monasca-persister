@@ -42,7 +42,6 @@ pbr==2.0.0
 pep8==1.7.1
 pyflakes==1.0.0
 pyinotify==0.9.6
-pykafka==2.5.0
 PyMySQL==0.7.6
 pyparsing==2.1.0
 python-dateutil==2.5.3
