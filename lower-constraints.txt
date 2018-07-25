@@ -5,6 +5,7 @@ cassandra-driver===2.1.4
 coverage==4.0
 debtcollector==1.2.0
 elasticsearch===2.0.0
+docutils==0.11
 extras==1.0.0
 fixtures==3.0.0
 flake8==2.5.5
