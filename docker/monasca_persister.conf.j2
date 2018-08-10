@@ -1,0 +1,64 @@
+[DEFAULT]
+#log_file = monasca_persister.log
+#log_dir = /var/log/monasca_persister
+
+# Default log level is WARNING
+# Show debugging output in logs (sets DEBUG log level output)
+debug = {{ DEBUG }}
+# Show more verbose log output (sets INFO log level output) if debug is False
+verbose = {{ VERBOSE }}
+
+[repositories]
+# The driver to use for the metrics repository
+metrics_driver = monasca_persister.repositories.influxdb.metrics_repository:MetricInfluxdbRepository
+
+# The driver to use for the alarm state history repository
+alarm_state_history_driver = monasca_persister.repositories.influxdb.alarm_state_history_repository:AlarmStateHistInfluxdbRepository
+
+[zookeeper]
+# Comma separated list of host:port
+uri = {{ ZOOKEEPER_URI }}
+partition_interval_recheck_seconds = 15
+
+[kafka_alarm_history]
+# Comma separated list of Kafka broker host:port.
+uri = {{ KAFKA_URI }}
+group_id = 1_alarm-state-transitions
+topic = alarm-state-transitions
+consumer_id = 1
+client_id = 1
+database_batch_size = {{ KAFKA_ALARM_HISTORY_BATCH_SIZE }}
+max_wait_time_seconds = {{ KAFKA_ALARM_HISTORY_WAIT_TIME }}
+# The following 3 values are set to the kakfa-python defaults
+fetch_size_bytes = 4096
+buffer_size = 4096
+# 8 times buffer size
+max_buffer_size = 32768
+# Path in zookeeper for kafka consumer group partitioning algo
+zookeeper_path = /persister_partitions/alarm-state-transitions
+num_processors = 1
+
+[kafka_metrics]
+# Comma separated list of Kafka broker host:port
+uri = {{ KAFKA_URI }}
+group_id = 1_metrics
+topic = metrics
+consumer_id = 1
+client_id = 1
+database_batch_size = {{ KAFKA_METRICS_BATCH_SIZE }}
+max_wait_time_seconds = {{ KAFKA_METRICS_WAIT_TIME }}
+# The following 3 values are set to the kakfa-python defaults
+fetch_size_bytes = 4096
+buffer_size = 4096
+# 8 times buffer size
+max_buffer_size = 32768
+# Path in zookeeper for kafka consumer group partitioning algo
+zookeeper_path = /persister_partitions/metrics
+num_processors = 1
+
+[influxdb]
+database_name = {{ INFLUX_DB }}
+ip_address = {{ INFLUX_HOST }}
+port = {{ INFLUX_PORT }}
+user = {{ INFLUX_USER }}
+password = {{ INFLUX_PASSWORD }}
