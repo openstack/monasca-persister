@@ -39,6 +39,9 @@ kafka_events_opts = [
     cfg.StrOpt('zookeeper_path',
                help='Path in zookeeper for kafka consumer group partitioning algorithm',
                default='/persister_partitions/$kafka_events.topic'),
+    cfg.IntOpt('batch_size',
+               help='Maximum number of events to buffer before writing to database',
+               default=1),
 ]
 
 # Replace Default OPT with reference to kafka group option
