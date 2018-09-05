@@ -43,16 +43,17 @@ class ElasticSearchEventsRepository(abstract_repository.AbstractRepository):
 
     def write_batch(self, data_points):
         for data_point in data_points:
-            (tenant_id, timestamp, event_type, payload) = data_point
+            (project_id, timestamp, event_type, payload, dimensions) = data_point
 
-            index = '%s-%s-%s' % (self.conf.index_name, tenant_id,
+            index = '%s-%s-%s' % (self.conf.index_name, project_id,
                                   ElasticSearchEventsRepository._normalize_timestamp(timestamp))
 
             body = {
-                'tenant_id': tenant_id,
-                'timestamp': timestamp,
+                'project_id': project_id,
+                '@timestamp': timestamp,
                 'event_type': event_type,
-                'payload': payload
+                'payload': payload,
+                'dimensions': dimensions
             }
 
             self.es.create(

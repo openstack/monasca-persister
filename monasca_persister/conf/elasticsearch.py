@@ -20,8 +20,8 @@ from monasca_persister.conf import types
 elasticsearch_opts = [
     cfg.StrOpt(
         'index_name',
-        help='Index name where events are stored',
-        default='monevents'),
+        help='Index prefix name where events are stored',
+        default='events'),
     cfg.ListOpt(
         'hosts',
         help='List of Elasticsearch nodes in format host[:port]',

@@ -104,9 +104,10 @@ def parse_alarm_state_hist_message(message):
 def parse_events_message(message):
 
     decoded_message = json.loads(message.message.value)
-    event_type = decoded_message['event_type']
-    timestamp = decoded_message['timestamp']
-    payload = decoded_message['payload']
-    tenant_id = payload['tenant_id']
+    event_type = decoded_message['event']['event_type']
+    timestamp = decoded_message['event']['timestamp']
+    payload = decoded_message['event']['payload']
+    project_id = decoded_message['meta']['project_id']
+    dimensions = decoded_message['event']['dimensions']
 
-    return tenant_id, timestamp, event_type, payload
+    return project_id, timestamp, event_type, payload, dimensions
