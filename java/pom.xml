@@ -29,6 +29,10 @@
         </artifactNamedVersion>
         <shadedJarName>${project.artifactId}-${project.version}-shaded
         </shadedJarName>
+        <!-- This line can be removed after updating openjdk-8-jdk package
+        to version newer then 8u181-b13-2 and/or maven-surefire-plugin 3.0.0
+        is released. -->
+        <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
     </properties>
 
     <!--Needed for buildnumber-maven-plugin-->
