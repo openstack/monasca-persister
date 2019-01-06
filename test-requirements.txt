@@ -3,12 +3,13 @@
 # process, which may cause wedges in the gate later.
 bandit>=1.1.0 # Apache-2.0
 flake8<2.6.0,>=2.5.4 # MIT
-hacking!=0.13.0,<0.14,>=0.12.0 # Apache-2.0
+hacking>=1.1.0,<1.2.0 # Apache-2.0
 coverage!=4.4,>=4.0 # Apache-2.0
 mock>=2.0.0 # BSD
 oslotest>=3.2.0 # Apache-2.0
 stestr>=1.0.0 # Apache-2.0
 docutils>=0.11 # OSI-Approved Open Source, Public Domain
+pycodestyle>=2.5.0 # MIT
 
 # release notes
 sphinx!=1.6.6,!=1.6.7,>=1.6.2 # BSD
