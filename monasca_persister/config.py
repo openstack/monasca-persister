@@ -12,6 +12,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import sys
+
+from oslo_config import cfg
 from oslo_log import log
 
 from monasca_persister import conf
@@ -23,6 +26,25 @@ LOG = log.getLogger(__name__)
 _CONF_LOADED = False
 
 
+def _get_config_files():
+    """Get the possible configuration files accepted by oslo.config
+
+    This also includes the deprecated ones
+    """
+    # default files
+    conf_files = cfg.find_config_files(project='monasca',
+                                       prog='monasca-persister')
+    # deprecated config files (only used if standard config files are not there)
+    if len(conf_files) == 0:
+        old_conf_files = cfg.find_config_files(project='monasca',
+                                               prog='persister')
+        if len(old_conf_files) > 0:
+            LOG.warning('Found deprecated old location "{}" '
+                        'of main configuration file'.format(old_conf_files))
+            conf_files += old_conf_files
+    return conf_files
+
+
 def parse_args():
     global _CONF_LOADED
     if _CONF_LOADED:
@@ -32,13 +54,14 @@ def parse_args():
     log.set_defaults()
     log.register_options(CONF)
 
-    CONF(prog='persister',
+    CONF(prog=sys.argv[1:],
          project='monasca',
          version=version.version_str,
+         default_config_files=_get_config_files(),
          description='Persists metrics & alarm history in TSDB')
 
     log.setup(CONF,
-              product_name='persister',
+              product_name='monasca-persister',
               version=version.version_str)
 
     conf.register_opts()
