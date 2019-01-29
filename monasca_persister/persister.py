@@ -102,6 +102,10 @@ def prepare_processes(conf, repo_driver):
         for proc in range(0, conf.num_processors):
             processors.append(multiprocessing.Process(
                 target=start_process, args=(repository, conf)))
+    else:
+        LOG.warning("Number of processors (num_processors) is {}".format(
+            conf.num_processors))
+
 
 def main():
     """Start persister."""
