@@ -8,16 +8,18 @@
       - openstack-python36-jobs
     check:
       jobs:
-        - monasca-tempest-python-influxdb
+        - monasca-tempest-python2-influxdb
+        - monasca-tempest-python3-influxdb
+        - monasca-tempest-python2-cassandra
         - monasca-tempest-java-influxdb
-        - monasca-tempest-python-cassandra
         - monasca-tempest-java-cassandra
         - legacy-monasca-persister-maven-build
     gate:
       jobs:
-        - monasca-tempest-python-influxdb
+        - monasca-tempest-python2-influxdb
+        - monasca-tempest-python3-influxdb
+        - monasca-tempest-python2-cassandra
         - monasca-tempest-java-influxdb
-        - monasca-tempest-python-cassandra
         - monasca-tempest-java-cassandra
         - legacy-monasca-persister-maven-build
     post:
