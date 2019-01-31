@@ -42,7 +42,7 @@ kafka_common_opts = [
                default=32768),
     cfg.IntOpt('num_processors',
                help='Number of processes spawned by persister',
-               default=0)
+               default=1)
 ]
 
 kafka_common_group = cfg.OptGroup(name='kafka',
