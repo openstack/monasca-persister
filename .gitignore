@@ -16,3 +16,6 @@ cover/
 *.sample
 perf/persister_perf_*/*.*
 perf/jmeter.log
+AUTHORS
+ChangeLog
+dist/*
