@@ -91,15 +91,15 @@ write access to the log directory.
 
 There is minimum amount of configuration which must be performed before
 running the persister. A template configuration file is installed in the
-default location of /etc/monasca/persister.conf.
+default location of /etc/monasca/monasca-persister.conf.
 
 Note that the configuration will contain authentication information for
 the database being used, so depending on your environment it may be
 desirable to inhibit read access except for the monasca-persister group.
 
 ```
-sudo chown root:monasca /etc/monasca/persister.conf
-sudo chmod 640 /etc/monasca/persister.conf
+sudo chown root:monasca /etc/monasca/monasca-persister.conf
+sudo chmod 640 /etc/monasca/monasca-persister.conf
 ```
 
 Most of the configuration options should be left at default, but at a
@@ -132,7 +132,7 @@ which may be useful for troubleshooting:
 ```
 sudo -u mon-persister \
   monasca-persister \
-  --config-file /etc/monasca/persister.conf
+  --config-file /etc/monasca/monasca-persister.conf
 ```
 
 Note that it is important to deploy the daemon in a manner such that the daemon
@@ -151,7 +151,7 @@ Description=OpenStack Monasca Persister
 Documentation=https://github.com/openstack/monasca-persister/monasca-persister/README.md
 Requires=network.target remote-fs.target
 After=network.target remote-fs.target
-ConditionPathExists=/etc/monasca/persister.conf
+ConditionPathExists=/etc/monasca/monasca-persister.conf
 ConditionPathExists=/var/lib/monasca-persister
 ConditionPathExists=/var/log/monasca/persister
 
@@ -161,7 +161,7 @@ PIDFile=/var/run/monasca-persister.pid
 User=mon-persister
 Group=monasca
 WorkingDirectory=/var/lib/monasca-persister
-ExecStart=/usr/local/bin/monasca-persister --config-file /etc/monasca/persister.conf
+ExecStart=/usr/local/bin/monasca-persister --config-file /etc/monasca/monasca-persister.conf
 Restart=on-failure
 RestartSec=5
 SyslogIdentifier=monasca-persister
