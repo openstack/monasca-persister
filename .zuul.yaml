@@ -13,6 +13,7 @@
         - monasca-tempest-python2-cassandra
         - monasca-tempest-java-influxdb
         - monasca-tempest-java-cassandra
+        - docker-build-monasca-service
         - legacy-monasca-persister-maven-build
     gate:
       jobs:
