@@ -15,6 +15,7 @@
 # limitations under the License.
 import os
 
+from oslo_config import cfg
 from oslo_log import log
 
 from monasca_common.kafka import consumer
@@ -61,6 +62,13 @@ class Persister(object):
                 LOG.warning("Some points older than retention policy were dropped")
                 self._data_points = []
                 self._consumer.commit()
+
+            elif cfg.CONF.repositories.ignore_parse_point_error \
+                    and "unable to parse points" in ex.message:
+                LOG.warning("Some points unable to parse were dropped")
+                self._data_points = []
+                self._consumer.commit()
+
             else:
                 LOG.exception("Error writing to database: {}"
                               .format(self._data_points))

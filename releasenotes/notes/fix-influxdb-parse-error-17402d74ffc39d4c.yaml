@@ -1,0 +1,9 @@
+---
+features:
+  - |
+    Configuration option `ignore_parse_point_error` added to allow dropping
+    malformed InfluxDB data points.
+fixes:
+  - |
+    Fixed handling of InfluxDB parse point errors in case these were not
+    validated in the API.
