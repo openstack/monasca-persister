@@ -31,7 +31,11 @@ repositories_opts = [
         name='events_driver',
         help='The repository driver to use for events',
         default=('monasca_persister.repositories.elasticsearch.events_repository:'
-                 'ElasticSearchEventsRepository'))]
+                 'ElasticSearchEventsRepository')),
+    cfg.BoolOpt(
+        'ignore_parse_point_error',
+        help='Specifies if InfluxDB parse point errors should be ignored and measurements dropped',
+        default=False)]
 
 repositories_group = cfg.OptGroup(name='repositories',
                                   title='repositories')
