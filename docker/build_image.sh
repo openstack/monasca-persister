@@ -19,22 +19,34 @@
 set -x  # Print each script step.
 set -eo pipefail  # Exit the script if any statement returns error.
 
-# This script is used for building Docker image with proper labels.
+# This script is used for building Docker image with proper labels
+# and proper version of monasca-common.
 #
 # Example usage:
-# $ ./build_image.sh <repository_version> <upper_constains_branch>
+#   $ ./build_image.sh <repository_version> <upper_constains_branch> <common_version>
+#
+# Everything after `./build_image.sh` is optional and by default configured
+# to get versions from `Dockerfile`.
 #
 # To build from master branch (default):
-# $ ./build_image.sh
+#   $ ./build_image.sh
 # To build specific version run this script in the following way:
-# $ ./build_image.sh stable/queens
+#   $ ./build_image.sh stable/queens
 # Building from specific commit:
-# $ ./build_image.sh  cb7f226
+#   $ ./build_image.sh  cb7f226
 # When building from a tag monasca-common will be used in version available
 # in upper constraint file:
-# $ ./build_image.sh 2.5.0
+#   $ ./build_image.sh 2.5.0
 # To build image from Gerrit patch sets that is targeting branch stable/queens:
-# $ ./build_image.sh refs/changes/51/558751/1 stable/queens
+#   $ ./build_image.sh refs/changes/51/558751/1 stable/queens
+#
+# If you want to build image with custom monasca-common version you need
+# to provide it as in the following example:
+#   $ ./build_image.sh master master refs/changes/19/595719/3
+
+# Go to folder with Docker files.
+REAL_PATH=$(python -c "import os,sys; print(os.path.realpath('$0'))")
+cd "$(dirname "$REAL_PATH")/../docker/"
 
 [ -z "$DOCKER_IMAGE" ] && \
     DOCKER_IMAGE=$(\grep DOCKER_IMAGE Dockerfile | cut -f2 -d"=")
@@ -63,6 +75,14 @@ fi
 case "$REPO_VERSION" in
     *stable*)
         CONSTRAINTS_BRANCH_CLEAN="$REPO_VERSION"
+        # Get monasca-common version from stable upper constraints file.
+        CONSTRAINTS_TMP_FILE=$(mktemp)
+        wget --output-document "$CONSTRAINTS_TMP_FILE" \
+            "$CONSTRAINTS_FILE"?h="$CONSTRAINTS_BRANCH_CLEAN"
+        UPPER_COMMON=$(\grep 'monasca-common' "$CONSTRAINTS_TMP_FILE")
+        # Get only version part from monasca-common.
+        UPPER_COMMON_VERSION="${UPPER_COMMON##*===}"
+        rm -rf "$CONSTRAINTS_TMP_FILE"
     ;;
     *)
         CONSTRAINTS_BRANCH_CLEAN="$CONSTRAINTS_BRANCH"
@@ -74,9 +94,13 @@ if [ -z "$COMMON_REPO" ]; then
     COMMON_REPO=$(\grep COMMON_REPO Dockerfile | cut -f2 -d"=") || true
     : "${COMMON_REPO:=https://git.openstack.org/openstack/monasca-common}"
 fi
+: "${COMMON_VERSION:=$3}"
 if [ -z "$COMMON_VERSION" ]; then
     COMMON_VERSION=$(\grep COMMON_VERSION Dockerfile | cut -f2 -d"=") || true
-    : "${COMMON_VERSION:=master}"
+    if [ "$UPPER_COMMON_VERSION" ]; then
+        # Common from upper constraints file.
+        COMMON_VERSION="$UPPER_COMMON_VERSION"
+    fi
 fi
 
 # Clone project to temporary directory for getting proper commit number from
@@ -92,7 +116,7 @@ TMP_DIR=$(mktemp -d)
     git fetch origin "$REPO_VERSION"
     git reset --hard FETCH_HEAD
 )
-GIT_COMMIT=$(git -C "$TMP_DIR" rev-parse FETCH_HEAD)
+GIT_COMMIT=$(git -C "$TMP_DIR" rev-parse HEAD)
 [ -z "${GIT_COMMIT}" ] && echo "No git commit hash found" && exit 1
 rm -rf "$TMP_DIR"
 
@@ -106,7 +130,7 @@ COMMON_TMP_DIR=$(mktemp -d)
     git fetch origin "$COMMON_VERSION"
     git reset --hard FETCH_HEAD
 )
-COMMON_GIT_COMMIT=$(git -C "$COMMON_TMP_DIR" rev-parse FETCH_HEAD)
+COMMON_GIT_COMMIT=$(git -C "$COMMON_TMP_DIR" rev-parse HEAD)
 [ -z "${COMMON_GIT_COMMIT}" ] && echo "No git commit hash found" && exit 1
 rm -rf "$COMMON_TMP_DIR"
 
