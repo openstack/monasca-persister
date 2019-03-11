@@ -16,12 +16,13 @@
 # limitations under the License.
 
 from oslo_config import cfg
+from oslo_config import types
 
 cassandra_opts = [
     cfg.ListOpt('contact_points',
                 help='Comma separated list of Cassandra node IP addresses',
                 default=['127.0.0.1'],
-                item_type=cfg.IPOpt),
+                item_type=types.HostAddress()),
     cfg.IntOpt('port',
                help='Cassandra port number',
                default=8086),

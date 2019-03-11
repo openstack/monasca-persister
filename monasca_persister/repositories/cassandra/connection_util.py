@@ -31,8 +31,7 @@ def create_cluster():
     else:
         auth_provider = None
 
-    contact_points = [ip.dest for ip in conf.cassandra.contact_points]
-    cluster = Cluster(contact_points,
+    cluster = Cluster(conf.cassandra.contact_points,
                       port=conf.cassandra.port,
                       auth_provider=auth_provider,
                       connect_timeout=conf.cassandra.connection_timeout,
