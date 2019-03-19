@@ -35,7 +35,7 @@ class TestInfluxdbAlarmStateHistoryRepo(base.BaseTestCase):
     def test_process_message(self):
         message = Mock()
 
-        message.message.value = """{
+        message.value.return_value = """{
             "alarm-transitioned": {
                 "alarmId": "dummyid",
                 "metrics": "dummymetrics",

@@ -17,7 +17,8 @@ import ujson as json
 
 
 def parse_measurement_message(message):
-    decoded_message = json.loads(message.message.value)
+
+    decoded_message = json.loads(message.value())
 
     metric = decoded_message['metric']
 
@@ -39,7 +40,8 @@ def parse_measurement_message(message):
 
 
 def parse_alarm_state_hist_message(message):
-    decoded_message = json.loads(message.message.value)
+
+    decoded_message = json.loads(message.value())
 
     alarm_transitioned = decoded_message['alarm-transitioned']
 
@@ -94,7 +96,8 @@ def parse_alarm_state_hist_message(message):
 
 
 def parse_events_message(message):
-    decoded_message = json.loads(message.message.value)
+
+    decoded_message = json.loads(message.value())
     event_type = decoded_message['event']['event_type']
     timestamp = decoded_message['event']['timestamp']
     payload = decoded_message['event']['payload']

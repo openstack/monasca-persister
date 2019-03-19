@@ -188,7 +188,8 @@ class TestPersister(base.BaseTestCase):
         fake_kafka_config = Mock()
         fake_repository = Mock()
 
-        with patch('monasca_persister.repositories.persister.Persister') as mock_persister_class:
+        with patch('monasca_persister.kafka.legacy_kafka_persister'
+                   '.LegacyKafkaPersister') as mock_persister_class:
             self.persister.start_process(fake_repository, fake_kafka_config)
 
             mock_persister_class.assert_called_once_with(

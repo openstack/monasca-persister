@@ -13,36 +13,25 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from abc import ABCMeta
 import os
 
 from oslo_config import cfg
 from oslo_log import log
+import six
 
-from monasca_common.kafka import consumer
+from monasca_persister.repositories import singleton
 
 LOG = log.getLogger(__name__)
 
 
-class Persister(object):
+@six.add_metaclass(singleton.Singleton)
+class Persister(six.with_metaclass(ABCMeta, object)):
 
-    def __init__(self, kafka_conf, zookeeper_conf, repository):
-
+    def __init__(self, kafka_conf, repository):
         self._data_points = []
-
         self._kafka_topic = kafka_conf.topic
-
         self._batch_size = kafka_conf.batch_size
-
-        self._consumer = consumer.KafkaConsumer(
-            kafka_conf.uri,
-            zookeeper_conf.uri,
-            kafka_conf.zookeeper_path,
-            kafka_conf.group_id,
-            kafka_conf.topic,
-            repartition_callback=self._flush,
-            commit_callback=self._flush,
-            commit_timeout=kafka_conf.max_wait_time_seconds)
-
         self.repository = repository()
 
     def _flush(self):
@@ -76,9 +65,8 @@ class Persister(object):
 
     def run(self):
         try:
-            for raw_message in self._consumer:
+            for message in self._consumer:
                 try:
-                    message = raw_message[1]
                     data_point = self.repository.process_message(message)
                     self._data_points.append(data_point)
                 except Exception:

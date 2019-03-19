@@ -33,7 +33,8 @@ from oslo_config import cfg
 from oslo_log import log
 
 from monasca_persister import config
-from monasca_persister.repositories import persister
+from monasca_persister.kafka import confluent_kafka_persister
+from monasca_persister.kafka import legacy_kafka_persister
 
 
 LOG = log.getLogger(__name__)
@@ -91,8 +92,12 @@ def clean_exit(signum, frame=None):
 
 def start_process(respository, kafka_config):
     LOG.info("start process: {}".format(respository))
-    m_persister = persister.Persister(kafka_config, cfg.CONF.zookeeper,
-                                      respository)
+    if kafka_config.legacy_kafka_client_enabled:
+        m_persister = legacy_kafka_persister.LegacyKafkaPersister(
+            kafka_config, cfg.CONF.zookeeper, respository)
+    else:
+        m_persister = confluent_kafka_persister.ConfluentKafkaPersister(
+            kafka_config, respository)
     m_persister.run()
 
 

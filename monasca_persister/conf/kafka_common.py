@@ -42,7 +42,13 @@ kafka_common_opts = [
                default=32768),
     cfg.IntOpt('num_processors',
                help='Number of processes spawned by persister',
-               default=1)
+               default=1),
+    cfg.BoolOpt('legacy_kafka_client_enabled',
+                help='Enable legacy Kafka client. When set old version of '
+                     'kafka-python library is used. Message format version '
+                     'for the brokers should be set to 0.9.0.0 to avoid '
+                     'performance issues until all consumers are upgraded.',
+                default=True)
 ]
 
 kafka_common_group = cfg.OptGroup(name='kafka',

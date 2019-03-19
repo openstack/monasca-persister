@@ -11,15 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from datetime import datetime
 import json
 import os
+
+from mock import patch
 from oslotest import base
+from testtools import matchers
+
 from monasca_persister.repositories.elasticsearch import events_repository
 from monasca_persister.repositories import utils
-from mock import Mock
-from testtools import matchers
-from datetime import datetime
 
 
 class TestEvents(base.BaseTestCase):
@@ -58,10 +59,13 @@ class TestEvents(base.BaseTestCase):
 
         self.assertEqual('2017-08-07', normalize_timestamp('2017-08-07 11:22:43'))
 
-    def _load_event(self, event_name):
+    @patch('monasca_common.kafka.legacy_kafka_message')
+    def _load_event(self, event_name, mock_kafka_message):
         if self.events is None:
             filepath = os.path.join(os.path.dirname(__file__), 'events.json')
             self.events = json.load(open(filepath))
         # create a kafka message envelope
         value = json.dumps(self.events[event_name])
-        return Mock(message=Mock(value=value))
+        message = mock_kafka_message.LegacyKafkaMessage()
+        message.value.return_value = value
+        return message

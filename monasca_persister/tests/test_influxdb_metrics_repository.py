@@ -60,4 +60,6 @@ class TestMetricInfluxdbRepository(base.BaseTestCase):
                 "creation_time":1554725988
             }
         '''
-        return Mock(message=Mock(value=metric))
+        message = Mock()
+        message.value.return_value = metric
+        return message

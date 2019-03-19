@@ -21,7 +21,7 @@ from oslotest import base
 from oslo_config import cfg
 
 from monasca_common.kafka import consumer
-from monasca_persister.repositories.persister import Persister
+from monasca_persister.kafka.legacy_kafka_persister import LegacyKafkaPersister
 from monasca_persister.repositories.persister import LOG
 
 
@@ -36,7 +36,7 @@ class TestPersisterRepo(base.BaseTestCase):
         self._set_patchers()
         self._set_mocks()
 
-        self.persister = Persister(self.mock_kafka, self.mock_zookeeper, Mock())
+        self.persister = LegacyKafkaPersister(self.mock_kafka, self.mock_zookeeper, Mock())
 
     def _set_mocks(self):
         self.mock_kafka = Mock()
@@ -102,7 +102,7 @@ class TestPersisterRepo(base.BaseTestCase):
                           return_value='message'):
             with patch.object(self.persister, '_consumer', return_value=Mock()) as mock_consumer:
                 self.persister._data_points = ['a']
-                self.persister._consumer.__iter__.return_value = ['aa', 'bb']
+                self.persister._consumer.__iter__.return_value = ('aa', 'bb')
                 self.persister._batch_size = 1
                 self.persister.run()
                 mock_consumer.commit.assert_called()

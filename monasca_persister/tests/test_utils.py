@@ -27,7 +27,7 @@ class TestUtils(base.BaseTestCase):
 
     def test_parse_measurement_message(self):
         message = Mock()
-        message.message.value = """{
+        message.value.return_value = """{
             "metric": {
               "name": "metric_name",
               "timestamp": "metric_timestamp",
@@ -54,7 +54,7 @@ class TestUtils(base.BaseTestCase):
 
     def test_parse_alarm_state_hist_message(self):
         message = Mock()
-        message.message.value = """{
+        message.value.return_value = """{
             "alarm-transitioned": {
                 "alarmId": "dummyid",
                 "metrics": "dummymetrics",
@@ -92,7 +92,7 @@ class TestUtils(base.BaseTestCase):
 
     def test_parse_events_message(self):
         message = Mock()
-        message.message.value = """{
+        message.value.return_value = """{
             "event": {
                 "event_type": "dummy_event_type",
                 "timestamp": "dummy_timestamp",
