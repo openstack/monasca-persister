@@ -1,4 +1,4 @@
-ARG DOCKER_IMAGE=monasca-persister
+ARG DOCKER_IMAGE=monasca/persister
 ARG APP_REPO=https://git.openstack.org/openstack/monasca-persister
 
 # Branch, tag or git hash to build from.
@@ -23,11 +23,19 @@ ENV \
     KAFKA_METRICS_BATCH_SIZE=1000 \
     KAFKA_METRICS_WAIT_TIME=15 \
     KAFKA_WAIT_FOR_TOPICS=alarm-state-transitions,metrics \
+    DATABASE_BACKEND=influxdb \
     INFLUX_HOST=influxdb \
     INFLUX_PORT=8086 \
     INFLUX_USER=mon_persister \
     INFLUX_PASSWORD=password \
     INFLUX_DB=mon \
+    CASSANDRA_HOSTS=cassandra \
+    CASSANDRA_PORT=8086 \
+    CASSANDRA_USER=mon_persister \
+    CASSANDRA_PASSWORD=password \
+    CASSANDRA_KEY_SPACE=monasca \
+    CASSANDRA_CONNECTION_TIMEOUT=5 \
+    CASSANDRA_RETENTION_POLICY=45 \
     STAY_ALIVE_ON_FAILURE="false"
 
 # Copy all necessary files to proper locations.

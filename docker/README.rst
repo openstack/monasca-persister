@@ -63,13 +63,13 @@ INFLUX_PORT                    8086                            The port for infl
 INFLUX_USER                    mon_persister                   The influx username
 INFLUX_PASSWORD                password                        The influx password
 INFLUX_DB                      mon                             The influx database name
-CASSANDRA_HOSTS                127.0.0.1                       Cassandra node addresses
+CASSANDRA_HOSTS                cassandra                       Cassandra node addresses
 CASSANDRA_PORT                 8086                            Cassandra port number
-KEY_SPACE                      monasca                         Keyspace name where metrics are stored
-CASSANDRA_USER                 undefined                       Cassandra user name
-CASSANDRA_PASSWORD             undefined                       Cassandra password
-CONNECTION_TIMEOUT             5                               Cassandra timeout in seconds
-RETENTION_POLICY               45                              Data retention period in days
+CASSANDRA_USER                 mon_persister                   Cassandra user name
+CASSANDRA_PASSWORD             password                        Cassandra password
+CASSANDRA_KEY_SPACE            monasca                         Keyspace name where metrics are stored
+CASSANDRA_CONNECTION_TIMEOUT   5                               Cassandra timeout in seconds
+CASSANDRA_RETENTION_POLICY     45                              Data retention period in days
 STAY_ALIVE_ON_FAILURE          false                           If true, container runs 2 hours even start fails
 ============================== =============================== ================================================
 
