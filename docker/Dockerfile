@@ -29,6 +29,7 @@ ENV \
     INFLUX_USER=mon_persister \
     INFLUX_PASSWORD=password \
     INFLUX_DB=mon \
+    INFLUX_IGNORE_PARSE_POINT_ERROR="false" \
     CASSANDRA_HOSTS=cassandra \
     CASSANDRA_PORT=8086 \
     CASSANDRA_USER=mon_persister \

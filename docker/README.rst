@@ -43,35 +43,36 @@ BASE_TAG               Dockerfile
 
 Environment variables (child)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-============================== =============================== ================================================
-Variable                       Default                         Description
-============================== =============================== ================================================
-DEBUG                          false                           If true, enable debug logging
-VERBOSE                        true                            If true, enable info logging
-ZOOKEEPER_URI                  zookeeper:2181                  The host and port for zookeeper
-KAFKA_URI                      kafka:9092                      The host and port for kafka
-KAFKA_WAIT_FOR_TOPICS          alarm-state-transitions,metrics Topics to wait on at startup
-KAFKA_WAIT_RETRIES 	           24                              Number of kafka connect attempts
-KAFKA_WAIT_DELAY               5                               Seconds to wait between attempts
-KAFKA_ALARM_HISTORY_BATCH_SIZE 1000                            Kafka consumer takes messages in a batch
-KAFKA_ALARM_HISTORY_WAIT_TIME  15                              Seconds to wait if the batch size is not reached
-KAFKA_METRICS_BATCH_SIZE       1000                            Kafka consumer takes messages in a batch
-KAFKA_METRICS_WAIT_TIME        15                              Seconds to wait if the batch size is not reached
-DATABASE_BACKEND               influxdb                        Select for backend database
-INFLUX_HOST                    influxdb                        The host for influxdb
-INFLUX_PORT                    8086                            The port for influxdb
-INFLUX_USER                    mon_persister                   The influx username
-INFLUX_PASSWORD                password                        The influx password
-INFLUX_DB                      mon                             The influx database name
-CASSANDRA_HOSTS                cassandra                       Cassandra node addresses
-CASSANDRA_PORT                 8086                            Cassandra port number
-CASSANDRA_USER                 mon_persister                   Cassandra user name
-CASSANDRA_PASSWORD             password                        Cassandra password
-CASSANDRA_KEY_SPACE            monasca                         Keyspace name where metrics are stored
-CASSANDRA_CONNECTION_TIMEOUT   5                               Cassandra timeout in seconds
-CASSANDRA_RETENTION_POLICY     45                              Data retention period in days
-STAY_ALIVE_ON_FAILURE          false                           If true, container runs 2 hours even start fails
-============================== =============================== ================================================
+=============================== =============================== ================================================
+Variable                        Default                         Description
+=============================== =============================== ================================================
+DEBUG                           false                           If true, enable debug logging
+VERBOSE                         true                            If true, enable info logging
+ZOOKEEPER_URI                   zookeeper:2181                  The host and port for zookeeper
+KAFKA_URI                       kafka:9092                      The host and port for kafka
+KAFKA_WAIT_FOR_TOPICS           alarm-state-transitions,metrics Topics to wait on at startup
+KAFKA_WAIT_RETRIES 	            24                              Number of kafka connect attempts
+KAFKA_WAIT_DELAY                5                               Seconds to wait between attempts
+KAFKA_ALARM_HISTORY_BATCH_SIZE  1000                            Kafka consumer takes messages in a batch
+KAFKA_ALARM_HISTORY_WAIT_TIME   15                              Seconds to wait if the batch size is not reached
+KAFKA_METRICS_BATCH_SIZE        1000                            Kafka consumer takes messages in a batch
+KAFKA_METRICS_WAIT_TIME         15                              Seconds to wait if the batch size is not reached
+DATABASE_BACKEND                influxdb                        Select for backend database
+INFLUX_HOST                     influxdb                        The host for influxdb
+INFLUX_PORT                     8086                            The port for influxdb
+INFLUX_USER                     mon_persister                   The influx username
+INFLUX_PASSWORD                 password                        The influx password
+INFLUX_DB                       mon                             The influx database name
+INFLUX_IGNORE_PARSE_POINT_ERROR false                           Don't exit on InfluxDB parse point errors
+CASSANDRA_HOSTS                 cassandra                       Cassandra node addresses
+CASSANDRA_PORT                  8086                            Cassandra port number
+CASSANDRA_USER                  mon_persister                   Cassandra user name
+CASSANDRA_PASSWORD              password                        Cassandra password
+CASSANDRA_KEY_SPACE             monasca                         Keyspace name where metrics are stored
+CASSANDRA_CONNECTION_TIMEOUT    5                               Cassandra timeout in seconds
+CASSANDRA_RETENTION_POLICY      45                              Data retention period in days
+STAY_ALIVE_ON_FAILURE           false                           If true, container runs 2 hours even start fails
+=============================== =============================== ================================================
 
 
 Provide Configuration templates

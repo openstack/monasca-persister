@@ -21,6 +21,9 @@ metrics_driver = monasca_persister.repositories.influxdb.metrics_repository:Metr
 
 # The influxdb driver to use for the alarm state history repository
 alarm_state_history_driver = monasca_persister.repositories.influxdb.alarm_state_history_repository:AlarmStateHistInfluxdbRepository
+
+# Don't exit on InfluxDB parse point errors
+ignore_parse_point_error = {{ INFLUX_IGNORE_PARSE_POINT_ERROR }}
 {% endif %}
 
 [zookeeper]
