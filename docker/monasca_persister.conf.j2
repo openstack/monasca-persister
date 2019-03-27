@@ -9,7 +9,7 @@ debug = {{ DEBUG }}
 verbose = {{ VERBOSE }}
 
 [repositories]
-{% if DATABASE_BACKEND == 'CASSANDRA' %}
+{% if DATABASE_BACKEND | lower == 'cassandra' %}
 # The cassandra driver to use for the metrics repository
 metrics_driver = monasca_persister.repositories.cassandra.metrics_repository:MetricCassandraRepository
 
@@ -64,15 +64,15 @@ max_buffer_size = 32768
 zookeeper_path = /persister_partitions/metrics
 num_processors = 1
 
-{% if DATABASE_BACKEND == 'CASSANDRA' %}
+{% if DATABASE_BACKEND | lower == 'cassandra' %}
 [cassandra]
-contact_points = {{CASSANDRA_HOSTS}}
+contact_points = {{ CASSANDRA_HOSTS }}
 port = {{ CASSANDRA_PORT }}
-keyspace = {{ KEY_SPACE }}
+keyspace = {{ CASSANDRA_KEY_SPACE }}
 user = {{ CASSANDRA_USER }}
 password = {{ CASSANDRA_PASSWORD }}
-connection_timeout = {{CONNECTION_TIMEOUT}}
-retention_policy = {{RETENTION_POLICY}}
+connection_timeout = {{ CASSANDRA_CONNECTION_TIMEOUT }}
+retention_policy = {{ CASSANDRA_RETENTION_POLICY }}
 {% else %}
 [influxdb]
 database_name = {{ INFLUX_DB }}
