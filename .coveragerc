@@ -1,0 +1,7 @@
+[run]
+branch = True
+source = monasca_persister
+omit = monasca_persister/tests/*
+
+[report]
+ignore_errors = True
