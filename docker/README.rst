@@ -9,19 +9,61 @@ Building monasca-base image
 See https://github.com/openstack/monasca-common/tree/master/docker/README.rst
 
 
-Building Monasca persister image (child)
-========================================
+Building Docker image
+=====================
 
+Example:
+  $ ./build_image.sh <repository_version> <upper_constrains_branch> <common_version>
 
-Requirements from monasca-base image
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-health_check.py
-  This file will be used for checking the status of the Monasca persister
-  application.
+Everything after ``./build_image.sh`` is optional and by default configured
+to get versions from ``Dockerfile``. ``./build_image.sh`` also contain more
+detailed build description.
 
+Environment variables
+~~~~~~~~~~~~~~~~~~~~~
+=============================== ================= ================================================
+Variable                        Default           Description
+=============================== ================= ================================================
+DEBUG                           false             If true, enable debug logging
+VERBOSE                         true              If true, enable info logging
+ZOOKEEPER_URI                   zookeeper:2181    The host and port for zookeeper
+KAFKA_URI                       kafka:9092        The host and port for kafka
+KAFKA_ALARM_HISTORY_BATCH_SIZE  1000              Kafka consumer takes messages in a batch
+KAFKA_ALARM_HISTORY_WAIT_TIME   15                Seconds to wait if the batch size is not reached
+KAFKA_METRICS_BATCH_SIZE        1000              Kafka consumer takes messages in a batch
+KAFKA_METRICS_WAIT_TIME         15                Seconds to wait if the batch size is not reached
+DATABASE_BACKEND                influxdb          Select for backend database
+INFLUX_HOST                     influxdb          The host for influxdb
+INFLUX_PORT                     8086              The port for influxdb
+INFLUX_USER                     mon_persister     The influx username
+INFLUX_PASSWORD                 password          The influx password
+INFLUX_DB                       mon               The influx database name
+INFLUX_IGNORE_PARSE_POINT_ERROR false             Don't exit on InfluxDB parse point errors
+CASSANDRA_HOSTS                 cassandra         Cassandra node addresses
+CASSANDRA_PORT                  8086              Cassandra port number
+CASSANDRA_USER                  mon_persister     Cassandra user name
+CASSANDRA_PASSWORD              password          Cassandra password
+CASSANDRA_KEY_SPACE             monasca           Keyspace name where metrics are stored
+CASSANDRA_CONNECTION_TIMEOUT    5                 Cassandra timeout in seconds
+CASSANDRA_RETENTION_POLICY      45                Data retention period in days
+STAY_ALIVE_ON_FAILURE           false             If true, container runs 2 hours even start fails
+=============================== ================= ================================================
 
-Scripts for child image
-~~~~~~~~~~~~~~~~~~~~~~~
+Wait scripts environment variables
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+======================= ================================ =========================================
+Variable                Default                          Description
+======================= ================================ =========================================
+KAFKA_URI               kafka:9092                       URI to Apache Kafka (distributed
+                                                         streaming platform)
+KAFKA_WAIT_FOR_TOPICS   alarm-state-transitions,metrics  The topics where metric-api streams
+                                                         the metric messages and alarm-states
+KAFKA_WAIT_RETRIES      24                               Number of kafka connect attempts
+KAFKA_WAIT_DELAY        5                                Seconds to wait between attempts
+======================= ================================ =========================================
+
+Scripts
+~~~~~~~
 start.sh
   In this starting script provide all steps that lead to the proper service
   start. Including usage of wait scripts and templating of configuration
@@ -31,57 +73,10 @@ start.sh
 build_image.sh
   Please read detailed build description inside the script.
 
-
-Build arguments (child)
-~~~~~~~~~~~~~~~~~~~~~~~
-====================== =========================
-Arguments              Occurrence
-====================== =========================
-BASE_TAG               Dockerfile
-====================== =========================
-
-
-Environment variables (child)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-=============================== =============================== ================================================
-Variable                        Default                         Description
-=============================== =============================== ================================================
-DEBUG                           false                           If true, enable debug logging
-VERBOSE                         true                            If true, enable info logging
-ZOOKEEPER_URI                   zookeeper:2181                  The host and port for zookeeper
-KAFKA_URI                       kafka:9092                      The host and port for kafka
-KAFKA_WAIT_FOR_TOPICS           alarm-state-transitions,metrics Topics to wait on at startup
-KAFKA_WAIT_RETRIES 	            24                              Number of kafka connect attempts
-KAFKA_WAIT_DELAY                5                               Seconds to wait between attempts
-KAFKA_ALARM_HISTORY_BATCH_SIZE  1000                            Kafka consumer takes messages in a batch
-KAFKA_ALARM_HISTORY_WAIT_TIME   15                              Seconds to wait if the batch size is not reached
-KAFKA_METRICS_BATCH_SIZE        1000                            Kafka consumer takes messages in a batch
-KAFKA_METRICS_WAIT_TIME         15                              Seconds to wait if the batch size is not reached
-DATABASE_BACKEND                influxdb                        Select for backend database
-INFLUX_HOST                     influxdb                        The host for influxdb
-INFLUX_PORT                     8086                            The port for influxdb
-INFLUX_USER                     mon_persister                   The influx username
-INFLUX_PASSWORD                 password                        The influx password
-INFLUX_DB                       mon                             The influx database name
-INFLUX_IGNORE_PARSE_POINT_ERROR false                           Don't exit on InfluxDB parse point errors
-CASSANDRA_HOSTS                 cassandra                       Cassandra node addresses
-CASSANDRA_PORT                  8086                            Cassandra port number
-CASSANDRA_USER                  mon_persister                   Cassandra user name
-CASSANDRA_PASSWORD              password                        Cassandra password
-CASSANDRA_KEY_SPACE             monasca                         Keyspace name where metrics are stored
-CASSANDRA_CONNECTION_TIMEOUT    5                               Cassandra timeout in seconds
-CASSANDRA_RETENTION_POLICY      45                              Data retention period in days
-LOG_LEVEL                       WARNING                         Log level for monasca persister
-LOG_LEVEL_KAFKA                 WARNING                         Log level for communication with Kafka
-LOG_LEVEL_INFLUXDB              WARNING                         Log level for communication with InfluxDB
-LOG_LEVEL_CASSANDRA             WARNING                         Log level for communication with Cassandra
-STAY_ALIVE_ON_FAILURE           false                           If true, container runs 2 hours even start fails
-=============================== =============================== ================================================
-
-
 Provide Configuration templates
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-* persister.conf.j2
+* monasca-persister.conf.j2
+* persister-logging.conf.j2
 
 
 Links
