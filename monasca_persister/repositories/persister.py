@@ -64,8 +64,8 @@ class Persister(object):
                 self._consumer.commit()
 
             elif cfg.CONF.repositories.ignore_parse_point_error \
-                    and "unable to parse points" in ex.message:
-                LOG.warning("Some points unable to parse were dropped")
+                    and "unable to parse" in ex.message:
+                LOG.warning("Some points were unable to be parsed and were dropped")
                 self._data_points = []
                 self._consumer.commit()
 
