@@ -29,7 +29,8 @@ class MetricInfluxdbRepository(abstract_repository.AbstractInfluxdbRepository):
 
         super(MetricInfluxdbRepository, self).__init__()
 
-    def process_message(self, message):
+    @staticmethod
+    def process_message(message):
 
         (dimensions, metric_name, region, tenant_id, time_stamp, value,
          value_meta) = parse_measurement_message(message)
@@ -56,7 +57,7 @@ class MetricInfluxdbRepository(abstract_repository.AbstractInfluxdbRepository):
         value_meta_field = u'value_meta=' + value_meta_str
 
         data = key_values + u' ' + value_field + u',' + \
-            value_meta_field + u' ' + str(int(time_stamp))
+                            value_meta_field + u' ' + str(int(time_stamp))
 
         LOG.debug(data)
 
