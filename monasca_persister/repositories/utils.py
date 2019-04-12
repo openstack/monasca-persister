@@ -17,7 +17,6 @@ import ujson as json
 
 
 def parse_measurement_message(message):
-
     decoded_message = json.loads(message.message.value)
 
     metric = decoded_message['metric']
@@ -33,16 +32,13 @@ def parse_measurement_message(message):
     value = float(metric['value'])
 
     value_meta = metric.get('value_meta', {})
-    if 'value_meta' is None:
-        # Ensure value_meta is a dict
-        value_meta = {}
+    value_meta = {} if value_meta is None else value_meta
 
     return (metric.get('dimensions', {}), metric_name, region, tenant_id,
             time_stamp, value, value_meta)
 
 
 def parse_alarm_state_hist_message(message):
-
     decoded_message = json.loads(message.message.value)
 
     alarm_transitioned = decoded_message['alarm-transitioned']
@@ -56,16 +52,12 @@ def parse_alarm_state_hist_message(message):
     old_state = alarm_transitioned['oldState']
 
     # Key may not exist or value may be none, convert both to ""
-    if 'link' in alarm_transitioned and alarm_transitioned['link'] is not None:
-        link = alarm_transitioned['link']
-    else:
-        link = ""
+    link = alarm_transitioned.get('link', "")
+    link = "" if link is None else link
 
     # Key may not exist or value may be none, convert both to ""
-    if 'lifecycleState' in alarm_transitioned and alarm_transitioned['lifecycleState'] is not None:
-        lifecycle_state = alarm_transitioned['lifecycleState']
-    else:
-        lifecycle_state = ""
+    lifecycle_state = alarm_transitioned.get('lifecycleState', "")
+    lifecycle_state = "" if lifecycle_state is None else lifecycle_state
 
     state_change_reason = alarm_transitioned['stateChangeReason']
 
@@ -102,7 +94,6 @@ def parse_alarm_state_hist_message(message):
 
 
 def parse_events_message(message):
-
     decoded_message = json.loads(message.message.value)
     event_type = decoded_message['event']['event_type']
     timestamp = decoded_message['event']['timestamp']
