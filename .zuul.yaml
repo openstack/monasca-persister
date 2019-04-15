@@ -28,3 +28,47 @@
     post:
       jobs:
         - legacy-monasca-persister-localrepo-upload
+        - publish-monasca-persister-docker-image
+    periodic:
+      jobs:
+        - publish-monasca-persister-docker-image
+    release:
+      jobs:
+        - publish-monasca-persister-docker-image
+
+- job:
+    name: publish-monasca-persister-docker-image
+    parent: build-monasca-docker-image
+    post-run: playbooks/docker-publish.yml
+    required-projects:
+      - openstack/monasca-common
+    vars:
+      publisher: true
+    secrets:
+      - doker_hub_login_persister
+
+- secret:
+    name: doker_hub_login_persister
+    data:
+      user: !encrypted/pkcs1-oaep
+        - Y3eu2U5qjOTAILazUyN3PzGCsRucSK3CxZta+z5P2xNl5oqtAdEt/SxkBMat86eL13bVm
+          AqSS5BQ6qafwKYc9UtP2dVuQkyLpWYqFTcOdpGK5KvQaQwz9x2PGAmDSqzY5u8vtFF05K
+          bs3kn2Xa74Z1cfLOrlxGXzd09KIwxPCqYMW8zEx3qiIydDXLq99UoDUsxhCXj65vqXcfG
+          yBVxFCnhNAS0kHd6gHM3Nnwi7bOLkRRDnxZb/WgyeqfB5qJsyZTGGU+CFAIpfa10hO0jU
+          JUcV8RRuI6Jd2BQTngW/f2Py8lUNhQW6gL31XV1Lr7j3bxPY07EPJuEBFEOUSDeWd3cmX
+          EP0iaJt//ZGNLIsn7C8KN38Gce4z681moWvK9eJQzfeVTaNXE4nUlNveWC/DUSfeULHMZ
+          uRGXId0LOgWIxm3KNhUWUBKLVVJDU/+M3E1jAPcE7uZ1zC2fUI19X+3AwW1fx5wiZqKik
+          niA9Sb5nwz1gA+ZnTn/AVot9pS0+VThGqU4AfmKowZn4uIHP+WKoLxvZalTgUYrHs+YQ1
+          DYgZMGIVG8PRhVdIz96ALbw/ZaI4RM4y1Hh2r4IQgC6pbxrnSMvddq7wi29OETP3aRuJc
+          Za/epFgYpEhVMTO4E47PYStiYqHoFser7sgPCs7U3ngxxkt8lXwJcin/yCQt6k=
+      password: !encrypted/pkcs1-oaep
+        - d207Nu/DU44eyy+2IjaOaF+bELwHsk4eOFK+3+VgZ4GwA5pv87bbUtWaj9rzwcPL0ZGRr
+          /2P9+4gUE//DFjT/gH5FkrkLCb91PaflPibjfJg2+mloT3/8q4lJJU32zcmXWoKeP9A+I
+          i8V1outQZP8ggsVWxAjC3595kglupbKX2BwcbbGlrqX/jdIZ8x7aCIpo08zjTKse+se3d
+          zmojDSGXOCRof82FKhmA5uMQjHK7a3o29rHe0AW4kylLRosm7IG+JQ1BgFIh+5OlSeAdw
+          VW7YJVXuW5TMzUwpXwWcfOUUSW655gmFFvXcpQaDu7Ad6Zg2QGpIyuInnYNAw1ZViWUE2
+          kmQ2SdlqHtRDamPvdR/o3h6Y1Pr+VFote/wek46KpsOeWATNOjUaqFu7wGtUQV6PSkUYo
+          hLyVLt3EkYIZmHI6ydQIeYCSM2O1wiuiwVNmgJ7S/6O2ZES68lplh3d9hzdUmoIz9u6j7
+          +tkK1IcXFtq/45AgKD9iCCGKcE13RLzBBC+Qgt1SBBywgZiQ+q9GEFmz55ETpiXJttsn8
+          /ed2JmJoJN5g9fNYqNrbj3SM3PMg1DqyphejoNCWWeWnJAdPoF5N2HfDUB3FiWfrYaC/C
+          wB/W2TARkMG7FlE+blYeQayjlet9b02SmsQtFcyIHNzE5mjkg4SdPMJY0buxZo=
