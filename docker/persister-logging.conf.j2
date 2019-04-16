@@ -1,0 +1,43 @@
+[loggers]
+keys = root, kafka, influxdb, cassandra
+
+[handlers]
+keys = console
+
+[formatters]
+keys = generic
+
+[logger_root]
+level = {{ LOG_LEVEL }}
+formatter = default
+handlers = console
+
+[logger_kafka]
+qualname = kafka
+level = {{ LOG_LEVEL_KAFKA }}
+formatter = default
+handlers = console
+propagate = 0
+
+[logger_influxdb]
+qualname = influxdb
+level = {{ LOG_LEVEL_INFLUXDB }}
+formatter = default
+handlers = console
+propagate = 0
+
+[logger_cassandra]
+qualname = cassandra
+level = {{ LOG_LEVEL_CASSANDRA }}
+formatter = default
+handlers = console
+propagate = 0
+
+[handler_console]
+class = logging.StreamHandler
+args = (sys.stderr,)
+level = DEBUG
+formatter = generic
+
+[formatter_generic]
+format = %(asctime)s %(levelname)s [%(name)s][%(threadName)s] %(message)s

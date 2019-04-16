@@ -16,6 +16,10 @@ FROM monasca/base:$BASE_TAG
 ENV \
     DEBUG=false \
     VERBOSE=true \
+    LOG_LEVEL=WARNING \
+    LOG_LEVEL_KAFKA=WARNING \
+    LOG_LEVEL_INFLUXDB=WARNING \
+    LOG_LEVEL_CASSANDRA=WARNING \
     ZOOKEEPER_URI=zookeeper:2181 \
     KAFKA_URI=kafka:9092 \
     KAFKA_ALARM_HISTORY_BATCH_SIZE=1000 \
@@ -40,7 +44,7 @@ ENV \
     STAY_ALIVE_ON_FAILURE="false"
 
 # Copy all necessary files to proper locations.
-COPY monasca_persister.conf.j2 /etc/monasca/
+COPY monasca-persister.conf.j2 persister-logging.conf.j2 /etc/monasca/
 
 # Run here all additional steps your service need post installation.
 # Stay with only one `RUN` and use `&& \` for next steps to don't create
