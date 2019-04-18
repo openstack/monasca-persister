@@ -71,6 +71,10 @@ CASSANDRA_PASSWORD              password                        Cassandra passwo
 CASSANDRA_KEY_SPACE             monasca                         Keyspace name where metrics are stored
 CASSANDRA_CONNECTION_TIMEOUT    5                               Cassandra timeout in seconds
 CASSANDRA_RETENTION_POLICY      45                              Data retention period in days
+LOG_LEVEL                       WARNING                         Log level for monasca persister
+LOG_LEVEL_KAFKA                 WARNING                         Log level for communication with Kafka
+LOG_LEVEL_INFLUXDB              WARNING                         Log level for communication with InfluxDB
+LOG_LEVEL_CASSANDRA             WARNING                         Log level for communication with Cassandra
 STAY_ALIVE_ON_FAILURE           false                           If true, container runs 2 hours even start fails
 =============================== =============================== ================================================
 

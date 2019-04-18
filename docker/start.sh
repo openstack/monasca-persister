@@ -25,12 +25,13 @@ python3 /kafka_wait_for_topics.py
 # Template all config files before start, it will use env variables.
 # Read usage examples: https://pypi.org/project/Templer/
 echo "Start script: creating config files from templates"
-templer -v -f /etc/monasca/monasca_persister.conf.j2 /etc/monasca/monasca_persister.conf
+templer -v -f /etc/monasca/monasca-persister.conf.j2 /etc/monasca/monasca-persister.conf
+templer -v -f /etc/monasca/persister-logging.conf.j2 /etc/monasca/persister-logging.conf
 
 # Start our service.
 # gunicorn --args
 echo "Start script: starting container"
-monasca-persister --config-file /etc/monasca/monasca_persister.conf
+monasca-persister --config-file /etc/monasca/monasca-persister.conf
 
 # Allow server to stay alive in case of failure for 2 hours for debugging.
 RESULT=$?
