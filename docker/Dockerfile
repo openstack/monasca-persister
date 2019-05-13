@@ -1,5 +1,5 @@
 ARG DOCKER_IMAGE=monasca/persister
-ARG APP_REPO=https://git.openstack.org/openstack/monasca-persister
+ARG APP_REPO=https://review.opendev.org/openstack/monasca-persister
 
 # Branch, tag or git hash to build from.
 ARG REPO_VERSION=master
