@@ -24,13 +24,19 @@ Usage
 Steps to use this tool:
 
 - Log in to one node where monasca-persister is deployed.
+
 - Identify installation path to monasca-persister.  This may be a
   virtual environment such as
-  `/opt/stack/venv/monasca-<version>/lib/python2.7/site-packages/monasca-persister`
-  or as in devstack `/opt/stack/monasca-persister/monasca_persister/`.
+  `/opt/stack/venv/monasca-<version>/lib/python2.7/site-packages/monasca_persister`
+  or as in devstack
+  `/opt/stack/monasca-persister/monasca_persister/`.
+
 - Identify the existing configuration for monasca-persister. If using a
-  java deployment, it may be in `/opt/stack/service/monasca/etc/persister-config.yml`
-  or in devstack `/etc/monasca/persister.conf`
+  java deployment, it may be in
+  `/opt/stack/service/monasca/etc/persister-config.yml`
+  or in devstack
+  `/etc/monasca/persister.conf`
+
 - Copy and modify the config template file.
 
 ::
@@ -39,18 +45,22 @@ Steps to use this tool:
    vi /opt/stack/service/monasca/etc/persister-recreate.ini
 
 - Copy the values from the monasca-persister config in to the new .ini,
-  particularly the password.  In some cases, the single IP for the
-  management network of one of the Cassandra nodes may need to be given,
-  rather than the list of hostnames as specified in the .yml.
+  particularly the password.
+
+  - The single IP for the management network of one of the Cassandra nodes
+    should be given for the contact_points value, rather than the list of
+    hostnames as specified in the .yml. [#f1]_
+
 - Copy the `persister-recreate-metric-id.py` and `persister-check-missing-metric-id.py`
   files in to place with the monasca-persister code.
 
 ::
 
-   cp persister-*-metric-id.py /opt/stack/venv/monasca-<version>/lib/python2.7/site-packages/monasca-persister
+   cp persister-*-metric-id.py /opt/stack/venv/monasca-<version>/lib/python2.7/site-packages/monasca_persister
 
 - Ensure the `mon-persister` user has permission to access both
   `persister-recreate.ini` and `persister-recreate-metric-id.py`.
+
 - Invoke the tool to generate a log of rows needing repair.
 
 ::
@@ -67,6 +77,18 @@ Steps to use this tool:
 - Once repair has been verified successful, the configuration file
   may be deleted.
 
+
+.. [#f1] Using the wrong format locator for the contact_points may result in errors:
+
+   - Giving the wrong IP address:
+     ::
+
+        NoHostAvailable: ('Unable to connect to any servers', {'192.168.0.0': error(111, "Tried connecting to [('192.168.0.0', 9042)]. Last error: Connection refused")})
+
+   - Giving a hostname rather than IP:
+     ::
+
+        gaierror: [Errno -2] Name or service not known
 
 License
 =======
