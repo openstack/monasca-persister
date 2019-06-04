@@ -44,7 +44,7 @@ to pip.
 
 ```
 sudo apt-get install git
-sudo pip install git+https://git.openstack.org/openstack/monasca-persister@<revision>#egg=monasca-persister
+sudo pip install git+https://opendev.org/openstack/monasca-persister@<revision>#egg=monasca-persister
 ```
 
 The installation will not cause the persister to run - it should first
