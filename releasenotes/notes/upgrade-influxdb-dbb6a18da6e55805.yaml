@@ -1,0 +1,14 @@
+---
+upgrade:
+  - |
+    InfluxDB 1.7.6 is now the recommended version.
+    monasca-api DevStack plugin now installs InfluxDB 1.7.6 by default.
+    See the `Time Series Databases Setup <https://docs.openstack.org/monasca-api/latest/admin/index.html#time-series-databases-setup>`_
+    section for more information on migrating.
+    Other deployment tools, such as Monasca Docker and Kolla-Ansible
+    should be upgraded accordingly.
+
+security:
+  - |
+    InfluxDB 1.7.6 fixes a security issue in which monasca-api leaks
+    dimensions across projects.
