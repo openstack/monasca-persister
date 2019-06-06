@@ -25,6 +25,12 @@ Steps to use this tool:
 
 - Log in to one node where monasca-persister is deployed.
 
+- If this installation of Monasca is separate from other OpenStack services 
+  (i.e. if Keystone services are not installed on the same server) then 
+  `cachetools` may need to be installed.  On a SUSE system this can be done
+  with `sudo zypper in python-cachetools`, or on an Ubuntu based devstack
+  this can be done with `sudo apt-get install python-cachetools`.
+
 - Identify installation path to monasca-persister.  This may be a
   virtual environment such as
   `/opt/stack/venv/monasca-<version>/lib/python2.7/site-packages/monasca_persister`
