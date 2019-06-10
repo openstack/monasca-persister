@@ -74,6 +74,7 @@ keyspace = {{ CASSANDRA_KEY_SPACE }}
 user = {{ CASSANDRA_USER }}
 password = {{ CASSANDRA_PASSWORD }}
 connection_timeout = {{ CASSANDRA_CONNECTION_TIMEOUT }}
+max_definition_cache_size = {{ CASSANDRA_MAX_CACHE_SIZE }}
 retention_policy = {{ CASSANDRA_RETENTION_POLICY }}
 {% else %}
 [influxdb]

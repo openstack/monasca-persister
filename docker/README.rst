@@ -45,6 +45,7 @@ CASSANDRA_USER                  mon_persister     Cassandra user name
 CASSANDRA_PASSWORD              password          Cassandra password
 CASSANDRA_KEY_SPACE             monasca           Keyspace name where metrics are stored
 CASSANDRA_CONNECTION_TIMEOUT    5                 Cassandra timeout in seconds
+CASSANDRA_MAX_CACHE_SIZE        20000000          Maximum number of cached metric definition entries in memory
 CASSANDRA_RETENTION_POLICY      45                Data retention period in days
 STAY_ALIVE_ON_FAILURE           false             If true, container runs 2 hours even start fails
 =============================== ================= ================================================
