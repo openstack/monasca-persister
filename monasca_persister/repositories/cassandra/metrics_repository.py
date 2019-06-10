@@ -45,7 +45,7 @@ METRICS_INSERT_CQL = ('update monasca.metrics USING TTL ? '
                       'and dimension_names = ?')
 
 METRICS_UPDATE_CQL = ('update monasca.metrics USING TTL ? '
-                      'set updated_at = ? '
+                      'set metric_id = ?, updated_at = ? '
                       'where region = ? and tenant_id = ? and metric_name = ? and dimensions = ? '
                       'and dimension_names = ?')
 
@@ -156,6 +156,7 @@ class MetricCassandraRepository(abstract_repository.AbstractCassandraRepository)
                 self._metric_batch.add_measurement_query(measurement_bound_stmt)
 
                 metric_update_bound_stmt = self._metric_update_stmt.bind((self._retention,
+                                                                          id_bytes,
                                                                           metric.time_stamp,
                                                                           metric.region,
                                                                           metric.tenant_id,
