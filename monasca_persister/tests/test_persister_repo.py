@@ -108,17 +108,16 @@ class TestPersisterRepo(base.BaseTestCase):
                 mock_consumer.commit.assert_called()
                 self.assertEqual([], self.persister._data_points)
 
-    @patch.object(LOG, 'info', side_effect=FakeException())
-    def test_flush_logs_warning_and_exception(self, mock_log_info):
+    def test_flush_logs_warning_and_exception(self):
         exception_msgs = ['partial write: points beyond retention policy dropped',
-                          'unable to parse points']
+                          'unable to parse']
         with(patch.object(cfg.CONF.repositories, 'ignore_parse_point_error',
                           return_value=True)):
             for elem in exception_msgs:
-                mock_log_info.side_effect.message = elem
-                self.persister._data_points = ['some']
-                self.persister._flush()
-                self.mock_log_warning.assert_called()
+                with patch.object(LOG, 'info', side_effect=FakeException(elem)):
+                    self.persister._data_points = ['some']
+                    self.persister._flush()
+                    self.mock_log_warning.assert_called()
 
     @patch.object(LOG, 'info', side_effect=FakeException())
     def test_flush_logs_exception(self, mock_log_info):
