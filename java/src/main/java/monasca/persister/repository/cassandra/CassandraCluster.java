@@ -64,15 +64,12 @@ public class CassandraCluster {
       + "set value = ?, value_meta = ?, region = ?, tenant_id = ?, metric_name = ?, dimensions = ? "
       + "where metric_id = ? and time_stamp = ?";
 
+  // TODO: Remove update statements, TTL issues
   private static final String MEASUREMENT_UPDATE_CQL = "update monasca.measurements USING TTL ? "
       + "set value = ?, value_meta = ? " + "where metric_id = ? and time_stamp = ?";
 
   private static final String METRICS_INSERT_CQL = "update monasca.metrics USING TTL ? "
       + "set metric_id = ?, created_at = ?, updated_at = ? "
-      + "where region = ? and tenant_id = ? and metric_name = ? and dimensions = ? and dimension_names = ?";
-
-  private static final String METRICS_UPDATE_CQL = "update monasca.metrics USING TTL ? "
-      + "set updated_at = ? "
       + "where region = ? and tenant_id = ? and metric_name = ? and dimensions = ? and dimension_names = ?";
 
   private static final String DIMENSION_INSERT_CQL = "insert into  monasca.dimensions "
@@ -115,7 +112,6 @@ public class CassandraCluster {
   private PreparedStatement measurementInsertStmt;
   private PreparedStatement measurementUpdateStmt;
   private PreparedStatement metricInsertStmt;
-  private PreparedStatement metricUpdateStmt;
   private PreparedStatement dimensionStmt;
   private PreparedStatement dimensionMetricStmt;
   private PreparedStatement metricDimensionStmt;
@@ -182,9 +178,9 @@ public class CassandraCluster {
     metricsSession = cluster.connect(dbConfig.getKeySpace());
 
     measurementInsertStmt = metricsSession.prepare(MEASUREMENT_INSERT_CQL).setIdempotent(true);
+    // TODO: Remove update statements, TTL issues
     measurementUpdateStmt = metricsSession.prepare(MEASUREMENT_UPDATE_CQL).setIdempotent(true);
     metricInsertStmt = metricsSession.prepare(METRICS_INSERT_CQL).setIdempotent(true);
-    metricUpdateStmt = metricsSession.prepare(METRICS_UPDATE_CQL).setIdempotent(true);
     dimensionStmt = metricsSession.prepare(DIMENSION_INSERT_CQL).setIdempotent(true);
     dimensionMetricStmt = metricsSession.prepare(DIMENSION_METRIC_INSERT_CQL).setIdempotent(true);
     metricDimensionStmt = metricsSession.prepare(METRIC_DIMENSION_INSERT_CQL).setIdempotent(true);
@@ -232,16 +228,13 @@ public class CassandraCluster {
     return measurementInsertStmt;
   }
 
+  // TODO: Remove update statements, TTL issues
   public PreparedStatement getMeasurementUpdateStmt() {
     return measurementUpdateStmt;
   }
 
   public PreparedStatement getMetricInsertStmt() {
     return metricInsertStmt;
-  }
-
-  public PreparedStatement getMetricUpdateStmt() {
-    return metricUpdateStmt;
   }
 
   public PreparedStatement getDimensionStmt() {
