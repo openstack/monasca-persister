@@ -48,6 +48,14 @@ max_buffer_size = 32768
 zookeeper_path = /persister_partitions/alarm-state-transitions
 num_processors = {{ KAFKA_ALARM_HISTORY_PROCESSORS | default(1) }}
 
+[kafka_events]
+# Comma separated list of Kafka broker host:port.
+uri = {{ KAFKA_URI }}
+enabled = {{ KAFKA_EVENTS_ENABLE | default(false) }}
+group_id = 1_events
+topic = monevents
+batch_size = 1
+
 [kafka_metrics]
 # Comma separated list of Kafka broker host:port
 uri = {{ KAFKA_URI }}

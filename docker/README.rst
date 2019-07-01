@@ -31,6 +31,7 @@ KAFKA_URI                       kafka:9092        The host and port for kafka
 KAFKA_ALARM_HISTORY_BATCH_SIZE  1000              Kafka consumer takes messages in a batch
 KAFKA_ALARM_HISTORY_PROCESSORS  1                 Number of processes for alarm history topic
 KAFKA_ALARM_HISTORY_WAIT_TIME   15                Seconds to wait if the batch size is not reached
+KAFKA_EVENTS_ENABLE             false             Enable events persister
 KAFKA_METRICS_BATCH_SIZE        1000              Kafka consumer takes messages in a batch
 KAFKA_METRICS_PROCESSORS        1                 Number of processes for metrics topic
 KAFKA_METRICS_WAIT_TIME         15                Seconds to wait if the batch size is not reached
