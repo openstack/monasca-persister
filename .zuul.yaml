@@ -12,7 +12,6 @@
         - monasca-tempest-python2-influxdb
         - monasca-tempest-python3-influxdb
         - monasca-tempest-python2-cassandra
-        - monasca-tempest-java-influxdb
         - monasca-tempest-python2-java-cassandra
         - docker-build-monasca-service
         - legacy-monasca-persister-maven-build
@@ -21,7 +20,6 @@
         - monasca-tempest-python2-influxdb
         - monasca-tempest-python3-influxdb
         - monasca-tempest-python2-cassandra
-        - monasca-tempest-java-influxdb
         - monasca-tempest-python2-java-cassandra
         - legacy-monasca-persister-maven-build
     post:
