@@ -9,61 +9,61 @@ Team and repository tags
 monasca-persister
 =================
 
-The Monitoring Persister consumes metrics and alarm state transitions
-from the Message Queue and stores them in the Metrics and Alarms
+The Monasca Persister consumes metrics and alarm state transitions
+from the Apache Kafka message queue and stores them in the time series
 database.
 
-Although the Persister isn't primarily a Web service it uses DropWizard,
-https://dropwizard.github.io/dropwizard/, which provides a nice Web
-application framework to expose an http endpoint that provides an
-interface through which metrics about the Persister can be queried as
-well as health status.
 
-The basic design of the Persister is to have one Kafka consumer publish
-to a Disruptor, https://github.com/LMAX-Exchange/disruptor, that has
-output processors. The output processors use prepared batch statements
-to write to the Metrics and Alarms database.
+Running
+=======
 
-The number of output processors/threads in the Persister can be
-specified to scale to more messages. To horizontally scale and provide
-fault-tolerance any number of Persisters can be started as consumers
-from the Message Queue.
-
-Build
-=====
-
-Requires monasca-common from
-https://github.com/openstack/monasca-common. Download and build
-following instructions in its README.md. Then build monasca-persister
-by:
+To install the Python monasca-persister modules, git clone the source
+and run the following command:
 
 ::
 
-   mvn clean package
+   $ pip install -c https://releases.openstack.org/constraints/upper/master -e ./monasca-persister
+
+To run the unit tests use:
+
+::
+
+   $ tox -e py27,py36
+
+To start the persister run:
+
+::
+
+   $ monasca-persister --config-file=monasca-persister.conf
+
 
 Configuration
 =============
 
-A sample configuration file is available in
-java/src/deb/etc/persister-config.yml-sample.
+A sample configuration file can be generated using the Oslo standards
+used in other OpenStack projects.
 
-A second configuration file is provided in
-java/src/main/resources/persister-config.yml for use with the `vagrant
-"mini-mon" development environment`_.
+::
 
-TODO
+   tox -e genconfig
+
+The result will be in ./etc/monasca/monasca-persister.conf.sample
+
+If the deployment is using the Docker files, the configuration template
+can be found in docker/monasca-persister.conf.j2.
+
+
+Java
 ====
 
--  Purge metrics on shutdown
--  Add more robust offset management in Kafka. Currently, the offset is
-   advanced as each message is read. If the Persister stops after the
-   metric has been read and prior to it being committed to the Metrics
-   and Alarms database, the metric will be lost.
--  Add better handling of SQL exceptions.
--  Complete health check.
--  Specify and document the names of the metrics that are available for
-   monitoring of the Persister.
--  Document the yaml configuration parameters.
+For information on Java implementation see `java/Readme.rst <java/Readme.rst>`_.
+
+
+Contributing and Reporting Bugs
+===============================
+
+Ongoing work for the Monasca project is tracked in Storyboard_.
+
 
 License
 =======
@@ -84,20 +84,5 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-Python
-======
 
-To install the Python monasca-persister modules, git clone the source
-and run the following command:
-
-::
-
-   $ sudo python setup.py install
-
-To run the unit tests use:
-
-::
-
-   $ tox -e py27,py35
-
-.. _vagrant "mini-mon" development environment: https://github.com/openstack/monasca-vagrant/
+.. _Storyboard: https://storyboard.openstack.org
