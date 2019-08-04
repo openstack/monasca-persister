@@ -19,6 +19,8 @@ import six
 
 from monasca_persister.repositories import abstract_repository
 
+DATABASE_NOT_FOUND_MSG = "database not found"
+
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractInfluxdbRepository(abstract_repository.AbstractRepository):
@@ -30,8 +32,30 @@ class AbstractInfluxdbRepository(abstract_repository.AbstractRepository):
             self.conf.influxdb.ip_address,
             self.conf.influxdb.port,
             self.conf.influxdb.user,
-            self.conf.influxdb.password,
-            self.conf.influxdb.database_name)
+            self.conf.influxdb.password)
 
-    def write_batch(self, data_points):
-        self._influxdb_client.write_points(data_points, 'ms', protocol='line')
+    def write_batch(self, data_points_by_tenant):
+        if self.conf.influxdb.db_per_tenant:
+            for tenant_id, data_points in data_points_by_tenant.items():
+                database = '%s_%s' % (self.conf.influxdb.database_name, tenant_id)
+                self._write_batch(data_points, database)
+        else:
+            # NOTE (brtknr): Chain list of values to avoid multiple calls to
+            # database API endpoint (when db_per_tenant is False).
+            data_points = data_points_by_tenant.chained()
+            self._write_batch(data_points, self.conf.influxdb.database_name)
+
+    def _write_batch(self, data_points, database):
+        # NOTE (brtknr): Loop twice to ensure database is created if missing.
+        for retry in range(2):
+            try:
+                self._influxdb_client.write_points(data_points, 'ms',
+                                                   protocol='line',
+                                                   database=database)
+                break
+            except influxdb.exceptions.InfluxDBClientError as ex:
+                if (str(ex).startswith(DATABASE_NOT_FOUND_MSG) and
+                        self.conf.influxdb.db_per_tenant):
+                    self._influxdb_client.create_database(database)
+                else:
+                    raise

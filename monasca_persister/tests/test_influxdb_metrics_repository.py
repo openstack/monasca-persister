@@ -15,7 +15,6 @@
 
 from mock import Mock
 from mock import patch
-from six import string_types
 
 from oslotest import base
 from oslo_config import cfg
@@ -35,7 +34,7 @@ class TestMetricInfluxdbRepository(base.BaseTestCase):
         metric = self._get_metric()
         with patch.object(cfg, 'CONF', return_value=None):
             metric_repo = MetricInfluxdbRepository()
-            self.assertIsInstance(metric_repo.process_message(metric), string_types)
+            self.assertIsInstance(metric_repo.process_message(metric), tuple)
 
     def _get_metric(self):
         metric = '''

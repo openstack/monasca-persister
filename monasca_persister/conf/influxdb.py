@@ -20,6 +20,9 @@ influxdb_opts = [
     cfg.StrOpt('database_name',
                help='database name where metrics are stored',
                default='mon'),
+    cfg.BoolOpt('db_per_tenant',
+                help='Whether to use a separate database per tenant',
+                default=False),
     cfg.HostAddressOpt('ip_address',
                        help='Valid IP address or hostname '
                             'to InfluxDB instance'),

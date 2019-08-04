@@ -64,7 +64,10 @@ class TestInfluxdbAlarmStateHistoryRepo(base.BaseTestCase):
                          '\\"metric_definition\\":\\"dummy_definition\\"',
                          '\\"sub_alarm_state\\":\\"dummy_state\\"',
                          '\\"current_values\\":\\"dummy_values\\"']
-        actual_output = self.alarm_state_repo.process_message(message)
+
+        actual_output, tenant_id = self.alarm_state_repo.process_message(message)
+
+        self.assertEqual(tenant_id, 'dummytenantId')
         self.assertIn(expected_output, actual_output)
         for elem in expected_dict:
             self.assertIn(elem, actual_output)

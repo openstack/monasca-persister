@@ -36,6 +36,9 @@ class MetricInfluxdbRepository(abstract_repository.AbstractInfluxdbRepository):
          value_meta) = parse_measurement_message(message)
 
         tags = dimensions
+
+        # TODO(brtknr): If database per tenant becomes the default and the only
+        # option, recording tenant_id will be redundant.
         tags[u'_tenant_id'] = tenant_id
         tags[u'_region'] = region
 
@@ -61,4 +64,4 @@ class MetricInfluxdbRepository(abstract_repository.AbstractInfluxdbRepository):
 
         LOG.debug(data)
 
-        return data
+        return data, tenant_id

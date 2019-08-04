@@ -61,4 +61,4 @@ class AlarmStateHistInfluxdbRepository(
 
         LOG.debug(line)
 
-        return line
+        return line, tenant_id
