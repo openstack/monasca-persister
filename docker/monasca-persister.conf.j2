@@ -47,6 +47,7 @@ max_buffer_size = 32768
 # Path in zookeeper for kafka consumer group partitioning algo
 zookeeper_path = /persister_partitions/alarm-state-transitions
 num_processors = {{ KAFKA_ALARM_HISTORY_PROCESSORS | default(1) }}
+legacy_kafka_client_enabled= {{ KAFKA_LEGACY_CLIENT_ENABLED | default(true) }}
 
 [kafka_events]
 # Comma separated list of Kafka broker host:port.
@@ -73,6 +74,7 @@ max_buffer_size = 32768
 # Path in zookeeper for kafka consumer group partitioning algo
 zookeeper_path = /persister_partitions/metrics
 num_processors = {{ KAFKA_METRICS_PROCESSORS | default(1) }}
+legacy_kafka_client_enabled= {{ KAFKA_LEGACY_CLIENT_ENABLED | default(true) }}
 
 {% if DATABASE_BACKEND | lower == 'cassandra' %}
 [cassandra]

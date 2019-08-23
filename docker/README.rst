@@ -32,6 +32,7 @@ KAFKA_ALARM_HISTORY_BATCH_SIZE  1000              Kafka consumer takes messages 
 KAFKA_ALARM_HISTORY_PROCESSORS  1                 Number of processes for alarm history topic
 KAFKA_ALARM_HISTORY_WAIT_TIME   15                Seconds to wait if the batch size is not reached
 KAFKA_EVENTS_ENABLE             false             Enable events persister
+KAFKA_LEGACY_CLIENT_ENABLED     true              Enable legacy Kafka client
 KAFKA_METRICS_BATCH_SIZE        1000              Kafka consumer takes messages in a batch
 KAFKA_METRICS_PROCESSORS        1                 Number of processes for metrics topic
 KAFKA_METRICS_WAIT_TIME         15                Seconds to wait if the batch size is not reached
