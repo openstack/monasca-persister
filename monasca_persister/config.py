@@ -45,7 +45,7 @@ def _get_config_files():
     return conf_files
 
 
-def parse_args():
+def parse_args(description='Persists metrics & alarm history in TSDB'):
     global _CONF_LOADED
     if _CONF_LOADED:
         LOG.debug('Configuration has been already loaded')
@@ -58,7 +58,7 @@ def parse_args():
          project='monasca',
          version=version.version_str,
          default_config_files=_get_config_files(),
-         description='Persists metrics & alarm history in TSDB')
+         description=description)
 
     log.setup(CONF,
               product_name='monasca-persister',
