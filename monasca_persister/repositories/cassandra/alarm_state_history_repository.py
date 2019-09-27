@@ -53,9 +53,12 @@ class AlarmStateHistCassandraRepository(abstract_repository.AbstractCassandraRep
                             alarm_id.encode('utf8'),
                             time_stamp)
 
-        return alarm_state_hist
+        return alarm_state_hist, tenant_id
 
-    def write_batch(self, alarm_state_hists):
+    def write_batch(self, alarm_state_hists_by_tenant):
+        # TODO(brtknr): At the moment, Cassandra does not have database per
+        # tenant implemented, so use chained list of values.
+        alarm_state_hists = alarm_state_hists_by_tenant.chained()
         while alarm_state_hists:
             num_rows = min(len(alarm_state_hists), cfg.CONF.kafka_alarm_history.batch_size)
             batch = alarm_state_hists[:num_rows]
