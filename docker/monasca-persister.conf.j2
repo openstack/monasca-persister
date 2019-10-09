@@ -33,7 +33,7 @@ partition_interval_recheck_seconds = 15
 [kafka_alarm_history]
 # Comma separated list of Kafka broker host:port.
 uri = {{ KAFKA_URI }}
-group_id = 1_alarm-state-transitions
+group_id = {{ KAFKA_ALARM_HISTORY_GROUP_ID }}
 topic = alarm-state-transitions
 consumer_id = 1
 client_id = 1
@@ -59,7 +59,7 @@ batch_size = 1
 [kafka_metrics]
 # Comma separated list of Kafka broker host:port
 uri = {{ KAFKA_URI }}
-group_id = 1_metrics
+group_id = {{ KAFKA_METRICS_GROUP_ID }}
 topic = metrics
 consumer_id = 1
 client_id = 1
