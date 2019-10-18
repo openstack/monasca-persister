@@ -37,7 +37,8 @@ class TestEvents(base.BaseTestCase):
 
     def test_parse_event(self):
         event = self._load_event('event_1')
-        project_id, timestamp, event_type, payload, dimensions = utils.parse_events_message(event)
+        (project_id, timestamp, event_type, payload,
+         dimensions), _ = utils.parse_events_message(event)
         self.assertEqual('de98fbff448f4f278a56e9929db70b03', project_id)
         self.assertEqual('2017-06-01 09:15:11.494606', timestamp)
         self.assertEqual('compute.instance.create.start', event_type)

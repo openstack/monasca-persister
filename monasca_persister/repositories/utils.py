@@ -104,4 +104,4 @@ def parse_events_message(message):
     project_id = decoded_message['meta']['project_id']
     dimensions = decoded_message['event']['dimensions']
 
-    return project_id, timestamp, event_type, payload, dimensions
+    return (project_id, timestamp, event_type, payload, dimensions), project_id

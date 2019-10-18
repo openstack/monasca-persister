@@ -27,5 +27,5 @@ class AbstractRepository(object):
         pass
 
     @abc.abstractmethod
-    def write_batch(self, data_points_by_tenant):
+    def write_batch(self, data_points):
         pass

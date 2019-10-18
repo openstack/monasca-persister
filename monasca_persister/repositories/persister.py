@@ -24,47 +24,16 @@ from monasca_persister.repositories import singleton
 
 LOG = log.getLogger(__name__)
 
-class DataPoints(dict):
-
-    def __init__(self):
-        self.counter = 0
-
-    def __setitem__(self, key, value):
-        raise NotImplementedError('Use append(key, value) instead.')
-
-    def __delitem__(self, key):
-        raise NotImplementedError('Use clear() instead.')
-
-    def pop(self):
-        raise NotImplementedError('Use clear() instead.')
-
-    def popitem(self):
-        raise NotImplementedError('Use clear() instead.')
-
-    def update(self):
-        raise NotImplementedError('Use clear() instead.')
-
-    def chained(self):
-        return [vi for vo in super(DataPoints, self).values() for vi in vo]
-
-    def append(self, key, value):
-        super(DataPoints, self).setdefault(key, []).append(value)
-        self.counter += 1
-
-    def clear(self):
-        super(DataPoints, self).clear()
-        self.counter = 0
-
 
 @six.add_metaclass(singleton.Singleton)
 class Persister(six.with_metaclass(ABCMeta, object)):
 
     def __init__(self, kafka_conf, repository):
-        self._data_points = DataPoints()
 
         self._kafka_topic = kafka_conf.topic
         self._batch_size = kafka_conf.batch_size
         self.repository = repository()
+        self._data_points = self.repository.data_points_class()
 
     def _flush(self):
         if not self._data_points:
@@ -74,7 +43,7 @@ class Persister(six.with_metaclass(ABCMeta, object)):
             self.repository.write_batch(self._data_points)
 
             LOG.info("Processed {} messages from topic '{}'".format(
-                self._data_points.counter, self._kafka_topic))
+                self._data_points.get_count(), self._kafka_topic))
 
             self._data_points.clear()
             self._consumer.commit()
@@ -105,7 +74,7 @@ class Persister(six.with_metaclass(ABCMeta, object)):
                     LOG.exception('Error processing message. Message is '
                                   'being dropped. {}'.format(message))
 
-                if self._data_points.counter >= self._batch_size:
+                if self._data_points.get_count() >= self._batch_size:
                     self._flush()
         except Exception:
             LOG.exception(
