@@ -47,9 +47,10 @@ class TestMetricInfluxdbRepository(base.BaseTestCase):
     @patch.object(influxdb, 'InfluxDBClient')
     @patch.object(cfg, 'CONF', return_value=None)
     def _test_write_batch(self, mock_conf, mock_influxdb_client,
-                          db_per_tenant, db_exists):
+                          db_per_tenant, db_exists, hours=0):
         mock_conf.influxdb.database_name = db_name = 'db'
         mock_conf.influxdb.db_per_tenant = db_per_tenant
+        mock_conf.influxdb.default_retention_hours = hours
         t1 = u'fake_tenant_id_1'
         t2 = u'fake_tenant_id_2'
         m1 = self._get_metric(t1)
@@ -59,23 +60,38 @@ class TestMetricInfluxdbRepository(base.BaseTestCase):
         self._test_process_message(metrics_repo, data_points, m1, t1)
         self._test_process_message(metrics_repo, data_points, m2, t2)
         metrics_repo._influxdb_client = mock_influxdb_client
+
         if db_exists:
             metrics_repo._influxdb_client.write_points = Mock()
         else:
             metrics_repo._influxdb_client.write_points = Mock(
                 side_effect=[db_not_found, None, db_not_found, None])
+            rp = '{}h'.format(hours)
             if db_per_tenant:
-                call1 = call('%s_%s' % (db_name, t1))
-                call2 = call('%s_%s' % (db_name, t2))
-                calls = [call1, call2]
+                db1 = '%s_%s' % (db_name, t1)
+                db2 = '%s_%s' % (db_name, t2)
+                rp1 = call(database=db1, default=True,
+                           name=rp, duration=rp, replication='1')
+                rp2 = call(database=db2, default=True,
+                           name=rp, duration=rp, replication='1')
+                calls = [call(db1), call(db2)]
+                rp_calls = [rp1, rp2]
             else:
                 calls = [call(db_name)]
+                rp_calls = [call(database=db_name, default=True,
+                                 name=rp, duration=rp, replication='1')]
         metrics_repo.write_batch(data_points)
         if db_exists:
             mock_influxdb_client.create_database.assert_not_called()
+            mock_influxdb_client.create_retention_policy.assert_not_called()
         else:
             mock_influxdb_client.create_database.assert_has_calls(
                 calls, any_order=True)
+            if hours > 0:
+                mock_influxdb_client.create_retention_policy.assert_has_calls(
+                    rp_calls, any_order=True)
+            else:
+                mock_influxdb_client.create_retention_policy.assert_not_called()
 
     def _get_metric(self, tenant_id):
         metric = '''
@@ -110,8 +126,20 @@ class TestMetricInfluxdbRepository(base.BaseTestCase):
     def test_write_batch(self):
         self._test_write_batch(db_per_tenant=False, db_exists=False)
 
+    def test_write_batch_db_exists_with_rp(self):
+        self._test_write_batch(db_per_tenant=False, db_exists=True, hours=2016)
+
+    def test_write_batch_with_rp(self):
+        self._test_write_batch(db_per_tenant=False, db_exists=False, hours=2016)
+
     def test_write_batch_db_per_tenant_db_exists(self):
         self._test_write_batch(db_per_tenant=True, db_exists=True)
 
     def test_write_batch_db_per_tenant(self):
         self._test_write_batch(db_per_tenant=True, db_exists=False)
+
+    def test_write_batch_db_per_tenant_db_exists_with_rp(self):
+        self._test_write_batch(db_per_tenant=True, db_exists=True, hours=2016)
+
+    def test_write_batch_db_per_tenant_with_rp(self):
+        self._test_write_batch(db_per_tenant=True, db_exists=False, hours=2016)
