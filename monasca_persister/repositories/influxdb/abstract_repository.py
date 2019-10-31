@@ -57,8 +57,9 @@ class AbstractInfluxdbRepository(abstract_repository.AbstractRepository):
                                                    database=database)
                 break
             except influxdb.exceptions.InfluxDBClientError as ex:
-                if (str(ex).startswith(DATABASE_NOT_FOUND_MSG) and
-                        self.conf.influxdb.db_per_tenant):
+                # When a databse is not found, the returned exception resolves
+                # to: {"error":"database not found: \"test\""}
+                if DATABASE_NOT_FOUND_MSG in str(ex):
                     self._influxdb_client.create_database(database)
                 else:
                     raise
