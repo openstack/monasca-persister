@@ -104,7 +104,8 @@ class TestUtils(base.BaseTestCase):
             }
         }"""
 
-        project_id, timestamp, event_type, payload, dimensions = utils.parse_events_message(message)
+        (project_id, timestamp, event_type, payload,
+         dimensions), _ = utils.parse_events_message(message)
 
         self.assertEqual(project_id, "dummy_project_id")
         self.assertEqual(timestamp, "dummy_timestamp")

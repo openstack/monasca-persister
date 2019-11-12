@@ -21,8 +21,7 @@ from oslo_config import cfg
 
 from monasca_persister.repositories.cassandra import alarm_state_history_repository
 from monasca_persister.repositories.cassandra import connection_util
-
-from monasca_persister.repositories.persister import DataPoints
+from monasca_persister.repositories import data_points
 
 
 class TestAlarmStateHistoryRepo(base.BaseTestCase):
@@ -106,6 +105,6 @@ class TestAlarmStateHistoryRepo(base.BaseTestCase):
             cfg.CONF = Mock(kafka_alarm_history=Mock(batch_size=1))
 
             self._session, self._upsert_stmt = Mock(), Mock()
-            alarm_state_hists_by_tenant = DataPoints()
+            alarm_state_hists_by_tenant = data_points.DataPointsAsList()
             alarm_state_hists_by_tenant.append('fake_tenant', 'elem')
             self.alarm_state_hist_repo.write_batch(alarm_state_hists_by_tenant)

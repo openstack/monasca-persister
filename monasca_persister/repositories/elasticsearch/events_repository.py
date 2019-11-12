@@ -21,6 +21,7 @@ from oslo_config import cfg
 from oslo_log import log
 
 from monasca_persister.repositories import abstract_repository
+from monasca_persister.repositories import data_points
 from monasca_persister.repositories import utils
 
 LOG = log.getLogger(__name__)
@@ -37,6 +38,7 @@ class ElasticSearchEventsRepository(abstract_repository.AbstractRepository):
             sniffer_timeout=self.conf.sniffer_timeout,
             max_retries=self.conf.max_retries
         )
+        self.data_points_class = data_points.DataPointsAsList
 
     def process_message(self, message):
         return utils.parse_events_message(message)
