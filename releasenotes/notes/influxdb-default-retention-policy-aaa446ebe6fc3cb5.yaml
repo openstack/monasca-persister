@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Support default_retention_hours config for InfluxDB for new
+    database that are created. Falls back to infinite retention as
+    before when unspecified or if the value is 0. Retention policy for
+    existing databases are not altered. Must be an integer.

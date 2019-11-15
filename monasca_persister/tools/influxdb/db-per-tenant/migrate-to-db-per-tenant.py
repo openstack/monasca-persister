@@ -125,12 +125,17 @@ class MigrationHelper(object):
     def migrate(self,
                 tenant_defaults={},
                 default_start_time_offset=0,  # Default: now
-                default_end_time_offset=(520),  # Default: 10 years
+                default_end_time_offset=520,  # Default: 10 years
                 skip_regex=[],
                 measurements_file=None, success_file=None, failure_file=None, **kwargs):
         measurements = self.get_measurements(measurements_file)
         tenancy = self.get_tenancies(measurements)
         done = self.get_complete(success_file)
+        default_rp = {}
+        hours = self.conf.influxdb.default_retention_hours
+        if hours > 0:
+            rp = '{}h'.format(hours)
+            default_rp = dict(name=rp, duration=rp, replication='1', default=True)
         skip = set()
         fail = set()
         if failure_file:
@@ -159,8 +164,15 @@ class MigrationHelper(object):
                     end_time_offset = tenant_defaults.get(
                         tenant_id, {}).get('end_time_offset_override',
                                            default_end_time_offset)
+                    # NOTE (brtknr): Ensure that the default upper and lower
+                    # time offsets are respected during migration by the
+                    # projects with custom retention policies.
+                    start_time_offset = max(default_start_time_offset,
+                                            start_time_offset)
+                    end_time_offset = min(default_end_time_offset,
+                                          end_time_offset)
                     retention_policy = tenant_defaults.get(
-                        tenant_id, {}) .get('rp', {})
+                        tenant_id, {}).get('rp', default_rp)
                     self._migrate(measurement, tenant_id,
                                   start_time_offset=start_time_offset,
                                   end_time_offset=end_time_offset,
