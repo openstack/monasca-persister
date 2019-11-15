@@ -3,22 +3,18 @@
       - check-requirements
       - openstack-cover-jobs
       - openstack-lower-constraints-jobs
-      - openstack-python-jobs
       - openstack-python3-ussuri-jobs
       - release-notes-jobs-python3
     check:
       jobs:
-        - monasca-tempest-python2-influxdb
         - monasca-tempest-python3-influxdb
-        - monasca-tempest-python2-cassandra
-        - monasca-tempest-python2-java-cassandra
+        - monasca-tempest-python3-cassandra
+        - monasca-tempest-python3-java-cassandra
         - docker-build-monasca-service
         - legacy-monasca-persister-maven-build
     gate:
       jobs:
-        - monasca-tempest-python2-influxdb
         - monasca-tempest-python3-influxdb
-        - monasca-tempest-python2-cassandra
         - legacy-monasca-persister-maven-build
     post:
       jobs:
