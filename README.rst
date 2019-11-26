@@ -28,7 +28,7 @@ To run the unit tests use:
 
 ::
 
-   $ tox -e py27,py36
+   $ tox -e py36
 
 To start the persister run:
 
