@@ -1,13 +1,10 @@
-Team and repository tags
-========================
+Monasca Persister
+=================
 
 .. image:: https://governance.openstack.org/tc/badges/monasca-persister.svg
     :target: https://governance.openstack.org/tc/reference/tags/index.html
 
 .. Change things from this point on
-
-monasca-persister
-=================
 
 The Monasca Persister consumes metrics and alarm state transitions
 from the Apache Kafka message queue and stores them in the time series
