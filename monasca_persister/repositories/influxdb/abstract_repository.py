@@ -52,9 +52,11 @@ class AbstractInfluxdbRepository(abstract_repository.AbstractRepository):
         # NOTE (brtknr): Loop twice to ensure database is created if missing.
         for retry in range(2):
             try:
+                batch_size = self.conf.influxdb.batch_size
                 self._influxdb_client.write_points(data_points, 'ms',
                                                    protocol='line',
-                                                   database=database)
+                                                   database=database,
+                                                   batch_size=batch_size)
                 break
             except influxdb.exceptions.InfluxDBClientError as ex:
                 # When a databse is not found, the returned exception resolves

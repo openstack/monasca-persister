@@ -27,6 +27,9 @@ influxdb_opts = [
                help='Default retention period in hours for new '
                     'databases automatically created by the persister',
                default=0),
+    cfg.IntOpt('batch_size',
+               help='Maximum size of the batch to write to the database.',
+               default=10000),
     cfg.HostAddressOpt('ip_address',
                        help='Valid IP address or hostname '
                             'to InfluxDB instance'),
