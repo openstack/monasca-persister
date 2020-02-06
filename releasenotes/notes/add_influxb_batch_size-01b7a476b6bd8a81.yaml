@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Configuration option `batch_size` for InfluxDB to control the maximum
+    size of batches written to the database. Default value set to 10 000 data
+    points.
