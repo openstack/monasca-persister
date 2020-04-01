@@ -132,7 +132,7 @@ def main():
 
     # Start
     try:
-        LOG.info('''
+        LOG.info(r'''
 
                _____
               /     \   ____   ____ _____    ______ ____ _____
@@ -163,6 +163,7 @@ def main():
     except Exception:
         LOG.exception('Error! Exiting.')
         clean_exit(signal.SIGKILL)
+
 
 if __name__ == "__main__":
     sys.exit(main())

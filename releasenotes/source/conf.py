@@ -173,9 +173,9 @@ htmlhelp_basename = 'MonitoringApiReleaseNotesDoc'
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [(
-     master_doc, 'MonitoringPersiterReleaseNotes.tex',
-     u'Monitoring Persister Release Notes', [author],
-     'manual'
+    master_doc, 'MonitoringPersiterReleaseNotes.tex',
+    u'Monitoring Persister Release Notes', [author],
+    'manual'
 )]
 
 # The name of an image file (relative to this directory) to place at the top of
