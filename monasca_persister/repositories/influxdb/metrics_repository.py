@@ -12,9 +12,9 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import ujson as json
 
 from oslo_log import log
+import simplejson as json
 
 from monasca_persister.repositories.influxdb import abstract_repository
 from monasca_persister.repositories.influxdb import line_utils

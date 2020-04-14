@@ -13,19 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from unittest import mock
+
 import influxdb
 from influxdb.exceptions import InfluxDBClientError
-
-from mock import Mock
-from mock import patch
-from mock import call
+from oslotest import base
+from oslo_config import cfg
+import six
 
 from monasca_persister.repositories.influxdb.metrics_repository import MetricInfluxdbRepository
 
-from oslotest import base
-from oslo_config import cfg
-
-import six
 
 db_not_found = InfluxDBClientError(
     content='{"error": "database not found: db"}', code=404)
@@ -44,8 +41,8 @@ class TestMetricInfluxdbRepository(base.BaseTestCase):
         self.assertEqual(_tenant, tenant)
         data_points.append(_tenant, _dp)
 
-    @patch.object(influxdb, 'InfluxDBClient')
-    @patch.object(cfg, 'CONF', return_value=None)
+    @mock.patch.object(influxdb, 'InfluxDBClient')
+    @mock.patch.object(cfg, 'CONF', return_value=None)
     def _test_write_batch(self, mock_conf, mock_influxdb_client,
                           db_per_tenant, db_exists, hours=0):
         mock_conf.influxdb.database_name = db_name = 'db'
@@ -62,24 +59,24 @@ class TestMetricInfluxdbRepository(base.BaseTestCase):
         metrics_repo._influxdb_client = mock_influxdb_client
 
         if db_exists:
-            metrics_repo._influxdb_client.write_points = Mock()
+            metrics_repo._influxdb_client.write_points = mock.Mock()
         else:
-            metrics_repo._influxdb_client.write_points = Mock(
+            metrics_repo._influxdb_client.write_points = mock.Mock(
                 side_effect=[db_not_found, None, db_not_found, None])
             rp = '{}h'.format(hours)
             if db_per_tenant:
                 db1 = '%s_%s' % (db_name, t1)
                 db2 = '%s_%s' % (db_name, t2)
-                rp1 = call(database=db1, default=True,
-                           name=rp, duration=rp, replication='1')
-                rp2 = call(database=db2, default=True,
-                           name=rp, duration=rp, replication='1')
-                calls = [call(db1), call(db2)]
+                rp1 = mock.call(database=db1, default=True, name=rp,
+                                duration=rp, replication='1')
+                rp2 = mock.call(database=db2, default=True, name=rp,
+                                duration=rp, replication='1')
+                calls = [mock.call(db1), mock.call(db2)]
                 rp_calls = [rp1, rp2]
             else:
-                calls = [call(db_name)]
-                rp_calls = [call(database=db_name, default=True,
-                                 name=rp, duration=rp, replication='1')]
+                calls = [mock.call(db_name)]
+                rp_calls = [mock.call(database=db_name, default=True,
+                                      name=rp, duration=rp, replication='1')]
         metrics_repo.write_batch(data_points)
         if db_exists:
             mock_influxdb_client.create_database.assert_not_called()
@@ -116,7 +113,7 @@ class TestMetricInfluxdbRepository(base.BaseTestCase):
                 "creation_time":1554725988
             }
         '''
-        message = Mock()
+        message = mock.Mock()
         message.value.return_value = metric
         return message
 

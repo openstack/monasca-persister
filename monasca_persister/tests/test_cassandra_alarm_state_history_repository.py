@@ -13,8 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from mock import Mock
-from mock import patch
+from unittest import mock
 
 from oslotest import base
 from oslo_config import cfg
@@ -44,12 +43,15 @@ class TestAlarmStateHistoryRepo(base.BaseTestCase):
         self.patch_conn_util_cluster.stop()
 
     def _set_patchers(self):
-        self.patch_cfg = patch.object(alarm_state_history_repository.abstract_repository, 'conf')
-        self.patch_conn_util_cluster = patch.object(connection_util, 'create_cluster',
-                                                    return_value=None)
-        self.patch_conn_util_session = patch.object(connection_util, 'create_session',
-                                                    return_value=Mock(
-                                                        prepare=Mock(return_value=None)))
+        self.patch_cfg = mock.patch.object(
+            alarm_state_history_repository.abstract_repository, 'conf')
+        self.patch_conn_util_cluster = mock.patch.object(connection_util,
+                                                         'create_cluster',
+                                                         return_value=None)
+        self.patch_conn_util_session =\
+            mock.patch.object(connection_util, 'create_session',
+                              return_value=mock.Mock(prepare=mock.Mock(
+                                  return_value=None)))
 
     def _set_mocks(self):
         self.mock_cfg = self.patch_cfg.start()
@@ -57,7 +59,7 @@ class TestAlarmStateHistoryRepo(base.BaseTestCase):
         self.mock_conn_util_session = self.patch_conn_util_session.start()
 
     def test_process_message(self):
-        message = Mock()
+        message = mock.Mock()
         message.value.return_value = """{
             "alarm-transitioned": {
                 "alarmId": "dummyid",
@@ -79,10 +81,10 @@ class TestAlarmStateHistoryRepo(base.BaseTestCase):
         }"""
         self.alarm_state_hist_repo._retention = 0
 
-        expected_output = [b'"sub_alarm_expression":"dummy_sub_alarm"',
-                           b'"current_values":"dummy_values"',
-                           b'"metric_definition":"dummy_definition"',
-                           b'"sub_alarm_state":"dummy_state"']
+        expected_output = [b'"sub_alarm_expression": "dummy_sub_alarm"',
+                           b'"current_values": "dummy_values"',
+                           b'"metric_definition": "dummy_definition"',
+                           b'"sub_alarm_state": "dummy_state"']
 
         output, tenant_id = self.alarm_state_hist_repo.process_message(message)
 
@@ -100,11 +102,12 @@ class TestAlarmStateHistoryRepo(base.BaseTestCase):
         self.assertEqual(output[9], 'dummytimestamp')
 
     def test_write_batch(self):
-        with patch.object(alarm_state_history_repository, 'execute_concurrent_with_args',
-                          return_value=0):
-            cfg.CONF = Mock(kafka_alarm_history=Mock(batch_size=1))
+        with mock.patch.object(alarm_state_history_repository,
+                               'execute_concurrent_with_args',
+                               return_value=0):
+            cfg.CONF = mock.Mock(kafka_alarm_history=mock.Mock(batch_size=1))
 
-            self._session, self._upsert_stmt = Mock(), Mock()
+            self._session, self._upsert_stmt = mock.Mock(), mock.Mock()
             alarm_state_hists_by_tenant = data_points.DataPointsAsList()
             alarm_state_hists_by_tenant.append('fake_tenant', 'elem')
             self.alarm_state_hist_repo.write_batch(alarm_state_hists_by_tenant)

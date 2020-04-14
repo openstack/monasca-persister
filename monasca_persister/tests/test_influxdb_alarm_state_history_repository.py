@@ -13,8 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from mock import Mock
-from mock import patch
+from unittest import mock
 
 from oslotest import base
 
@@ -26,14 +25,15 @@ from monasca_persister.repositories.influxdb import abstract_repository
 class TestInfluxdbAlarmStateHistoryRepo(base.BaseTestCase):
     def setUp(self):
         super(TestInfluxdbAlarmStateHistoryRepo, self).setUp()
-        with patch.object(abstract_repository.cfg, 'CONF', return_value=Mock()):
+        with mock.patch.object(abstract_repository.cfg, 'CONF',
+                               return_value=mock.Mock()):
             self.alarm_state_repo = AlarmStateHistInfluxdbRepository()
 
     def tearDown(self):
         super(TestInfluxdbAlarmStateHistoryRepo, self).tearDown()
 
     def test_process_message(self):
-        message = Mock()
+        message = mock.Mock()
 
         message.value.return_value = """{
             "alarm-transitioned": {
@@ -54,16 +54,16 @@ class TestInfluxdbAlarmStateHistoryRepo(base.BaseTestCase):
                 }
             }
         }"""
-        expected_output = u'alarm_state_history,tenant_id=dummytenantId ' \
-                          u'tenant_id="dummytenantId",alarm_id="dummyid",' \
-                          u'metrics="\\"dummymetrics\\"",new_state="dummynewState"' \
-                          u',old_state="dummyoldState",link="dummylink",' \
-                          u'lifecycle_state="dummylifecycleState",' \
-                          u'reason="dummystateChangeReason",reason_data="{}"'
-        expected_dict = ['\\"sub_alarm_expression\\":\\"dummy_sub_alarm\\"',
-                         '\\"metric_definition\\":\\"dummy_definition\\"',
-                         '\\"sub_alarm_state\\":\\"dummy_state\\"',
-                         '\\"current_values\\":\\"dummy_values\\"']
+        expected_output = 'alarm_state_history,tenant_id=dummytenantId ' \
+                          'tenant_id="dummytenantId",alarm_id="dummyid",' \
+                          'metrics="\\"dummymetrics\\"",new_state="dummynewState"' \
+                          ',old_state="dummyoldState",link="dummylink",' \
+                          'lifecycle_state="dummylifecycleState",' \
+                          'reason="dummystateChangeReason",reason_data="{}"'
+        expected_dict = ['\\"sub_alarm_expression\\": \\"dummy_sub_alarm\\"',
+                         '\\"metric_definition\\": \\"dummy_definition\\"',
+                         '\\"sub_alarm_state\\": \\"dummy_state\\"',
+                         '\\"current_values\\": \\"dummy_values\\"']
 
         actual_output, tenant_id = self.alarm_state_repo.process_message(message)
 

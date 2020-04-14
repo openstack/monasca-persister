@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from mock import Mock
+from unittest import mock
+
 from oslotest import base
+import simplejson as json
 
 from monasca_persister.repositories import utils
 
@@ -26,7 +28,7 @@ class TestUtils(base.BaseTestCase):
         super(TestUtils, self).tearDown()
 
     def test_parse_measurement_message(self):
-        message = Mock()
+        message = mock.Mock()
         message.value.return_value = """{
             "metric": {
               "name": "metric_name",
@@ -53,7 +55,7 @@ class TestUtils(base.BaseTestCase):
         self.assertEqual(data[6], {})
 
     def test_parse_alarm_state_hist_message(self):
-        message = Mock()
+        message = mock.Mock()
         message.value.return_value = """{
             "alarm-transitioned": {
                 "alarmId": "dummyid",
@@ -73,10 +75,10 @@ class TestUtils(base.BaseTestCase):
                 }
             }
         }"""
-        output = ['"sub_alarm_expression":"dummy_sub_alarm"',
-                  '"current_values":"dummy_values"',
-                  '"metric_definition":"dummy_definition"',
-                  '"sub_alarm_state":"dummy_state"']
+        output = {'sub_alarm_expression': 'dummy_sub_alarm',
+                  'current_values': 'dummy_values',
+                  'metric_definition': 'dummy_definition',
+                  'sub_alarm_state': 'dummy_state'}
         data = utils.parse_alarm_state_hist_message(message)
         self.assertEqual(data[0], 'dummyid')
         self.assertEqual(data[1], 'dummymetrics')
@@ -84,14 +86,15 @@ class TestUtils(base.BaseTestCase):
         self.assertEqual(data[3], 'dummyoldState')
         self.assertEqual(data[4], 'dummylink')
         self.assertEqual(data[5], 'dummylifecycleState')
-        self.assertEqual(data[6], "dummystateChangeReason")
-        for elem in output:
-            self.assertIn(elem, data[7])
+        self.assertEqual(data[6], 'dummystateChangeReason')
+        sub_alarms_data = json.loads(data[7])
+        for elemKey, elemValue in output.items():
+            self.assertIn(elemValue, sub_alarms_data[elemKey])
         self.assertEqual(data[8], 'dummytenantId')
         self.assertEqual(data[9], 'dummytimestamp')
 
     def test_parse_events_message(self):
-        message = Mock()
+        message = mock.Mock()
         message.value.return_value = """{
             "event": {
                 "event_type": "dummy_event_type",

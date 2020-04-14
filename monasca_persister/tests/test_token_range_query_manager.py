@@ -13,8 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from mock import Mock
-from mock import patch
+from unittest import mock
 
 from oslotest import base
 
@@ -33,11 +32,13 @@ class TestTokenRangeQueryManager(base.BaseTestCase):
         self._set_patchers()
         self._set_mocks()
 
-        cql, result_handler = Mock(), Mock()
+        cql, result_handler = mock.Mock, mock.Mock()
         self.token_range_query_mgr = TokenRangeQueryManager(cql, result_handler, process_count=1)
 
     def _set_patchers(self):
-        self.patcher_setup = patch.object(TokenRangeQueryManager, '_setup', return_value=None)
+        self.patcher_setup = mock.patch.object(TokenRangeQueryManager,
+                                               '_setup',
+                                               return_value=None)
 
     def _set_mocks(self):
         self.mock_setup = self.patcher_setup.start()
@@ -48,12 +49,14 @@ class TestTokenRangeQueryManager(base.BaseTestCase):
         self.patcher_setup.stop()
 
     def test_close_pool(self):
-        with patch.object(self.token_range_query_mgr._pool, 'join', side_effect=None):
+        with mock.patch.object(self.token_range_query_mgr._pool, 'join',
+                               side_effect=None):
             self.assertIsNone(self.token_range_query_mgr.close_pool())
 
     def test_query(self):
-        with patch.object(self.token_range_query_mgr._pool, 'map', side_effect=FakeException):
-            sample_element = Mock()
+        with mock.patch.object(self.token_range_query_mgr._pool, 'map',
+                               side_effect=FakeException):
+            sample_element = mock.Mock()
             sample_element.value = 1
             token_ring = [sample_element, sample_element]
             self.assertRaises(FakeException, self.token_range_query_mgr.query, token_ring)

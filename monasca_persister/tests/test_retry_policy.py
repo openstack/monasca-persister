@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from mock import Mock
+from unittest import mock
 
 from cassandra.policies import RetryPolicy
 from oslotest import base
@@ -32,7 +32,10 @@ class TestMonascaRetryPolicy(base.BaseTestCase):
     def test_on_read_timeout_when_retry_num_gt_read_attempts(self):
         self.monasca_retry_policy.read_attempts = 0
         retry_num = 1
-        rethrow, none = self.monasca_retry_policy.on_read_timeout(Mock(), Mock(), Mock(), 0, 0,
+        rethrow, none = self.monasca_retry_policy.on_read_timeout(mock.Mock(),
+                                                                  mock.Mock(),
+                                                                  mock.Mock(),
+                                                                  0, 0,
                                                                   retry_num)
         self.assertEqual(rethrow, RetryPolicy.RETHROW)
         self.assertEqual(none, None)
@@ -45,7 +48,7 @@ class TestMonascaRetryPolicy(base.BaseTestCase):
         retry_num = 0
         self.monasca_retry_policy.read_attempts = 1
         returned_retry, returned_consistency = self.monasca_retry_policy. \
-            on_read_timeout(Mock(), consistency, required_responses,
+            on_read_timeout(mock.Mock(), consistency, required_responses,
                             received_responses, data_retrieved, retry_num)
         self.assertEqual(returned_retry, RetryPolicy.RETRY)
         self.assertEqual(consistency, returned_consistency)
@@ -58,7 +61,7 @@ class TestMonascaRetryPolicy(base.BaseTestCase):
         retry_num = 0
         self.monasca_retry_policy.read_attempts = 1
         returned_rethrow, returned_none = self.monasca_retry_policy. \
-            on_read_timeout(Mock(), consistency, required_reponses,
+            on_read_timeout(mock.Mock(), consistency, required_reponses,
                             received_responses, data_retrieved, retry_num)
         self.assertEqual(returned_rethrow, RetryPolicy.RETHROW)
         self.assertEqual(returned_none, None)
@@ -67,7 +70,8 @@ class TestMonascaRetryPolicy(base.BaseTestCase):
         retry_num = 1
         self.monasca_retry_policy.write_attempts = 0
         returned_rethrow, returned_none = self.monasca_retry_policy. \
-            on_write_timeout(Mock(), Mock(), Mock(), 0, 0, retry_num)
+            on_write_timeout(mock.Mock(), mock.Mock(), mock.Mock(), 0, 0,
+                             retry_num)
         self.assertEqual(returned_rethrow, RetryPolicy.RETHROW)
         self.assertEqual(returned_none, None)
 
@@ -76,7 +80,8 @@ class TestMonascaRetryPolicy(base.BaseTestCase):
         consistency = 0
         self.monasca_retry_policy.write_attempts = 1
         returned_retry, returned_consistency = self.monasca_retry_policy. \
-            on_write_timeout(Mock(), consistency, Mock(), 0, 0, retry_num)
+            on_write_timeout(mock.Mock(), consistency, mock.Mock(), 0, 0,
+                             retry_num)
         self.assertEqual(returned_retry, RetryPolicy.RETRY)
         self.assertEqual(returned_consistency, consistency)
 
@@ -86,7 +91,8 @@ class TestMonascaRetryPolicy(base.BaseTestCase):
         self.monasca_retry_policy.unavailable_attempts = 1
 
         returned_retry_next_host, returned_consistency = \
-            self.monasca_retry_policy.on_unavailable(Mock(), consistency, 0, 0, retry_num)
+            self.monasca_retry_policy.on_unavailable(mock.Mock(),
+                                                     consistency, 0, 0, retry_num)
         self.assertEqual(returned_consistency, consistency)
         self.assertEqual(returned_retry_next_host, RetryPolicy.RETRY_NEXT_HOST)
 
@@ -96,6 +102,7 @@ class TestMonascaRetryPolicy(base.BaseTestCase):
         self.monasca_retry_policy.unavailable_attempts = 1
 
         returned_rethrow, returned_none = \
-            self.monasca_retry_policy.on_unavailable(Mock(), consistency, 0, 0, retry_num)
+            self.monasca_retry_policy.on_unavailable(mock.Mock(),
+                                                     consistency, 0, 0, retry_num)
         self.assertEqual(returned_none, None)
         self.assertEqual(returned_rethrow, RetryPolicy.RETHROW)

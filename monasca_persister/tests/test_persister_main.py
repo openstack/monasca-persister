@@ -10,10 +10,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from mock import patch
-from mock import call
-from mock import Mock
 import signal
+from unittest import mock
 
 from oslo_config import cfg
 from oslotest import base
@@ -41,12 +39,13 @@ class TestPersister(base.BaseTestCase):
         self._set_mocks()
 
     def _set_patchers(self):
-        self.sys_exit_patcher = patch.object(self.persister.sys, 'exit')
-        self.log_patcher = patch.object(self.persister, 'log')
-        self.simport_patcher = patch.object(self.persister, 'simport')
-        self.cfg_patcher = patch.object(self.persister, 'cfg')
-        self.sleep_patcher = patch.object(self.persister.time, 'sleep')
-        self.process_patcher = patch.object(self.persister.multiprocessing, 'Process')
+        self.sys_exit_patcher = mock.patch.object(self.persister.sys, 'exit')
+        self.log_patcher = mock.patch.object(self.persister, 'log')
+        self.simport_patcher = mock.patch.object(self.persister, 'simport')
+        self.cfg_patcher = mock.patch.object(self.persister, 'cfg')
+        self.sleep_patcher = mock.patch.object(self.persister.time, 'sleep')
+        self.process_patcher = mock.patch.object(
+            self.persister.multiprocessing, 'Process')
 
     def _set_mocks(self):
         self.mock_sys_exit = self.sys_exit_patcher.start()
@@ -118,23 +117,25 @@ class TestPersister(base.BaseTestCase):
 
     def test_active_children_are_killed_during_exit(self):
 
-        with patch.object(self.persister.multiprocessing, 'active_children') as active_children,\
-                patch.object(self.persister.os, 'kill') as mock_kill:
+        with mock.patch.object(self.persister.multiprocessing,
+                               'active_children') as active_children,\
+                mock.patch.object(self.persister.os, 'kill') as mock_kill:
 
-            active_children.return_value = [Mock(name='child-1', pid=1),
-                                            Mock(name='child-2', pid=2)]
+            active_children.return_value = [mock.Mock(name='child-1', pid=1),
+                                            mock.Mock(name='child-2', pid=2)]
 
             self.persister.clean_exit(0)
 
-            mock_kill.assert_has_calls([call(1, signal.SIGKILL), call(2, signal.SIGKILL)])
+            mock_kill.assert_has_calls([mock.call(1, signal.SIGKILL),
+                                        mock.call(2, signal.SIGKILL)])
 
     def test_active_children_kill_exception_is_ignored(self):
 
-        with patch.object(self.persister.multiprocessing,
-                          'active_children') as active_children, \
-                patch.object(self.persister.os, 'kill') as mock_kill:
+        with mock.patch.object(self.persister.multiprocessing,
+                               'active_children') as active_children, \
+                mock.patch.object(self.persister.os, 'kill') as mock_kill:
 
-            active_children.return_value = [Mock()]
+            active_children.return_value = [mock.Mock()]
             mock_kill.side_effect = FakeException
 
             self.persister.clean_exit(0)
@@ -185,11 +186,11 @@ class TestPersister(base.BaseTestCase):
         self._assert_process_terminate_called()
 
     def test_start_process_handler_creates_and_runs_persister(self):
-        fake_kafka_config = Mock()
-        fake_repository = Mock()
+        fake_kafka_config = mock.Mock()
+        fake_repository = mock.Mock()
 
-        with patch('monasca_persister.kafka.legacy_kafka_persister'
-                   '.LegacyKafkaPersister') as mock_persister_class:
+        with mock.patch('monasca_persister.kafka.legacy_kafka_persister.'
+                        'LegacyKafkaPersister') as mock_persister_class:
             self.persister.start_process(fake_repository, fake_kafka_config)
 
             mock_persister_class.assert_called_once_with(
@@ -197,7 +198,7 @@ class TestPersister(base.BaseTestCase):
 
 
 def _get_process(name, is_alive=True):
-    return Mock(name=name, is_alive=Mock(return_value=is_alive))
+    return mock.Mock(name=name, is_alive=mock.Mock(return_value=is_alive))
 
 
 def _get_process_list(number_of_processes):

@@ -13,12 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ujson
-
 from datetime import datetime
+
 from elasticsearch import Elasticsearch
 from oslo_config import cfg
 from oslo_log import log
+import simplejson as json
 
 from monasca_persister.repositories import abstract_repository
 from monasca_persister.repositories import data_points
@@ -61,7 +61,7 @@ class ElasticSearchEventsRepository(abstract_repository.AbstractRepository):
             self.es.create(
                 index=index,
                 doc_type='event',
-                body=ujson.dumps(body)
+                body=json.dumps(body)
             )
 
     @staticmethod

@@ -14,8 +14,8 @@
 from datetime import datetime
 import json
 import os
+from unittest import mock
 
-from mock import patch
 from oslotest import base
 from testtools import matchers
 
@@ -60,7 +60,7 @@ class TestEvents(base.BaseTestCase):
 
         self.assertEqual('2017-08-07', normalize_timestamp('2017-08-07 11:22:43'))
 
-    @patch('monasca_common.kafka.legacy_kafka_message')
+    @mock.patch('monasca_common.kafka.legacy_kafka_message')
     def _load_event(self, event_name, mock_kafka_message):
         if self.events is None:
             filepath = os.path.join(os.path.dirname(__file__), 'events.json')
