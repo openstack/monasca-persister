@@ -13,8 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from mock import Mock
-from mock import patch
+from unittest import mock
 
 from cassandra.query import BatchStatement
 from cassandra.query import SimpleStatement
@@ -31,15 +30,16 @@ class TestMetricBatch(base.BaseTestCase):
     def setUp(self):
         super(TestMetricBatch, self).setUp()
         self.bound_stmt = SimpleStatement("whatever")
-        self.metric_batch = metric_batch.MetricBatch(Mock(), Mock(), 1)
+        self.metric_batch = metric_batch.MetricBatch(mock.Mock(),
+                                                     mock.Mock(), 1)
         self._set_patchers()
         self._set_mocks()
 
     def _set_patchers(self):
-        self.patch_from_key = patch.object(self.metric_batch.metadata.token_map.token_class,
-                                           'from_key')
-        self.patch_lb_make_query_plan = patch.object(self.metric_batch.lb_policy,
-                                                     'make_query_plan')
+        self.patch_from_key = mock.patch.object(
+            self.metric_batch.metadata.token_map.token_class, 'from_key')
+        self.patch_lb_make_query_plan = mock.patch.object(
+            self.metric_batch.lb_policy, 'make_query_plan')
 
     def _set_mocks(self):
         self.mock_key = self.patch_from_key.start()
@@ -144,21 +144,21 @@ class TestMetricBatch(base.BaseTestCase):
     def test_log_token_batch_map(self):
         query_map = {}
         self.metric_batch.batch_query_by_token(self.bound_stmt, query_map)
-        with patch.object(metric_batch.LOG, 'info') as mock_log_info:
+        with mock.patch.object(metric_batch.LOG, 'info') as mock_log_info:
             self.metric_batch.log_token_batch_map('name', query_map)
             mock_log_info.assert_called_with('name : Size: 1;  Tokens: |token: 1|')
 
     def test_log_replica_batch_map(self):
         query_map = {}
-        with patch.object(self.metric_batch.lb_policy, 'make_query_plan'):
-            with patch.object(metric_batch.LOG, 'info') as mock_log_info:
+        with mock.patch.object(self.metric_batch.lb_policy, 'make_query_plan'):
+            with mock.patch.object(metric_batch.LOG, 'info') as mock_log_info:
                 self.metric_batch.batch_query_by_replicas(self.bound_stmt, query_map)
                 self.metric_batch.log_replica_batch_map('name', query_map)
                 mock_log_info.assert_called_with('name : Size: 1;  Replicas: |: 1|')
 
     def test_get_all_batches(self):
-        with patch.object(self.metric_batch, 'log_token_batch_map'):
-            with(patch.object(self.metric_batch, 'log_replica_batch_map')):
+        with mock.patch.object(self.metric_batch, 'log_token_batch_map'):
+            with(mock.patch.object(self.metric_batch, 'log_replica_batch_map')):
                 sample_elements = ['measurement_query', 'metric_query', 'dimension_query',
                                    'dimension_metric_query', 'metric_dimension_query']
                 self.metric_batch.measurement_queries.update({'some': sample_elements[0]})

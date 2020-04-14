@@ -12,9 +12,9 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import ujson as json
 
 from oslo_log import log
+import simplejson as json
 
 from monasca_persister.repositories.influxdb import abstract_repository
 from monasca_persister.repositories.influxdb import line_utils
@@ -38,26 +38,26 @@ class AlarmStateHistInfluxdbRepository(
          time_stamp) = parse_alarm_state_hist_message(
             message)
 
-        name = u'alarm_state_history'
+        name = 'alarm_state_history'
         fields = []
-        fields.append(u'tenant_id=' + line_utils.escape_value(tenant_id))
-        fields.append(u'alarm_id=' + line_utils.escape_value(alarm_id))
-        fields.append(u'metrics=' + line_utils.escape_value(
+        fields.append('tenant_id=' + line_utils.escape_value(tenant_id))
+        fields.append('alarm_id=' + line_utils.escape_value(alarm_id))
+        fields.append('metrics=' + line_utils.escape_value(
             json.dumps(metrics, ensure_ascii=False)))
-        fields.append(u'new_state=' + line_utils.escape_value(new_state))
-        fields.append(u'old_state=' + line_utils.escape_value(old_state))
-        fields.append(u'link=' + line_utils.escape_value(link))
-        fields.append(u'lifecycle_state=' + line_utils.escape_value(
+        fields.append('new_state=' + line_utils.escape_value(new_state))
+        fields.append('old_state=' + line_utils.escape_value(old_state))
+        fields.append('link=' + line_utils.escape_value(link))
+        fields.append('lifecycle_state=' + line_utils.escape_value(
             lifecycle_state))
-        fields.append(u'reason=' + line_utils.escape_value(
+        fields.append('reason=' + line_utils.escape_value(
             state_change_reason))
-        fields.append(u'reason_data=' + line_utils.escape_value("{}"))
-        fields.append(u'sub_alarms=' + line_utils.escape_value(
+        fields.append('reason_data=' + line_utils.escape_value("{}"))
+        fields.append('sub_alarms=' + line_utils.escape_value(
             sub_alarms_json_snake_case))
 
-        line = name + u',tenant_id=' + line_utils.escape_tag(tenant_id)
-        line += u' ' + u','.join(fields)
-        line += u' ' + str(int(time_stamp))
+        line = name + ',tenant_id=' + line_utils.escape_tag(tenant_id)
+        line += ' ' + ','.join(fields)
+        line += ' ' + str(int(time_stamp))
 
         LOG.debug(line)
 

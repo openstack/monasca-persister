@@ -13,39 +13,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from six import PY2
-
 
 def escape_tag(tag):
-    tag = get_unicode(tag)
-    return tag.replace(
-        u"\\", u"\\\\"
+    return str(tag).replace(
+        "\\", "\\\\"
     ).replace(
-        u" ", u"\\ "
+        " ", "\\ "
     ).replace(
-        u",", u"\\,"
+        ",", "\\,"
     ).replace(
-        u"=", u"\\="
+        "=", "\\="
     )
 
 
-def get_unicode(data):
-    if PY2:
-        if isinstance(data, unicode):
-            return data
-        else:
-            return data.decode('utf-8')
-    else:
-        return str(data)
-
-
 def escape_value(value):
-    return u"\"{0}\"".format(
-        get_unicode(value).replace(
-            u"\\", u"\\\\"
+    return "\"{0}\"".format(
+        str(value).replace(
+            "\\", "\\\\"
         ).replace(
-            u"\"", u"\\\""
+            "\"", "\\\""
         ).replace(
-            u"\n", u"\\n"
+            "\n", "\\n"
         )
     )

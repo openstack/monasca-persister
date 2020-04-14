@@ -14,8 +14,7 @@
 # limitations under the License.
 
 import os
-from mock import patch
-from mock import Mock
+from unittest import mock
 
 from oslotest import base
 from oslo_config import cfg
@@ -37,16 +36,17 @@ class TestPersisterRepo(base.BaseTestCase):
         self._set_patchers()
         self._set_mocks()
 
-        self.persister = LegacyKafkaPersister(self.mock_kafka, self.mock_zookeeper, Mock())
+        self.persister = LegacyKafkaPersister(self.mock_kafka,
+                                              self.mock_zookeeper, mock.Mock())
 
     def _set_mocks(self):
-        self.mock_kafka = Mock()
+        self.mock_kafka = mock.Mock()
         self.mock_kafka.topic = 'topic'
         self.mock_kafka.batch_size = 1
         self.mock_kafka.zookeeper_path = ''
         self.mock_kafka.group_id = 0
         self.mock_kafka.max_wait_time_seconds = 0
-        self.mock_zookeeper = Mock(uri='')
+        self.mock_zookeeper = mock.Mock(uri='')
 
         self.mock_consumer_init = self.patch_kafka_init.start()
         self.mock_client_init = self.patch_kafka_client_init.start()
@@ -55,14 +55,17 @@ class TestPersisterRepo(base.BaseTestCase):
         self.mock_log_exception = self.patch_log_exception.start()
 
     def _set_patchers(self):
-        self.patch_kafka_init = patch.object(consumer.KafkaConsumer, '__init__',
-                                             return_value=None)
-        self.patch_kafka_commit = patch.object(consumer.KafkaConsumer, 'commit',
-                                               return_value=FakeException())
-        self.patch_kafka_client_init = patch.object(consumer.kafka_client.KafkaClient, '__init__',
-                                                    return_value=None)
-        self.patch_log_warning = patch.object(LOG, 'warning')
-        self.patch_log_exception = patch.object(LOG, 'exception')
+        self.patch_kafka_init = mock.patch.object(consumer.KafkaConsumer,
+                                                  '__init__',
+                                                  return_value=None)
+        self.patch_kafka_commit = \
+            mock.patch.object(consumer.KafkaConsumer, 'commit',
+                              return_value=FakeException())
+        self.patch_kafka_client_init = \
+            mock.patch.object(consumer.kafka_client.KafkaClient, '__init__',
+                              return_value=None)
+        self.patch_log_warning = mock.patch.object(LOG, 'warning')
+        self.patch_log_exception = mock.patch.object(LOG, 'exception')
 
     def tearDown(self):
         super(TestPersisterRepo, self).tearDown()
@@ -84,24 +87,25 @@ class TestPersisterRepo(base.BaseTestCase):
         self.assertIsNone(self.persister._flush())
 
     def test_run_if_consumer_is_faulty(self):
-        with patch.object(os, '_exit', return_value=None) as mock_exit:
+        with mock.patch.object(os, '_exit', return_value=None) as mock_exit:
             self.persister._data_points = data_points.DataPointsAsDict()
-            self.persister._consumer = Mock(side_effect=FakeException)
+            self.persister._consumer = mock.Mock(side_effect=FakeException)
             self.persister.run()
             mock_exit.assert_called_once_with(1)
 
     def test_run_logs_exception_from_consumer(self):
-        with patch.object(self.persister.repository, 'process_message',
-                          side_effect=FakeException):
+        with mock.patch.object(self.persister.repository, 'process_message',
+                               side_effect=FakeException):
             self.persister._data_points = data_points.DataPointsAsDict()
             self.persister._consumer = ['aa']
             self.persister.run()
             self.mock_log_exception.assert_called()
 
     def test_run_commit_is_called_and_data_points_is_emptied(self):
-        with patch.object(self.persister.repository, 'process_message',
-                          return_value=('message', 'tenant_id')):
-            with patch.object(self.persister, '_consumer', return_value=Mock()) as mock_consumer:
+        with mock.patch.object(self.persister.repository, 'process_message',
+                               return_value=('message', 'tenant_id')):
+            with mock.patch.object(self.persister, '_consumer',
+                                   return_value=mock.Mock()) as mock_consumer:
                 self.persister._data_points = data_points.DataPointsAsDict()
                 self.persister._data_points.append('fake_tenant_id', 'some')
                 self.persister._consumer.__iter__.return_value = ('aa', 'bb')
@@ -113,19 +117,21 @@ class TestPersisterRepo(base.BaseTestCase):
     def test_flush_logs_warning_and_exception(self):
         exception_msgs = ['partial write: points beyond retention policy dropped',
                           'unable to parse']
-        with(patch.object(cfg.CONF.repositories, 'ignore_parse_point_error',
-                          return_value=True)):
+        with(mock.patch.object(cfg.CONF.repositories,
+                               'ignore_parse_point_error', return_value=True)):
             for elem in exception_msgs:
-                with patch.object(LOG, 'info', side_effect=FakeException(elem)):
+                with mock.patch.object(LOG, 'info', side_effect=FakeException(
+                        elem)):
                     self.persister._data_points = data_points.DataPointsAsDict()
                     self.persister._data_points.append('fake_tenant_id', 'some')
                     self.persister._flush()
                     self.mock_log_warning.assert_called()
 
-    @patch.object(LOG, 'info', side_effect=FakeException())
+    @mock.patch.object(LOG, 'info', side_effect=FakeException())
     def test_flush_logs_exception(self, mock_log_info):
-        with(patch.object(cfg.CONF.repositories,
-                          'ignore_parse_point_error', return_value=False)):
+        with(mock.patch.object(cfg.CONF.repositories,
+                               'ignore_parse_point_error',
+                               return_value=False)):
             mock_log_info.side_effect.message = 'some msg'
             self.persister._data_points = data_points.DataPointsAsDict()
             self.persister._data_points.append('fake_tenant_id', 'some')

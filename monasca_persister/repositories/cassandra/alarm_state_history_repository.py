@@ -14,11 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ujson as json
-
 from cassandra.concurrent import execute_concurrent_with_args
 from oslo_config import cfg
 from oslo_log import log
+import simplejson as json
 
 from monasca_persister.repositories.cassandra import abstract_repository
 from monasca_persister.repositories.utils import parse_alarm_state_hist_message

@@ -19,10 +19,10 @@ from cachetools import LRUCache
 from collections import namedtuple
 import hashlib
 import threading
-import ujson as json
 
 from cassandra.concurrent import execute_concurrent
 from oslo_log import log
+import simplejson as json
 
 from monasca_persister.repositories.cassandra import abstract_repository
 from monasca_persister.repositories.cassandra import token_range_query_manager
