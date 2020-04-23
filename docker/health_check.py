@@ -19,8 +19,9 @@
 
 def main():
     """health check for Monasca-persister"""
-    #TODO wait for health check endpoint ...
+    # TODO(Christian Brandstetter) wait for health check endpoint ...
     return 0
+
 
 if __name__ == '__main__':
     main()

@@ -8,13 +8,11 @@ docutils==0.11
 elasticsearch==2.0.0
 extras==1.0.0
 fixtures==3.0.0
-flake8==2.5.5
 future==0.16.0
 gevent==1.2.2
 gitdb==0.6.4
 GitPython==1.0.1
 greenlet==0.4.10
-hacking==0.12.0
 influxdb==2.9.2
 iso8601==0.1.11
 kazoo==2.2
@@ -40,8 +38,6 @@ oslo.serialization==2.18.0
 oslo.utils==3.33.0
 oslotest==3.2.0
 pbr==2.0.0
-pep8==1.7.1
-pyflakes==1.0.0
 pyinotify==0.9.6
 PyMySQL==0.7.6
 pyparsing==2.1.0
