@@ -19,7 +19,6 @@ kazoo==2.2
 keystoneauth1==3.4.0
 linecache2==1.0.0
 mccabe==0.4.0
-mock==2.0.0
 monasca-common==2.16.0
 monotonic==0.6
 mox3==0.20.0
