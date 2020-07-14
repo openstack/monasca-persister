@@ -48,7 +48,7 @@ kafka_common_opts = [
                      'kafka-python library is used. Message format version '
                      'for the brokers should be set to 0.9.0.0 to avoid '
                      'performance issues until all consumers are upgraded.',
-                default=True)
+                default=False)
 ]
 
 kafka_common_group = cfg.OptGroup(name='kafka',
