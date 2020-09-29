@@ -11,14 +11,11 @@
         - monasca-tempest-python3-cassandra
         - monasca-tempest-python3-java-cassandra
         - docker-build-monasca-service
-        - legacy-monasca-persister-maven-build
     gate:
       jobs:
         - monasca-tempest-python3-influxdb
-        - legacy-monasca-persister-maven-build
     post:
       jobs:
-        - legacy-monasca-persister-localrepo-upload
         - publish-monasca-persister-docker-image
     periodic:
       jobs:
