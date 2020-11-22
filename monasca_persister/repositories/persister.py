@@ -13,20 +13,17 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from abc import ABCMeta
 import os
 
 from oslo_config import cfg
 from oslo_log import log
-import six
 
 from monasca_persister.repositories import singleton
 
 LOG = log.getLogger(__name__)
 
 
-@six.add_metaclass(singleton.Singleton)
-class Persister(six.with_metaclass(ABCMeta, object)):
+class Persister(object, metaclass=singleton.Singleton):
 
     def __init__(self, kafka_conf, repository):
 

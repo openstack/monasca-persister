@@ -15,7 +15,6 @@
 import abc
 import influxdb
 from oslo_config import cfg
-import six
 
 from monasca_persister.repositories import abstract_repository
 from monasca_persister.repositories import data_points
@@ -23,8 +22,7 @@ from monasca_persister.repositories import data_points
 DATABASE_NOT_FOUND_MSG = "database not found"
 
 
-@six.add_metaclass(abc.ABCMeta)
-class AbstractInfluxdbRepository(abstract_repository.AbstractRepository):
+class AbstractInfluxdbRepository(abstract_repository.AbstractRepository, metaclass=abc.ABCMeta):
 
     def __init__(self):
         super(AbstractInfluxdbRepository, self).__init__()

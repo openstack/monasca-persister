@@ -10,14 +10,12 @@
 #  License for the specific language governing permissions and limitations
 #  under the License.
 from monasca_common.kafka import client_factory
-import six
 
 from monasca_persister.repositories import persister
 from monasca_persister.repositories import singleton
 
 
-@six.add_metaclass(singleton.Singleton)
-class ConfluentKafkaPersister(persister.Persister):
+class ConfluentKafkaPersister(persister.Persister, metaclass=singleton.Singleton):
 
     def __init__(self, kafka_conf, repository, client_id=""):
         super(ConfluentKafkaPersister, self).__init__(kafka_conf, repository)

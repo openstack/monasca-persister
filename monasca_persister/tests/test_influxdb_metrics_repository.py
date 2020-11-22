@@ -19,7 +19,6 @@ import influxdb
 from influxdb.exceptions import InfluxDBClientError
 from oslotest import base
 from oslo_config import cfg
-import six
 
 from monasca_persister.repositories.influxdb.metrics_repository import MetricInfluxdbRepository
 
@@ -37,7 +36,7 @@ class TestMetricInfluxdbRepository(base.BaseTestCase):
 
     def _test_process_message(self, metrics_repo, data_points, metric, tenant):
         _dp, _tenant = metrics_repo.process_message(metric)
-        self.assertIsInstance(_dp, six.string_types)
+        self.assertIsInstance(_dp, str)
         self.assertEqual(_tenant, tenant)
         data_points.append(_tenant, _dp)
 

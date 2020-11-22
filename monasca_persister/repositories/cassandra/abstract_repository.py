@@ -16,7 +16,6 @@
 
 import abc
 from oslo_config import cfg
-import six
 
 from monasca_persister.repositories import abstract_repository
 from monasca_persister.repositories.cassandra import connection_util
@@ -25,8 +24,7 @@ from monasca_persister.repositories import data_points
 conf = cfg.CONF
 
 
-@six.add_metaclass(abc.ABCMeta)
-class AbstractCassandraRepository(abstract_repository.AbstractRepository):
+class AbstractCassandraRepository(abstract_repository.AbstractRepository, metaclass=abc.ABCMeta):
     def __init__(self):
         super(AbstractCassandraRepository, self).__init__()
 
