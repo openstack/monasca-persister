@@ -101,7 +101,7 @@ class MigrationHelper(object):
         measurements = []
         if fname:
             with open(fname, 'a+') as f:
-                measurements = [l.strip() for l in f.readlines()]
+                measurements = [line.strip() for line in f.readlines()]
         if not measurements:
             result = self.client.query('SHOW MEASUREMENTS').get_points('measurements')
             measurements = [m.get('name') for m in result]
@@ -118,7 +118,7 @@ class MigrationHelper(object):
     def get_complete(self, fname):
         if fname:
             with open(fname, 'a+') as fd:
-                return {l.strip() for l in fd.readlines()}
+                return {line.strip() for line in fd.readlines()}
         else:
             return {}
 
