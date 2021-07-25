@@ -24,9 +24,6 @@
       jobs:
         - legacy-monasca-persister-localrepo-upload
         - publish-monasca-persister-docker-image
-    periodic:
-      jobs:
-        - publish-monasca-persister-docker-image
     release:
       jobs:
         - publish-monasca-persister-docker-image
