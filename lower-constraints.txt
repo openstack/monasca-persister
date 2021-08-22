@@ -8,13 +8,12 @@ docutils==0.11
 elasticsearch==2.0.0
 extras==1.0.0
 fixtures==3.0.0
-flake8==2.5.5
+flake8==2.6.0
 future==0.16.0
 gevent==1.2.2
 gitdb==0.6.4
 GitPython==1.0.1
 greenlet==0.4.10
-hacking==0.12.0
 influxdb==2.9.2
 iso8601==0.1.11
 kazoo==2.2
