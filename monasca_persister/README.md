@@ -104,6 +104,7 @@ sudo chmod 640 /etc/monasca/monasca-persister.conf
 
 Most of the configuration options should be left at default, but at a
 minimum, the following should be changed:
+The default value for influxdb ssl and verify_ssl is False. Only add/change if your influxdb is using SSL.
 
 ```
 [zookeeper]
@@ -121,6 +122,8 @@ ip_address =
 port =
 user =
 password =
+ssl =
+verify_ssl =
 ```
 
 ### Running
