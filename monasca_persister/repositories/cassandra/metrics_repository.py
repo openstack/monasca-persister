@@ -132,7 +132,7 @@ class MetricCassandraRepository(abstract_repository.AbstractCassandraRepository)
                 dim_names.append(name)
 
             hash_string = '%s\0%s\0%s\0%s' % (region, tenant_id, metric_name, '\0'.join(dim_list))
-            metric_id = hashlib.sha1(hash_string.encode('utf8')).hexdigest()
+            metric_id = hashlib.sha256(hash_string.encode('utf8')).hexdigest()
 
             # TODO(brtknr): If database per tenant becomes the default and the
             # only option, recording tenant_id will be redundant.

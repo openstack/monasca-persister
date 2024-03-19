@@ -128,7 +128,7 @@ def main():
                 hash_string = '%s\0%s\0%s\0%s' % (row.region, row.tenant_id,
                                                   row.metric_name,
                                                   '\0'.join(row.dimensions))
-                # metric_id = hashlib.sha1(hash_string.encode('utf8')).hexdigest()
+                # metric_id = hashlib.sha256(hash_string.encode('utf8')).hexdigest()
                 # id_bytes = bytearray.fromhex(metric_id)
 
                 LOG.info("Recreated hash for metric id: {}".format(hash_string))
