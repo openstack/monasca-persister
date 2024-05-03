@@ -9,7 +9,6 @@
         - monasca-tempest-python3-influxdb
         - monasca-tempest-python3-cassandra
         - monasca-tempest-python3-java-cassandra
-        - docker-build-monasca-service
     gate:
       jobs:
         - monasca-tempest-python3-influxdb
