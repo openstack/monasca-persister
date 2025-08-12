@@ -1,4 +1,0 @@
----
-features:
-  - |
-    Support for automatic database creation in InfluxDB has been added.
